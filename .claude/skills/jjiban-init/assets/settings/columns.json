@@ -1,0 +1,12 @@
+{
+  "version": "1.3",
+  "columns": [
+    { "id": "todo", "codes": [" "], "name": "Todo", "order": 1, "color": "#6b7280" },
+    { "id": "design", "codes": ["bd"], "name": "Design", "order": 2, "color": "#3b82f6" },
+    { "id": "detail", "codes": ["dd", "an"], "name": "Detail", "order": 3, "color": "#8b5cf6" },
+    { "id": "approve", "codes": ["ap"], "name": "Approve", "order": 4, "color": "#10b981" },
+    { "id": "implement", "codes": ["im", "fx"], "name": "Implement", "order": 5, "color": "#f59e0b" },
+    { "id": "verify", "codes": ["vf"], "name": "Verify", "order": 6, "color": "#eab308" },
+    { "id": "done", "codes": ["xx"], "name": "Done", "order": 7, "color": "#22c55e" }
+  ]
+}

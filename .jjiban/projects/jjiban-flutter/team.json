@@ -1,0 +1,24 @@
+{
+  "members": [
+    {
+      "id": "admin",
+      "name": "Admin",
+      "email": "admin@project.com",
+      "role": "admin",
+      "active": true
+    },
+    {
+      "id": "jongik.jang",
+      "name": "장종익",
+      "email": "jongik.jang@dongkuk.com",
+      "role": "developer",
+      "active": true
+    }
+  ],
+  "roles": [
+    { "id": "admin", "name": "Admin", "permissions": ["all"] },
+    { "id": "developer", "name": "Developer", "permissions": ["read", "write", "code"] },
+    { "id": "member", "name": "Member", "permissions": ["read", "write"] },
+    { "id": "viewer", "name": "Viewer", "permissions": ["read"] }
+  ]
+}
