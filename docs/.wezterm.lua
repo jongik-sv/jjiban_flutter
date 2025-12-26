@@ -1,7 +1,7 @@
 local wezterm = require 'wezterm'
 local config = wezterm.config_builder()
 local mux = wezterm.mux
-
+local act = wezterm.action
 -- ============================================
 -- 0. Startup Layout (4-Pane Split)
 -- ============================================
@@ -16,7 +16,7 @@ wezterm.on('mux-startup', function()
   -- +-------+-------+
   -- |   0   |   1   |
   -- +-------+-------+
-  -- |   2   |   3   |
+  -- |   2   |   3   | 
   -- +-------+-------+
 
   -- 오른쪽으로 분할 (pane 1 생성)
@@ -85,7 +85,12 @@ config.tab_bar_at_bottom = true
 -- Leader key: CTRL+A (like tmux with prefix)
 config.leader = { key = 'a', mods = 'CTRL', timeout_milliseconds = 1000 }
 
-config.keys = {-- Pane splitting (Leader + | or -)
+config.keys = {
+  {
+    key = 'Enter',
+    mods = 'NONE',
+    action = act.SendKey { key = 'Enter', mods = 'NONE' },
+  },
   {
     key = '|',
     mods = 'LEADER|SHIFT',
@@ -233,17 +238,11 @@ config.enable_csi_u_key_encoding = false
 -- PowerShell 7 (pwsh) + UTF-8
 -- config.default_prog = { 'pwsh.exe', '-NoLogo', '-Command', '[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; claude --dangerously-skip-permissions' }
 -- Windows PowerShell 5.1
--- config.default_prog = { 'powershell.exe', '-NoLogo', '-Command', '[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; claude --dangerously-skip-permissions' }
-config.default_prog = { 'cmd.exe', "/k", "chcp 65001 && claude --dangerously-skip-permissions" }           -- CMDs 는 chcp 65001로 UTF-8 설정
+config.default_prog = { 'powershell.exe', '-NoLogo', '-Command', '[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; claude --dangerously-skip-permissions' }
+-- config.default_prog = { 'cmd.exe', "/k", "chcp 65001 && claude --dangerously-skip-permissions" }           -- CMDs 는 chcp 65001로 UTF-8 설정
 -- config.default_prog = { 'wsl.exe' }           -- WSL
 -- config.default_prog = { 'claude --dangerously-skip-permissions' }  -- Claude Code
 
--- Windows stdin 호환성
-config.allow_win32_input_mode = true
 
--- -- 기본 쉘 UTF-8 강제
--- if wezterm.target_triple == 'x86_64-pc-windows-msvc' then
---   config.default_prog = { 'powershell.exe', '-NoLogo', '-ExecutionPolicy', 'Bypass', '-Command', 'chcp 65001' }
--- end
 
 return config
