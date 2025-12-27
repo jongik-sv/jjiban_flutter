@@ -162,7 +162,7 @@
 ### TSK-02-01: 자동 재개 메커니즘
 - category: development
 - domain: backend
-- status: implement [im]
+- status: done [xx]
 - priority: high
 - assignee: -
 - schedule: 2026-01-04 ~ 2026-01-05
