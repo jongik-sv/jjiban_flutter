@@ -51,7 +51,7 @@
 ### TSK-01-02: WBS 파서 구현
 - category: development
 - domain: backend
-- status: approve [ap]
+- status: implement [im]
 - priority: critical
 - assignee: -
 - schedule: 2025-12-29 ~ 2025-12-29
