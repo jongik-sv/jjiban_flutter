@@ -20,7 +20,7 @@ dev = [
 ]
 
 [project.scripts]
-orchay = "orchay.main:main"
+orchay = "orchay.cli:cli_main"
 
 [build-system]
 requires = ["hatchling"]

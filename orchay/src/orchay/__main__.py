@@ -1,6 +1,6 @@
 """orchay 패키지 진입점."""
 
-from orchay.main import main
+from orchay.cli import cli_main
 
 if __name__ == "__main__":
-    main()
+    cli_main()

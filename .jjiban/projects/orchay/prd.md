@@ -4,8 +4,8 @@
 
 | 항목 | 내용 |
 |------|------|
-| 문서 버전 | 1.0 |
-| 작성일 | 2025-12-27 |
+| 문서 버전 | 2.0 |
+| 작성일 | 2025-12-28 |
 | 상태 | Draft |
 | 프로젝트 경로 | `./orchay` |
 
@@ -347,6 +347,22 @@ while running:
 - **TRD 연동 속성**: tech-spec, api-spec, data-model (detailed 이상)
 - **상세도 레벨**: minimal, standard, detailed, full
 
+#### wbs.md 메타데이터
+
+wbs.md 상단의 `> key: value` 형식 메타데이터를 파싱합니다:
+
+| 필드 | 설명 | 예시 |
+|------|------|------|
+| `version` | WBS 버전 | `1.0` |
+| `depth` | 계층 깊이 (3 또는 4) | `3` |
+| `updated` | 마지막 업데이트 날짜 | `2025-12-28` |
+| `project-root` | 개발 폴더 경로 (프로젝트 루트 기준) | `orchay`, `./`, `lib/myapp` |
+| `strategy` | 개발 전략 설명 | `부트스트래핑` |
+
+**project-root 사용**:
+- Worker에 Task 분배 시 해당 폴더에서 명령 실행
+- 예: `project-root: orchay` → `cd orchay && /wf:run TSK-01-01`
+
 ### 3.2 스케줄 큐 관리
 
 의존성과 우선순위를 고려하여 실행 가능한 Task 큐를 유지합니다. 스케줄 큐에는 **개발 가능한 Task만** 표시됩니다.
@@ -482,60 +498,19 @@ ORCHAY_DONE:TSK-01-01-01:build:error:TDD 5회 초과
 
 #### 상태 판정 우선순위
 
-```python
-DONE_PATTERN = r"ORCHAY_DONE:([^:]+):(\w+):(success|error)(?::(.+))?"
+**파일 기반 상태 관리**: 작업 중인 Worker는 `orchay-active.json` 파일로 추적합니다.
 
-def detect_worker_state(pane_id: int) -> tuple[str, dict | None]:
-    """Worker 상태 감지 - 우선순위 기반 판정
+> 상세 구현 코드는 [orchay-code-reference.md](./orchay-code-reference.md#상태-감지) 참조
 
-    Returns:
-        (state, done_info): state는 상태 문자열, done_info는 완료 신호 정보
-    """
+```
+판정 로직:
+1. 파일에 해당 pane의 작업이 있으면:
+   - ORCHAY_DONE 감지 시 → done + 파일에서 제거
+   - 그 외 → busy (계속 작업 중)
 
-    # 0. pane 존재 확인
-    if not pane_exists(pane_id):
-        return "dead", None
-
-    output = wezterm_get_text(pane_id, last_lines=50)
-
-    # 1. 완료 신호 패턴 (최우선)
-    done_match = re.search(DONE_PATTERN, output)
-    if done_match:
-        done_info = {
-            "task_id": done_match.group(1),
-            "action": done_match.group(2),
-            "status": done_match.group(3),
-            "message": done_match.group(4)
-        }
-        return "done", done_info
-
-    # 2. 일시 중단 패턴
-    pause_patterns = [
-        r"rate.*limit", r"please.*wait", r"try.*again",
-        r"context.*limit", r"conversation.*too.*long",
-        r"overloaded", r"capacity"
-    ]
-    if any(re.search(p, output, re.I) for p in pause_patterns):
-        return "paused", None
-
-    # 3. 에러 패턴
-    error_patterns = [r"Error:", r"Failed:", r"Exception:", r"❌", r"fatal:"]
-    if any(re.search(p, output, re.I) for p in error_patterns):
-        return "error", None
-
-    # 4. 질문/입력 대기 패턴
-    question_patterns = [r"\?\s*$", r"\(y/n\)", r"선택", r"Press.*to continue"]
-    if any(re.search(p, output, re.I) for p in question_patterns):
-        return "blocked", None
-
-    # 5. 프롬프트 패턴 (idle)
-    prompt_patterns = [r"^>\s*$", r"╭─", r"❯"]
-    last_lines = output.strip().split('\n')[-3:]
-    if any(re.search(p, line) for p in prompt_patterns for line in last_lines):
-        return "idle", None
-
-    # 6. 기본값: 작업 중
-    return "busy", None
+2. 파일에 없으면 (초기 상태 또는 작업 완료 후):
+   - pane 출력으로 상태 판단
+   - 우선순위: dead > done > idle > paused > error > blocked > busy
 ```
 
 ### 3.4 작업 분배
@@ -1309,19 +1284,90 @@ WBS 기반 UI에서 `orchay-active.json` 파일을 모니터링하여:
 ./orchay history --clear      # 히스토리 전체 삭제
 ```
 
-### 6.3 CLI 옵션 (설정 파일 오버라이드)
+### 6.3 CLI 사용법
 
-| 옵션 | 설명 |
-|------|------|
+```bash
+orchay [PROJECT] [OPTIONS]
+```
+
+| 인자/옵션 | 설명 |
+|----------|------|
+| `PROJECT` | 프로젝트명 (`.jjiban/projects/{PROJECT}/` 사용, 기본: orchay) |
 | `-w, --workers N` | workers 오버라이드 |
 | `-i, --interval S` | interval 오버라이드 |
-| `-c, --category CAT` | category 오버라이드 |
+| `-m, --mode MODE` | 실행 모드 (design/quick/develop/force) |
 | `--dry-run` | 미리보기 (분배 안 함) |
-| `-p, --project PATH` | project 오버라이드 |
+| `-v, --verbose` | 상세 로그 출력 |
+
+**사용 예시**:
+```bash
+# orchay 프로젝트 실행
+uv run python -m orchay orchay --dry-run
+
+# jjiban-flutter 프로젝트 실행
+uv run python -m orchay jjiban-flutter -m develop
+
+# 기본값 (orchay 프로젝트)
+uv run python -m orchay --dry-run
+```
 
 **우선순위**: CLI 옵션 > 설정 파일 > 기본값
 
-### 6.4 설치
+### 6.4 exec 서브커맨드 (실행 상태 관리)
+
+워크플로우(`/wf:*`) 명령어 실행 시 Task 실행 상태를 추적하기 위한 서브커맨드입니다.
+Claude Code Worker들이 어떤 Task를 실행 중인지 `.jjiban/logs/orchay-active.json`에 기록합니다.
+
+```bash
+# Task 실행 시작 등록
+orchay exec start TSK-01-01 design
+
+# Task 실행 완료 해제
+orchay exec stop TSK-01-01
+
+# Task 단계 갱신
+orchay exec update TSK-01-01 build
+
+# 실행 중인 Task 목록
+orchay exec list
+
+# 모든 실행 상태 초기화
+orchay exec clear
+```
+
+| 명령어 | 설명 |
+|--------|------|
+| `exec start <task_id> <step>` | Task 실행 시작 등록 |
+| `exec stop <task_id>` | Task 실행 완료 해제 |
+| `exec update <task_id> <step>` | Task 단계 갱신 |
+| `exec list` | 실행 중인 Task 목록 |
+| `exec clear` | 모든 실행 상태 초기화 |
+
+**옵션 (start)**:
+| 옵션 | 설명 |
+|------|------|
+| `-w, --worker N` | Worker ID (기본: 0) |
+| `-p, --pane N` | Pane ID (기본: 0) |
+
+**상태 파일 구조** (`.jjiban/logs/orchay-active.json`):
+```json
+{
+  "activeTasks": {
+    "TSK-01-01": {
+      "worker": 1,
+      "paneId": 2,
+      "startedAt": "2025-12-28T10:00:00",
+      "currentStep": "design"
+    }
+  }
+}
+```
+
+**워크플로우 훅 연동**:
+- `/wf:*` 명령어 시작 시: `orchay exec start {TASK_ID} {COMMAND}`
+- `/wf:*` 명령어 완료 시: `orchay exec stop {TASK_ID}`
+
+### 6.5 설치
 
 ```bash
 # PATH에 추가 (Unix)
@@ -1817,3 +1863,8 @@ Workers: 3 | 초기 분배: TSK-01-01-01, TSK-01-01-02, TSK-02-01
 |     |            | - 데이터 구조: worker, startedAt, currentStep |
 |     |            | - 생명주기: 등록(분배 시) → 갱신(단계 변경 시) → 해제(완료 시) → 초기화(재시작 시) |
 |     |            | - UI 연동: 스피너 표시, 현재 진행 단계 표시 |
+| 2.0 | 2025-12-28 | exec 서브커맨드 CLI 추가 (6.4) |
+|     |            | - `orchay exec start/stop/update/list/clear` 명령어 |
+|     |            | - 워크플로우 훅 연동: `/wf:*` 실행 시 상태 등록/해제 |
+|     |            | - `orchay/src/orchay/cli.py` 구현 |
+|     |            | - 기존 `npx jjiban exec` → `orchay exec`로 대체 |
