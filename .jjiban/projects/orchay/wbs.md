@@ -195,7 +195,7 @@
 ### TSK-02-02: TUI 메인 화면
 - category: development
 - domain: frontend
-- status: [ ]
+- status: detail-design [dd]
 - priority: high
 - assignee: -
 - schedule: 2026-01-04 ~ 2026-01-06
