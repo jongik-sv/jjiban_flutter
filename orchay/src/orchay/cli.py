@@ -41,7 +41,11 @@ def create_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="command", help="사용 가능한 명령어")
 
     # run 서브커맨드 (스케줄러 실행)
-    run_parser = subparsers.add_parser("run", help="스케줄러 실행")
+    run_parser = subparsers.add_parser(
+        "run",
+        help="스케줄러 실행",
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
     run_parser.add_argument(
         "wbs",
         nargs="?",
@@ -67,7 +71,11 @@ def create_parser() -> argparse.ArgumentParser:
         "--mode",
         choices=["design", "quick", "develop", "force"],
         default="quick",
-        help="실행 모드 (기본: quick)",
+        help="""실행 모드 (기본: quick)
+  design  : 설계까지 자동 ([dd]에서 멈춤)
+  quick   : 완료까지 자동 ([xx]까지 진행)
+  develop : 구현까지 자동 ([im]에서 멈춤, 검증은 수동)
+  force   : 의존성 무시, 완료까지 자동""",
     )
     run_parser.add_argument(
         "--dry-run",
@@ -338,6 +346,8 @@ def cli_main() -> int:
         return handle_history(args)
     elif args.command == "run":
         # 스케줄러 실행 (기존 main.py 방식)
+        # sys.argv에서 'run' 서브커맨드를 제거하여 main.py에 전달
+        sys.argv = [sys.argv[0]] + sys.argv[2:]
         from orchay.main import main as run_scheduler
 
         run_scheduler()

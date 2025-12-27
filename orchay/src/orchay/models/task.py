@@ -53,6 +53,7 @@ class Task(BaseModel):
     depends: list[str] = Field(default_factory=list, description="의존 Task ID 목록")
     blocked_by: str | None = Field(default=None, description="블로킹 사유")
     is_running: bool = Field(default=False, description="현재 실행 중 여부")
+    workflow: str = Field(default="design", description="실행할 workflow 명령어 (design, build 등)")
 
     def is_executable(self) -> bool:
         """실행 가능 여부 확인."""

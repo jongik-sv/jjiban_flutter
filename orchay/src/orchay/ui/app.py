@@ -5,9 +5,12 @@ Textual 프레임워크 기반 터미널 UI 구현.
 
 from __future__ import annotations
 
-from typing import ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from rich.text import Text
+
+if TYPE_CHECKING:
+    from orchay.main import Orchestrator
 from textual.app import App, ComposeResult
 from textual.binding import Binding, BindingType
 from textual.containers import Container, Horizontal, Vertical
@@ -262,8 +265,9 @@ class OrchayApp(App[None]):
         self._help_visible = False
         self._action_menu_visible = False
 
-        # Mock orchestrator for CommandHandler
-        self._orchestrator = orchestrator or self._create_mock_orchestrator()
+        # 실제 Orchestrator 또는 Mock
+        self._real_orchestrator: Orchestrator | None = orchestrator  # type: ignore[assignment]
+        self._orchestrator: Any = orchestrator or self._create_mock_orchestrator()
         self._command_handler = CommandHandler(self._orchestrator)
 
     def _create_mock_orchestrator(self) -> object:
@@ -409,6 +413,11 @@ class OrchayApp(App[None]):
         # 자동 갱신 타이머 시작
         self.set_interval(self._interval, self._on_auto_refresh)
 
+    def on_unmount(self) -> None:
+        """앱 종료 시 정리."""
+        if self._real_orchestrator is not None and hasattr(self._real_orchestrator, "stop"):
+            self._real_orchestrator.stop()
+
     async def on_input_submitted(self, event: Input.Submitted) -> None:
         """Input 제출 이벤트 핸들러."""
         if event.input.id != "command-input":
@@ -437,8 +446,27 @@ class OrchayApp(App[None]):
     def _on_auto_refresh(self) -> None:
         """자동 갱신 콜백."""
         if not self._paused:
+            # 실제 Orchestrator가 있으면 스케줄링 사이클 실행
+            if self._real_orchestrator is not None:
+                self.run_worker(self._run_orchestrator_tick())
+            self._sync_from_orchestrator()
+            self._update_queue_table()
+            self._update_worker_panel()
             self._update_header_info()
             self._update_progress()
+
+    async def _run_orchestrator_tick(self) -> None:
+        """Orchestrator 스케줄링 사이클 실행."""
+        if self._real_orchestrator is not None and hasattr(self._real_orchestrator, "_tick"):
+            await self._real_orchestrator._tick()  # pyright: ignore[reportPrivateUsage]
+
+    def _sync_from_orchestrator(self) -> None:
+        """Orchestrator 상태를 TUI에 동기화."""
+        if self._real_orchestrator is not None:
+            if hasattr(self._real_orchestrator, "tasks"):
+                self._tasks = self._real_orchestrator.tasks
+            if hasattr(self._real_orchestrator, "workers"):
+                self._worker_list = self._real_orchestrator.workers
 
     def _count_queue(self) -> int:
         """대기 중인 Task 수."""

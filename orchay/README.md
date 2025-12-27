@@ -32,24 +32,26 @@ pip install -e ".[dev]"
 
 ```bash
 # uv 사용 (권장)
-cd orchay
-uv run python -m orchay [WBS_PATH] [OPTIONS]
+cd {프로젝트 루트}  # .jjiban 폴더가 있는 위치
+uv run --project orchay python -m orchay [PROJECT] [OPTIONS]
 
 # 또는 venv 활성화 후
+cd orchay
 .venv\Scripts\activate      # Windows
 # source .venv/bin/activate  # Linux/Mac
-python -m orchay [WBS_PATH] [OPTIONS]
+cd ..  # 프로젝트 루트로 이동
+python -m orchay [PROJECT] [OPTIONS]
 ```
 
 ### CLI 옵션
 
 ```
 usage: orchay [-h] [-w WORKERS] [-i INTERVAL]
-              [-m {design,quick,develop,force}] [--dry-run] [-v]
-              [wbs]
+              [-m {design,quick,develop,force}] [--dry-run] [-v] [--no-tui]
+              [project]
 
 positional arguments:
-  wbs                   WBS 파일 경로 (기본: .jjiban/projects/orchay/wbs.md)
+  project               프로젝트명 (.jjiban/projects/{project}/ 사용, 기본: orchay)
 
 options:
   -w, --workers N       Worker 수 (기본: 3)
@@ -57,25 +59,34 @@ options:
   -m, --mode MODE       실행 모드: design, quick, develop, force (기본: quick)
   --dry-run             분배 없이 상태만 표시
   -v, --verbose         상세 로그 출력
+  --no-tui              TUI 없이 CLI 모드로 실행
 ```
+
+> **Note:** 기본적으로 TUI(Textual UI) 모드로 실행됩니다. CLI 모드가 필요하면 `--no-tui` 옵션을 사용하세요.
 
 ### 사용 예시
 
 ```bash
-# 기본 실행 (quick 모드, 3 workers)
-uv run python -m orchay .jjiban/projects/myproject/wbs.md
+# TUI 모드로 실행 (기본)
+uv run python -m orchay orchay
+
+# dry-run 모드 (분배 없이 상태만 표시)
+uv run python -m orchay orchay --dry-run
+
+# CLI 모드로 실행 (TUI 없이)
+uv run python -m orchay orchay --no-tui
+
+# jjiban-flutter 프로젝트 실행
+uv run python -m orchay jjiban-flutter
 
 # develop 모드로 실행
-uv run python -m orchay wbs.md -m develop
+uv run python -m orchay orchay -m develop
 
 # 5개 Worker로 실행
-uv run python -m orchay wbs.md -w 5
-
-# 상태만 확인 (분배 없음)
-uv run python -m orchay wbs.md --dry-run
+uv run python -m orchay orchay -w 5
 
 # 모니터링 간격 10초
-uv run python -m orchay wbs.md -i 10
+uv run python -m orchay orchay -i 10
 ```
 
 ### 실행 화면

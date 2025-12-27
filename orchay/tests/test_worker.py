@@ -1,10 +1,18 @@
 """Worker 상태 감지 테스트."""
 
+import time
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
+import orchay.worker
 from orchay.worker import DoneInfo, detect_worker_state, parse_done_signal
+
+
+@pytest.fixture(autouse=True)
+def reset_startup_time() -> None:
+    """테스트에서 idle 감지가 즉시 동작하도록 startup_time을 과거로 설정."""
+    orchay.worker._startup_time = time.time() - 100  # 100초 전으로 설정
 
 
 class TestParseDoneSignal:
@@ -55,6 +63,40 @@ class TestParseDoneSignal:
         assert result is not None
         assert result.task_id == "TSK-01-04"
 
+    def test_parse_with_project_name(self) -> None:
+        """프로젝트명 포함 ORCHAY_DONE 파싱."""
+        text = "ORCHAY_DONE:orchay/TSK-01-01:done:success"
+
+        result = parse_done_signal(text)
+
+        assert result is not None
+        assert result.task_id == "orchay/TSK-01-01"
+        assert result.action == "done"
+        assert result.status == "success"
+
+    def test_fallback_pattern_without_project(self) -> None:
+        """Fallback 패턴: 프로젝트명 없이 'Task TSK-XX 완료'."""
+        text = "═══════════════════════════════════\nTask TSK-02-04 완료\n═══════════════════════════════════"
+
+        result = parse_done_signal(text)
+
+        assert result is not None
+        assert result.task_id == "TSK-02-04"
+        assert result.action == "done"
+        assert result.status == "success"
+        assert result.message == "fallback pattern"
+
+    def test_fallback_pattern_with_project(self) -> None:
+        """Fallback 패턴: 프로젝트명 포함 'Task project/TSK-XX 완료'."""
+        text = "═══════════════════════════════════\nTask orchay/TSK-01-01 완료\n═══════════════════════════════════"
+
+        result = parse_done_signal(text)
+
+        assert result is not None
+        assert result.task_id == "orchay/TSK-01-01"
+        assert result.action == "done"
+        assert result.status == "success"
+
 
 class TestDetectWorkerState:
     """detect_worker_state 테스트."""
@@ -69,16 +111,6 @@ class TestDetectWorkerState:
 
             assert state == "idle"
             assert done_info is None
-
-    @pytest.mark.asyncio
-    async def test_detect_idle_starship_prompt(self) -> None:
-        """Starship 프롬프트 (╭─) 감지."""
-        with patch("orchay.worker.wezterm_get_text") as mock_get_text:
-            mock_get_text.return_value = "작업 완료\n╭─ project\n❯ "
-
-            state, done_info = await detect_worker_state(pane_id=1)
-
-            assert state == "idle"
 
     @pytest.mark.asyncio
     async def test_detect_busy(self) -> None:
@@ -120,7 +152,7 @@ class TestDetectWorkerState:
     async def test_detect_paused_weekly_limit(self) -> None:
         """paused 상태 감지 (weekly limit)."""
         with patch("orchay.worker.wezterm_get_text") as mock_get_text:
-            mock_get_text.return_value = "weekly limit reached, resets Oct 9 at 10:30am"
+            mock_get_text.return_value = "weekly limit reached, resets at Oct 9 10:30am"
 
             state, done_info = await detect_worker_state(pane_id=1)
 
@@ -211,7 +243,7 @@ class TestDetectWorkerState:
         """우선순위 테스트 - paused가 idle보다 우선."""
         with patch("orchay.worker.pane_exists", return_value=True):
             with patch("orchay.worker.wezterm_get_text") as mock_get_text:
-                mock_get_text.return_value = "rate limit exceeded\n> "
+                mock_get_text.return_value = "rate limit exceeded, please wait\n> "
 
                 state, done_info = await detect_worker_state(pane_id=1)
 

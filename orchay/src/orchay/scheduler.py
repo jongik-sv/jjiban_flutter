@@ -3,10 +3,17 @@
 실행 가능 Task 필터링, 모드별 워크플로우 결정, Task 분배 로직을 구현합니다.
 """
 
+import json
+import logging
 from datetime import datetime
 from enum import Enum
+from pathlib import Path
+from typing import Any
 
 from orchay.models import Task, TaskPriority, TaskStatus, Worker, WorkerState
+from orchay.utils.active_tasks import register_active_task
+
+logger = logging.getLogger(__name__)
 
 
 class ExecutionMode(str, Enum):
@@ -170,6 +177,77 @@ def get_workflow_steps(
     return WORKFLOW_STEPS.get(mode, WORKFLOW_STEPS[ExecutionMode.QUICK])
 
 
+# workflows.json 캐시
+_workflows_cache: dict[str, Any] | None = None
+
+
+def _load_workflows() -> dict[str, Any]:
+    """workflows.json 파일을 로드합니다."""
+    global _workflows_cache
+    if _workflows_cache is not None:
+        return _workflows_cache
+
+    # .jjiban/settings/workflows.json 찾기
+    cwd = Path.cwd()
+    for parent in [cwd, *cwd.parents]:
+        workflows_path = parent / ".jjiban" / "settings" / "workflows.json"
+        if workflows_path.exists():
+            try:
+                _workflows_cache = json.loads(workflows_path.read_text(encoding="utf-8"))
+                return _workflows_cache
+            except Exception as e:
+                logger.warning(f"workflows.json 로드 실패: {e}")
+                break
+
+    # 기본값 반환
+    _workflows_cache = {}
+    return _workflows_cache
+
+
+def _get_workflow_name(category: str) -> str:
+    """Task 카테고리에 해당하는 workflow 이름을 반환합니다."""
+    # category -> workflow 매핑
+    category_to_workflow = {
+        "development": "development",
+        "development-full": "development-full",
+        "defect": "defect",
+        "infrastructure": "infrastructure",
+        "simple-dev": "development",
+    }
+    return category_to_workflow.get(category, "development")
+
+
+def get_next_workflow_command(task: Task) -> str | None:
+    """Task 상태에 따라 다음 실행할 workflow 명령을 반환합니다.
+
+    Args:
+        task: 대상 Task
+
+    Returns:
+        workflow 명령어 (예: "start", "build", "done") 또는 None (transition 없음)
+    """
+    workflows_data = _load_workflows()
+    workflows = workflows_data.get("workflows", {})
+
+    # Task 카테고리에 해당하는 workflow 찾기
+    workflow_name = _get_workflow_name(task.category.value)
+    workflow = workflows.get(workflow_name, {})
+    transitions = workflow.get("transitions", [])
+
+    # 현재 상태에서 다음으로 가는 transition 찾기
+    current_status = task.status.value
+    for transition in transitions:
+        if transition.get("from") == current_status:
+            return transition.get("command")
+
+    # transition 없으면 None 반환
+    logger.warning(
+        f"Transition 없음: {task.id} ({task.category.value}) "
+        f"상태 {current_status} → workflow '{workflow_name}'"
+    )
+    return None
+
+
 async def dispatch_task(
     worker: Worker,
     task: Task,
@@ -186,6 +264,7 @@ async def dispatch_task(
         - worker.state = "busy"
         - worker.current_task = task.id
         - worker.dispatch_time = now()
+        - orchay-active.json에 작업 등록
     """
     # Worker 상태 업데이트
     worker.state = WorkerState.BUSY
@@ -194,8 +273,16 @@ async def dispatch_task(
 
     # 워크플로우 첫 단계 설정
     steps = get_workflow_steps(task, mode)
-    if steps:
-        worker.current_step = steps[0]
+    first_step = steps[0] if steps else "start"
+    worker.current_step = first_step
 
     # Task의 is_running 플래그 설정
     task.is_running = True
+
+    # 파일 기반 상태 관리: 작업 등록
+    register_active_task(
+        task_id=task.id,
+        worker_id=worker.id,
+        pane_id=worker.pane_id,
+        step=first_step,
+    )

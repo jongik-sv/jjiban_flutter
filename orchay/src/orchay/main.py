@@ -17,14 +17,14 @@ from pathlib import Path
 from rich.console import Console
 from rich.table import Table
 
-from orchay.models import Config, ExecutionConfig, Task, Worker, WorkerState
+from orchay.models import Config, ExecutionConfig, Task, TaskStatus, Worker, WorkerState
 from orchay.scheduler import (
     ExecutionMode,
     dispatch_task,
     filter_executable_tasks,
     get_next_workflow_command,
 )
-from orchay.utils.active_tasks import clear_active_tasks
+from orchay.utils.active_tasks import load_active_tasks, unregister_active_task
 from orchay.utils.wezterm import (
     WezTermNotFoundError,
     wezterm_list_panes,
@@ -56,6 +56,7 @@ class Orchestrator:
         self.running_tasks: set[str] = set()
         self.mode = ExecutionMode(config.execution.mode)
         self._running = False
+        self._paused = False
 
     async def initialize(self) -> bool:
         """오케스트레이터 초기화.
@@ -65,8 +66,13 @@ class Orchestrator:
         """
         console.print("[bold cyan]orchay[/] - Task Scheduler v0.1.0\n")
 
-        # 이전 세션 상태 클리어 (파일 기반 상태 관리)
-        clear_active_tasks()
+        # 기존 active tasks 로드 (다른 pane에서 실행 중인 작업 제외용)
+        active_data = load_active_tasks()
+        self.running_tasks = set(active_data.get("activeTasks", {}).keys())
+        if self.running_tasks:
+            console.print(
+                f"[dim]기존 실행 중 Task 로드: {', '.join(sorted(self.running_tasks))}[/]\n"
+            )
 
         # WBS 파일 확인
         if not self.wbs_path.exists():
@@ -140,26 +146,61 @@ class Orchestrator:
         # 1. WBS 재파싱
         self.tasks = await self.parser.parse()
 
-        # 2. Worker 상태 업데이트
+        # 2. stopAtState에 도달한 Task 정리
+        self._cleanup_completed_tasks()
+
+        # 3. Worker 상태 업데이트
         await self._update_worker_states()
 
-        # 3. 실행 가능 Task 필터링
+        # 4. 실행 가능 Task 필터링
         executable = await filter_executable_tasks(
             self.tasks,
             self.mode,
             self.running_tasks,
         )
 
-        # 4. idle Worker에 Task 분배
-        for worker in self.workers:
-            if not executable:
-                break
-            if worker.state == WorkerState.IDLE:
-                task = executable.pop(0)
-                await self._dispatch_to_worker(worker, task)
+        # 5. idle Worker에 Task 분배 (일시정지 상태가 아닐 때만)
+        if not self._paused:
+            for worker in self.workers:
+                if not executable:
+                    break
+                if worker.state == WorkerState.IDLE:
+                    task = executable.pop(0)
+                    await self._dispatch_to_worker(worker, task)
 
-        # 5. 상태 출력
+        # 6. 상태 출력
         self.print_status()
+
+    def _cleanup_completed_tasks(self) -> None:
+        """stopAtState에 도달한 Task를 active에서 제거.
+
+        모드별 stopAtState:
+        - design: [dd] (상세설계)
+        - quick/force: [xx] (완료)
+        - develop: [im] (구현)
+        """
+        # 모드별 stopAtState 매핑
+        stop_state_map: dict[ExecutionMode, set[TaskStatus]] = {
+            ExecutionMode.DESIGN: {TaskStatus.DETAIL_DESIGN, TaskStatus.DONE},
+            ExecutionMode.QUICK: {TaskStatus.DONE},
+            ExecutionMode.DEVELOP: {TaskStatus.IMPLEMENT, TaskStatus.VERIFY, TaskStatus.DONE},
+            ExecutionMode.FORCE: {TaskStatus.DONE},
+        }
+
+        stop_statuses = stop_state_map.get(self.mode, {TaskStatus.DONE})
+
+        # WBS에서 stopAtState 이상인 Task들의 ID 수집
+        completed_task_ids = {t.id for t in self.tasks if t.status in stop_statuses}
+
+        # active tasks에서 완료된 것들 제거
+        active_data = load_active_tasks()
+        for task_id in list(active_data["activeTasks"].keys()):
+            # task_id에서 순수 ID 추출 (orchay/TSK-01-01 → TSK-01-01)
+            pure_id = task_id.split("/")[-1] if "/" in task_id else task_id
+            if pure_id in completed_task_ids:
+                unregister_active_task(task_id)
+                self.running_tasks.discard(task_id)
+                self.running_tasks.discard(pure_id)
 
     async def _update_worker_states(self) -> None:
         """모든 Worker의 상태를 업데이트."""
@@ -319,6 +360,11 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="상세 로그 출력",
     )
+    parser.add_argument(
+        "--no-tui",
+        action="store_true",
+        help="TUI 없이 CLI 모드로 실행",
+    )
     return parser.parse_args()
 
 
@@ -389,6 +435,23 @@ async def async_main() -> int:
         orchestrator.print_status()
         return 0
 
+    # TUI 모드 (기본)
+    if not args.no_tui:
+        from orchay.ui.app import OrchayApp
+
+        app = OrchayApp(
+            config=config,
+            tasks=orchestrator.tasks,
+            worker_list=orchestrator.workers,
+            mode=args.mode,
+            project=args.project,
+            interval=args.interval,
+            orchestrator=orchestrator,
+        )
+        await app.run_async()
+        return 0
+
+    # CLI 모드 (--no-tui)
     # 시그널 핸들러 설정
     def signal_handler() -> None:
         orchestrator.stop()

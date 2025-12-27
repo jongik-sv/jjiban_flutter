@@ -156,6 +156,10 @@ Project (프로젝트) - 6~24개월
    - WBS에 `WP-00: 프로젝트 초기화` Work Package 자동 추가
    - jjiban-init 스킬 실행하여 프로젝트 구조 생성
 3. **존재하면**: 기존 프로젝트 메타데이터 로드
+4. **project-root 확인**:
+   - 사용자에게 개발 폴더 경로 질문 (프로젝트 루트 기준 상대 경로)
+   - 예시: `./` (루트), `orchay`, `lib/myapp`
+   - orchay 스케줄러가 Worker에 Task 분배 시 해당 폴더에서 명령 실행
 
 ### 1단계: PRD 분석 및 프로젝트 규모 산정
 
@@ -250,6 +254,7 @@ Project (프로젝트) - 6~24개월
 > version: 1.0
 > depth: 4
 > updated: {날짜}
+> project-root: {개발 폴더 경로}
 
 ---
 
@@ -412,6 +417,9 @@ Project (프로젝트) - 6~24개월
 # 시작일 지정
 /plan:wbs --start-date 2026-01-15 .jjiban/projects/jjiban/prd.md
 
+# 개발 폴더 경로 지정 (project-root)
+/plan:wbs --project-root orchay .jjiban/projects/orchay/prd.md
+
 # 규모 산정만 실행 (WBS 생성 없이)
 /plan:wbs --estimate-only .jjiban/projects/jjiban/prd.md
 ```
@@ -420,6 +428,7 @@ Project (프로젝트) - 6~24개월
 |------|------|--------|
 | `--scale [large\|medium]` | 프로젝트 규모 강제 지정 | 자동 산정 |
 | `--start-date [YYYY-MM-DD]` | 프로젝트 시작일 지정 | 오늘 날짜 |
+| `--project-root [PATH]` | 개발 폴더 경로 (프로젝트 루트 기준) | 사용자 입력 |
 | `--estimate-only` | 규모 산정만 실행 | - |
 
 ---

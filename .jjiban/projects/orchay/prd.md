@@ -119,49 +119,7 @@ WezTerm 터미널 멀티플렉서 환경에서 실행되는 Task 스케줄러입
 
 #### 스케줄러 이벤트 루프 상세
 
-```python
-while running:
-    # 1. wbs.md 변경 체크
-    if wbs_file_changed():
-        tasks = parse_wbs()
-        queue = filter_executable_tasks(tasks)
-        queue = sort_by_priority(queue)
-
-    # 2. 각 Worker pane 상태 체크
-    for worker in workers:
-        output = wezterm_get_text(worker.pane_id)
-
-        if matches_prompt_pattern(output):
-            worker.state = "idle"
-        elif matches_error_pattern(output):
-            worker.state = "error"
-        else:
-            worker.state = "busy"
-
-    # 3. 대기 중 Worker 처리
-    for worker in workers:
-        if worker.state == "idle" and queue:
-            # 이전 Task 완료 확인
-            if worker.current_task:
-                verify_task_completion(worker.current_task)
-
-            # 다음 Task 분배
-            task = queue.pop(0)
-            command = build_workflow_command(task)
-            wezterm_send_text(worker.pane_id, command)
-            worker.current_task = task
-            worker.state = "busy"
-
-    # 4. 에러 Worker 처리
-    for worker in workers:
-        if worker.state == "error":
-            log_error(worker)
-            mark_task_blocked(worker.current_task)
-            notify_user(worker)  # 선택
-
-    # 5. 대기
-    sleep(interval)
-```
+→ 코드 참조: [orchay-code-reference.md#스케줄러-이벤트-루프](orchay-code-reference.md#스케줄러-이벤트-루프)
 
 ### 2.4 워커(Claude Code) 상세 역할
 
@@ -360,8 +318,8 @@ wbs.md 상단의 `> key: value` 형식 메타데이터를 파싱합니다:
 | `strategy` | 개발 전략 설명 | `부트스트래핑` |
 
 **project-root 사용**:
-- Worker에 Task 분배 시 해당 폴더에서 명령 실행
-- 예: `project-root: orchay` → `cd orchay && /wf:run TSK-01-01`
+- 프로젝트명으로 Task ID 접두사 지정
+- 예: `project-root: orchay` → `/wf:design orchay/TSK-01-01`
 
 ### 3.2 스케줄 큐 관리
 
@@ -408,46 +366,7 @@ wbs.md 상단의 `> key: value` 형식 메타데이터를 파싱합니다:
 
 #### 필터링 로직
 
-```python
-def filter_executable_tasks(tasks: list, mode: str) -> list:
-    """실행 가능한 Task 필터링
-
-    → workflows.json executionModes.dependencyCheck 참조:
-      - ignore: 의존성 무시
-      - check-implemented: 선행 Task [im] 이상 확인
-    """
-    executable = []
-
-    for task in tasks:
-        # 공통 필터: 완료, blocked, 실행 중 제외
-        if task.status == "[xx]":
-            continue
-        if task.blocked_by:
-            continue
-        if task.is_running:
-            continue
-
-        if mode == "design":
-            # 설계 모드: 설계 미완료만
-            if task.status == "[ ]":
-                executable.append(task)
-
-        elif mode in ["quick", "develop"]:
-            # quick/develop: 설계는 무시, 구현은 의존성 확인
-            if task.status == "[ ]":
-                # 설계 단계: 의존성 무시
-                executable.append(task)
-            elif task.status in ["[dd]", "[ap]", "[im]"]:
-                # 구현 단계: 선행 Task가 [im] 이상이어야 진행
-                if check_dependencies_implemented(task):
-                    executable.append(task)
-
-        elif mode == "force":
-            # 강제 모드: 모든 미완료 Task (의존성 무시)
-            executable.append(task)
-
-    return executable
-```
+→ 코드 참조: [orchay-code-reference.md#filter_executable_tasks](orchay-code-reference.md#filter_executable_tasks)
 
 ### 3.3 Worker 상태 감지
 
@@ -480,20 +399,28 @@ Claude Code가 입력 대기 상태일 때 출력하는 프롬프트 패턴을 �
 각 `/wf:*` 명령어는 작업 완료 시 다음 형식의 신호를 출력합니다:
 
 ```
-ORCHAY_DONE:{task-id}:{action}:{status}[:{message}]
+ORCHAY_DONE:[{project}/]{task-id}:{action}:{status}[:{message}]
 ```
 
 | 필드 | 설명 | 예시 |
 |------|------|------|
-| `task-id` | Task 식별자 | `TSK-01-01-01` |
+| `project` | 프로젝트명 (선택) | `orchay` |
+| `task-id` | Task 식별자 | `TSK-01-01` |
 | `action` | wf 명령어 | `start`, `build`, `done` 등 |
 | `status` | 완료 상태 | `success` 또는 `error` |
 | `message` | 에러 메시지 (선택) | `테스트 실패` |
 
 **예시:**
 ```
-ORCHAY_DONE:TSK-01-01-01:start:success
-ORCHAY_DONE:TSK-01-01-01:build:error:TDD 5회 초과
+ORCHAY_DONE:TSK-01-01:start:success              # 기존 호환
+ORCHAY_DONE:orchay/TSK-01-01:start:success       # 새 형식
+ORCHAY_DONE:orchay/TSK-01-01:build:error:TDD 5회 초과
+```
+
+**Fallback 패턴** (ORCHAY_DONE 누락 시):
+```
+Task orchay/TSK-01-01 완료
+Task TSK-01-01 완료                               # 기존 호환
 ```
 
 #### 상태 판정 우선순위
@@ -536,92 +463,7 @@ idle Worker 감지 → /clear 전송 → Task workflow 순차 실행 → 완료 
 
 #### Task 실행 로직
 
-```python
-def execute_task(worker, task, mode: str):
-    """Task의 전체 workflow를 순차 실행"""
-
-    # 1. 컨텍스트 초기화
-    wezterm_send_text(worker.pane_id, "/clear\r")
-    log(f"🧹 Worker {worker.id}: /clear 전송")
-    sleep(2)
-
-    # 2. 모드별 workflow 단계 결정
-    workflow_steps = get_workflow_steps(task, mode)
-    # design: ["start"]
-    # quick/force: ["start", "approve", "build", "done"]
-    # develop: ["start", "review", "apply", "approve", "build", "audit", "patch", "test", "done"]
-
-    # 3. 상태 업데이트
-    worker.current_task = task
-    worker.state = "busy"
-    worker.dispatch_time = time.time()
-
-    # 4. workflow 순차 실행
-    for step in workflow_steps:
-        command = f"/wf:{step} {task.id}"
-        wezterm_send_text(worker.pane_id, f"{command}\r")
-        log(f"📤 Worker {worker.id}: {command}")
-
-        # 단계 완료 대기
-        wait_for_step_completion(worker)
-
-        # 에러 발생 시 중단
-        if worker.state == "error":
-            log(f"❌ Worker {worker.id}: {task.id} 에러 발생, 중단")
-            return "error"
-
-        # paused 상태 처리 (rate limit 등)
-        if worker.state == "paused":
-            handle_paused_worker(worker)
-
-    log(f"✅ Worker {worker.id}: {task.id} 완료")
-    return "completed"
-
-
-def get_workflow_steps(task, mode: str) -> list:
-    """모드와 Task 상태에 따른 workflow 단계 반환
-
-    → workflows.json의 executionModes 및 workflows 참조
-    """
-
-    if mode == "design":
-        # 설계 모드: start만
-        if task.status == "[ ]":
-            return ["start"]
-        return []  # 이미 설계 완료
-
-    # 모드별 워크플로우 정의
-    # quick/force: transitions만 (actions 생략)
-    # develop: full (transitions + actions)
-
-    if mode in ["quick", "force"]:
-        # transitions만 실행
-        all_steps = {
-            "development": ["start", "approve", "build", "done"],
-            "defect": ["start", "fix", "verify", "done"],
-            "infrastructure": ["start", "build", "done"]
-        }
-    else:  # develop
-        # full workflow (transitions + actions)
-        all_steps = {
-            "development": ["start", "review", "apply", "approve", "build", "audit", "patch", "test", "done"],
-            "defect": ["start", "fix", "audit", "patch", "test", "verify", "done"],
-            "infrastructure": ["start", "build", "audit", "patch", "done"]
-        }
-
-    steps = all_steps.get(task.category, all_steps["development"])
-
-    # 현재 상태에 따라 남은 단계만 반환
-    status_to_step = {
-        "[ ]": 0,   # start부터
-        "[dd]": 1,  # approve/review부터
-        "[ap]": 2,  # build부터
-        "[im]": 3   # done/verify부터
-    }
-
-    start_index = status_to_step.get(task.status, 0)
-    return steps[start_index:]
-```
+→ 코드 참조: [orchay-code-reference.md#task-실행-로직](orchay-code-reference.md#task-실행-로직)
 
 #### WezTerm CLI 명령어
 
@@ -680,71 +522,9 @@ Worker가 완료한 작업의 출력 내용을 저장하고 나중에 조회할 
 | `error_message` | string? | 에러 발생 시 에러 메시지 |
 | `duration_seconds` | number | 작업 소요 시간 (초) |
 
-#### 히스토리 저장 로직
+#### 히스토리 저장/조회 로직
 
-```python
-def save_task_history(worker, task, status: str):
-    """완료된 작업을 히스토리에 저장"""
-
-    if not settings.get("history", {}).get("enabled", True):
-        return
-
-    # pane 출력 캡처
-    capture_lines = settings["history"].get("captureLines", 500)
-    output = wezterm_get_text(worker.pane_id, last_lines=capture_lines)
-
-    # 히스토리 레코드 생성
-    record = {
-        "task_id": task.id,
-        "worker_id": worker.id,
-        "started_at": worker.dispatch_time.isoformat(),
-        "completed_at": datetime.now().isoformat(),
-        "status": status,
-        "output": output,
-        "duration_seconds": int(time.time() - worker.dispatch_time.timestamp())
-    }
-
-    if status == "error":
-        record["error_message"] = extract_error_message(output)
-
-    # JSON Lines 파일에 추가
-    history_path = settings["history"].get("storagePath", ".jjiban/logs/orchay-history.jsonl")
-    with open(history_path, "a", encoding="utf-8") as f:
-        f.write(json.dumps(record, ensure_ascii=False) + "\n")
-
-    # 최대 항목 수 관리
-    manage_history_size(history_path)
-```
-
-#### 히스토리 조회 로직
-
-```python
-def list_history(limit: int = 20) -> list:
-    """최근 히스토리 목록 조회"""
-    history_path = settings["history"].get("storagePath")
-    records = []
-
-    with open(history_path, "r", encoding="utf-8") as f:
-        for line in f:
-            records.append(json.loads(line))
-
-    # 최신순 정렬 후 limit 적용
-    records.sort(key=lambda x: x["completed_at"], reverse=True)
-    return records[:limit]
-
-
-def get_history_detail(task_id: str) -> dict | None:
-    """특정 Task의 히스토리 상세 조회"""
-    history_path = settings["history"].get("storagePath")
-
-    with open(history_path, "r", encoding="utf-8") as f:
-        for line in f:
-            record = json.loads(line)
-            if record["task_id"] == task_id:
-                return record
-
-    return None
-```
+→ 코드 참조: [orchay-code-reference.md#히스토리-관리](orchay-code-reference.md#히스토리-관리)
 
 ### 3.7 인터랙티브 명령어 시스템
 
@@ -840,87 +620,7 @@ def get_history_detail(task_id: str) -> dict | None:
 
 #### 명령어 입력 처리
 
-```python
-import sys
-import select
-import tty
-import termios
-
-class CommandHandler:
-    """인터랙티브 명령어 처리기"""
-
-    FUNCTION_KEYS = {
-        '\x1bOP': 'help',      # F1
-        '\x1bOQ': 'status',    # F2
-        '\x1bOR': 'queue',     # F3
-        '\x1bOS': 'workers',   # F4
-        '\x1b[15~': 'reload',  # F5
-        '\x1b[17~': 'history', # F6
-        '\x1b[18~': 'mode',    # F7
-        '\x1b[20~': 'pause',   # F9
-        '\x1b[21~': 'stop',    # F10
-        '\x1b[1;2P': 'worker 1',  # Shift+F1
-        '\x1b[1;2Q': 'worker 2',  # Shift+F2
-        '\x1b[1;2R': 'worker 3',  # Shift+F3
-    }
-
-    def check_input(self) -> str | None:
-        """비동기로 키 입력 확인"""
-        if select.select([sys.stdin], [], [], 0)[0]:
-            key = sys.stdin.read(1)
-
-            # ESC 시퀀스 (Function Key) 처리
-            if key == '\x1b':
-                key += sys.stdin.read(2)
-                if key in self.FUNCTION_KEYS:
-                    return self.FUNCTION_KEYS[key]
-
-            # 일반 문자 입력 (명령어 모드)
-            elif key == ':':
-                return self.read_command_line()
-
-        return None
-
-    def process_command(self, cmd: str):
-        """명령어 실행"""
-        parts = cmd.strip().split()
-        if not parts:
-            return
-
-        action = parts[0].lower()
-        args = parts[1:] if len(parts) > 1 else []
-
-        if action == 'help':
-            self.show_help()
-        elif action == 'status':
-            self.show_status()
-        elif action == 'queue':
-            self.interactive_queue()
-        elif action == 'stop':
-            self.stop_scheduler()
-        # ... 기타 명령어
-```
-
-#### 메인 루프 통합
-
-```python
-def main_loop():
-    command_handler = CommandHandler()
-
-    while running:
-        # 1. 키 입력 확인
-        cmd = command_handler.check_input()
-        if cmd:
-            command_handler.process_command(cmd)
-
-        # 2. 기존 스케줄러 로직
-        if not paused:
-            check_wbs_changes()
-            check_worker_states()
-            dispatch_tasks()
-
-        sleep(interval)
-```
+→ 코드 참조: [orchay-code-reference.md#인터랙티브-명령어](orchay-code-reference.md#인터랙티브-명령어)
 
 ### 3.8 실행 모드
 
@@ -1081,38 +781,7 @@ mode force    # 강제 모드로 전환
 
 #### 상태 관리 로직
 
-```python
-def register_active_task(task_id: str, worker_id: int, step: str):
-    """Task 분배 시 작업 중 상태 등록"""
-    active = load_active_tasks()
-    active["activeTasks"][task_id] = {
-        "worker": worker_id,
-        "startedAt": datetime.now().isoformat(),
-        "currentStep": step
-    }
-    save_active_tasks(active)
-
-
-def update_current_step(task_id: str, step: str):
-    """워크플로우 단계 변경 시 currentStep 갱신"""
-    active = load_active_tasks()
-    if task_id in active["activeTasks"]:
-        active["activeTasks"][task_id]["currentStep"] = step
-        save_active_tasks(active)
-
-
-def unregister_active_task(task_id: str):
-    """Task 완료(ORCHAY_DONE) 시 작업 중 상태 해제"""
-    active = load_active_tasks()
-    if task_id in active["activeTasks"]:
-        del active["activeTasks"][task_id]
-        save_active_tasks(active)
-
-
-def clear_all_active_tasks():
-    """스케줄러 시작 시 모든 작업 중 상태 초기화"""
-    save_active_tasks({"activeTasks": {}})
-```
+→ 코드 참조: [orchay-code-reference.md#상태-파일-구조](orchay-code-reference.md#상태-파일-구조)
 
 #### UI 연동
 
@@ -1595,118 +1264,7 @@ Weekly limit reached · resets Oct 9 at 10:30am
 
 이 메시지에서 reset 시간을 파싱하여 정확한 대기 시간을 계산합니다.
 
-```python
-from datetime import datetime
-import re
-
-def extract_reset_time(output: str) -> datetime | None:
-    """Claude Code 출력에서 reset 시간 추출
-
-    지원 형식:
-    - "Weekly limit reached · resets Oct 9 at 10:30am"
-    - "resets Oct 6, 1pm"
-    - "reset at Oct 6, 1pm"
-    """
-    patterns = [
-        # "resets Oct 9 at 10:30am" 형식
-        r"resets\s+(\w+)\s+(\d+)\s+at\s+(\d+):?(\d*)\s*(am|pm)?",
-        # "reset at Oct 6, 1pm" 형식
-        r"reset\s+at\s+(\w+)\s+(\d+),?\s*(\d+):?(\d*)\s*(am|pm)?"
-    ]
-
-    for pattern in patterns:
-        match = re.search(pattern, output, re.I)
-        if match:
-            groups = match.groups()
-            month_str, day = groups[0], int(groups[1])
-            hour = int(groups[2])
-            minute = int(groups[3]) if groups[3] else 0
-            ampm = groups[4].lower() if groups[4] else None
-
-            # AM/PM 변환
-            if ampm == "pm" and hour < 12:
-                hour += 12
-            elif ampm == "am" and hour == 12:
-                hour = 0
-
-            # 월 파싱
-            months = {"jan": 1, "feb": 2, "mar": 3, "apr": 4, "may": 5, "jun": 6,
-                      "jul": 7, "aug": 8, "sep": 9, "oct": 10, "nov": 11, "dec": 12}
-            month = months.get(month_str.lower()[:3], 1)
-
-            # 연도 추정 (현재 연도, 과거면 다음 연도)
-            now = datetime.now()
-            year = now.year
-            reset_time = datetime(year, month, day, hour, minute)
-
-            if reset_time < now:
-                reset_time = datetime(year + 1, month, day, hour, minute)
-
-            return reset_time
-
-    return None
-
-
-def calculate_wait_seconds(reset_time: datetime) -> int:
-    """reset 시간까지 대기할 초 계산"""
-    now = datetime.now()
-    delta = reset_time - now
-    return max(0, int(delta.total_seconds()))
-```
-
-#### 재개 로직
-
-```python
-def handle_paused_worker(worker):
-    """일시 중단된 Worker 자동 재개"""
-
-    output = get_pane_output(worker.pane_id)
-
-    # 1. 중단 유형별 대기 시간 결정
-    if is_weekly_limit(output):
-        # Weekly limit: reset 시간 파싱하여 정확한 대기 시간 계산
-        reset_time = extract_reset_time(output)
-        if reset_time:
-            wait_time = calculate_wait_seconds(reset_time)
-            reset_str = reset_time.strftime("%m/%d %H:%M")
-            log(f"⏳ Worker {worker.id}: Weekly limit, {reset_str}까지 대기 ({wait_time}초)")
-        else:
-            wait_time = 3600  # 파싱 실패 시 1시간 대기
-            log(f"⏳ Worker {worker.id}: Weekly limit, 기본 1시간 대기")
-    elif is_rate_limited(output):
-        wait_time = extract_wait_time(output) or 60  # 기본 60초
-        log(f"⏳ Worker {worker.id}: 레이트 리밋, {wait_time}초 대기")
-    elif is_context_limit(output):
-        wait_time = 5  # 컨텍스트 리밋은 짧은 대기
-        log(f"⏳ Worker {worker.id}: 컨텍스트 리밋, {wait_time}초 대기")
-    else:
-        wait_time = 30  # 기타 일시 중단
-        log(f"⏳ Worker {worker.id}: 일시 중단, {wait_time}초 대기")
-
-    # 2. 대기
-    sleep(wait_time)
-
-    # 3. "계속" 전송으로 재개
-    resume_text = settings.get("resumeText", "계속")
-    wezterm_send_text(worker.pane_id, f"{resume_text}\r")
-    log(f"▶️ Worker {worker.id}: '{resume_text}' 전송")
-
-    # 4. 상태 재확인
-    sleep(3)
-    new_state = detect_worker_state(worker.pane_id)
-
-    if new_state == "busy":
-        log(f"✅ Worker {worker.id}: 작업 재개됨")
-        worker.state = "busy"
-        worker.retry_count = 0
-    else:
-        worker.retry_count += 1
-        log(f"⚠️ Worker {worker.id}: 재개 실패 ({worker.retry_count}/{MAX_RETRIES})")
-
-        if worker.retry_count >= MAX_RETRIES:
-            log(f"❌ Worker {worker.id}: 최대 재시도 초과, error 상태로 전환")
-            worker.state = "error"
-```
+→ 코드 참조: [orchay-code-reference.md#rate-limit-처리](orchay-code-reference.md#rate-limit-처리)
 
 #### 재개 텍스트 옵션
 
@@ -1758,14 +1316,7 @@ def handle_paused_worker(worker):
 
 #### 스케줄러 루프 통합
 
-```python
-# 메인 루프에서 paused 상태 처리 추가
-for worker in workers:
-    if worker.state == "paused":
-        handle_paused_worker(worker)
-    elif worker.state == "idle" and queue:
-        dispatch_task(worker, queue.pop(0))
-```
+→ 코드 참조: [orchay-code-reference.md#스케줄러-이벤트-루프](orchay-code-reference.md#스케줄러-이벤트-루프)
 
 ---
 

@@ -9,7 +9,7 @@ import time
 from dataclasses import dataclass
 from typing import Literal
 
-from orchay.utils.active_tasks import get_task_by_pane, is_pane_active, unregister_active_task
+from orchay.utils.active_tasks import is_pane_active
 from orchay.utils.wezterm import pane_exists, wezterm_get_text
 
 # 모듈 시작 시간 (idle 감지 지연용)
@@ -18,6 +18,10 @@ _IDLE_DETECTION_DELAY: float = 10.0  # 시작 후 10초간 idle 감지 비활성
 
 # ORCHAY_DONE 패턴: ORCHAY_DONE:{task-id}:{action}:{status}[:{message}]
 DONE_PATTERN = re.compile(r"ORCHAY_DONE:([^:]+):(\w+):(success|error)(?::(.+))?")
+
+# Fallback 완료 패턴: "Task [project/]TSK-XX-XX 완료"
+# 예: "Task TSK-01-01 완료" 또는 "Task orchay/TSK-01-01 완료"
+DONE_FALLBACK_PATTERN = re.compile(r"Task\s+((?:[\w-]+/)?TSK-[\w-]+)\s+완료")
 
 # 상태 감지 패턴들
 PAUSE_PATTERNS = [
@@ -74,18 +78,30 @@ def parse_done_signal(text: str) -> DoneInfo | None:
     Returns:
         DoneInfo 또는 None (패턴 미매칭 시)
     """
+    # 1. 정규 ORCHAY_DONE 패턴 체크
     matches = list(DONE_PATTERN.finditer(text))
-    if not matches:
-        return None
+    if matches:
+        # 마지막 매치 사용 (가장 최근 완료 신호)
+        match = matches[-1]
+        return DoneInfo(
+            task_id=match.group(1),
+            action=match.group(2),
+            status=match.group(3),  # type: ignore[arg-type]
+            message=match.group(4),
+        )
 
-    # 마지막 매치 사용 (가장 최근 완료 신호)
-    match = matches[-1]
-    return DoneInfo(
-        task_id=match.group(1),
-        action=match.group(2),
-        status=match.group(3),  # type: ignore[arg-type]
-        message=match.group(4),
-    )
+    # 2. Fallback 패턴 체크: "Task TSK-XX-XX 완료"
+    fallback_matches = list(DONE_FALLBACK_PATTERN.finditer(text))
+    if fallback_matches:
+        match = fallback_matches[-1]
+        return DoneInfo(
+            task_id=match.group(1),
+            action="done",
+            status="success",
+            message="fallback pattern",
+        )
+
+    return None
 
 
 WorkerState = Literal["dead", "done", "paused", "error", "blocked", "idle", "busy"]
@@ -120,10 +136,7 @@ async def detect_worker_state(pane_id: int) -> tuple[WorkerState, DoneInfo | Non
         # 작업 중인 pane: ORCHAY_DONE 신호만 체크
         done_info = parse_done_signal(output)
         if done_info:
-            # 완료 신호 감지 → 파일에서 제거
-            task_id = get_task_by_pane(pane_id)
-            if task_id:
-                unregister_active_task(task_id)
+            # 완료 신호 감지 (active 제거는 스케줄러에서 WBS 상태 기반으로 처리)
             return "done", done_info
 
         # 완료 신호 없으면 계속 busy

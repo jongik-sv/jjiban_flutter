@@ -191,12 +191,18 @@ Category: [category]
 
 **성공:**
 ```
-ORCHAY_DONE:{task-id}:done:success
+ORCHAY_DONE:{project}/{task-id}:done:success
 ```
 
 **실패:**
 ```
-ORCHAY_DONE:{task-id}:done:error:{에러 요약}
+ORCHAY_DONE:{project}/{task-id}:done:error:{에러 요약}
+```
+
+**예시:**
+```
+ORCHAY_DONE:orchay/TSK-01-01:done:success
+ORCHAY_DONE:orchay/TSK-02-03:done:error:테스트 실패
 ```
 
 > ⚠️ 이 출력은 orchay 스케줄러가 작업 완료를 감지하는 데 사용됩니다. 반드시 정확한 형식으로 출력하세요.

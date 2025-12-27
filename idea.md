@@ -13,3 +13,5 @@
 wezterm cli send-text --no-paste --pane-id 1 프롬프트 # 예 : /wf:design TSK-01-01
 wezterm cli send-text --no-paste --pane-id 1 `r # 명령어를 submit 하기 위한 enter 키
 
+
+ python C:\project\jjiban_flutter\orchay\launcher.py
