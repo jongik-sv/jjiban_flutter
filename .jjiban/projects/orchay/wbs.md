@@ -297,7 +297,7 @@
 ### TSK-02-05: 테스트 및 문서화
 - category: development
 - domain: test
-- status: implement [im]
+- status: done [xx]
 - priority: medium
 - assignee: -
 - schedule: 2026-01-08 ~ 2026-01-10
