@@ -51,7 +51,7 @@
 ### TSK-01-02: WBS 파서 구현
 - category: development
 - domain: backend
-- status: design [dd]
+- status: approve [ap]
 - priority: critical
 - assignee: -
 - schedule: 2025-12-29 ~ 2025-12-29
@@ -84,7 +84,7 @@
 ### TSK-01-03: 스케줄러 코어 구현
 - category: development
 - domain: backend
-- status: design [dd]
+- status: approved [ap]
 - priority: critical
 - assignee: -
 - schedule: 2025-12-30 ~ 2025-12-31
