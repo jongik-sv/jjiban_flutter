@@ -3,6 +3,7 @@
 > version: 1.0
 > depth: 3
 > updated: 2025-12-28
+> project-root: orchay
 > strategy: 부트스트래핑 (1단계 완료 후 orchay로 2단계 자동 개발)
 
 ---
@@ -161,7 +162,7 @@
 ### TSK-02-01: 자동 재개 메커니즘
 - category: development
 - domain: backend
-- status: [ ]
+- status: detail-design [dd]
 - priority: high
 - assignee: -
 - schedule: 2026-01-04 ~ 2026-01-05
