@@ -123,40 +123,48 @@ BINDINGS = [
 
 ### 3.1 단위 테스트 (26개)
 
-| 테스트 그룹 | 테스트 수 | 결과 |
-|------------|----------|------|
-| TestParseCommand | 4 | ✅ |
-| TestFunctionKeys | 4 | ✅ |
-| TestQueueInteractive | 4 | ✅ |
-| TestQueueAdjustment | 4 | ✅ |
-| TestModeChange | 1 | ✅ |
-| TestBusinessRules | 3 | ✅ |
-| TestAdditionalCommands | 4 | ✅ |
-| TestCommandResult | 2 | ✅ |
+```
+tests/test_command.py - 26 passed
+├── TestParseCommand (4): parse_command_with_args, without_args, unknown, process_command_success
+├── TestFunctionKeys (4): f1_help, f7_mode, f10_stop, shift_f1_worker_1
+├── TestQueueInteractive (4): get_queue_tasks, prev_task_index, next_task_index, action_options
+├── TestQueueAdjustment (4): up_task, top_task, skip_task, retry_task
+├── TestModeChange (1): change_mode_cycle
+├── TestBusinessRules (3): skip_running_rejected, mode_no_affect, pause_keeps_running
+├── TestAdditionalCommands (4): status, queue, workers, help
+└── TestCommandResult (2): success_result, error_result
+```
 
 ### 3.2 TUI 테스트 (12개)
 
-| 테스트 ID | 시나리오 | 결과 |
-|-----------|----------|------|
-| E2E-001 | 명령어 입력 | ✅ |
-| E2E-002 | F1 도움말 | ✅ |
-| E2E-003 | 큐 인터랙티브 | ✅ |
-| E2E-004 | Task top | ✅ |
-| E2E-005 | 모드 전환 | ✅ |
-| E2E-006 | 실행 중 skip 거부 | ✅ |
-| E2E-007 | 모드 전환 후 작업 유지 | ✅ |
-| E2E-008 | pause 후 작업 유지 | ✅ |
-| test_queue_navigation | 큐 네비게이션 | ✅ |
-| test_f2_status | F2 상태 | ✅ |
-| test_f4_workers | F4 Workers | ✅ |
-| test_f5_reload | F5 재로드 | ✅ |
+```
+tests/test_tui.py - 12 passed
+├── test_command_input_status (E2E-001)
+├── test_f1_help (E2E-002)
+├── test_queue_interactive (E2E-003)
+├── test_task_top (E2E-004)
+├── test_mode_change (E2E-005)
+├── test_skip_running_task_rejected (E2E-006)
+├── test_mode_change_keeps_running (E2E-007)
+├── test_pause_keeps_running (E2E-008)
+├── test_queue_navigation
+├── test_f2_status
+├── test_f4_workers
+└── test_f5_reload
+```
 
 ### 3.3 테스트 커버리지
 
 ```
-테스트 총합: 38개
-통과: 38개 (100%)
-실패: 0개
+============================= test session =============================
+platform win32 -- Python 3.12.11, pytest-9.0.2
+asyncio: mode=Mode.AUTO
+collected 38 items
+
+tests/test_command.py ... 26 passed
+tests/test_tui.py ....... 12 passed
+
+============================= 38 passed in 3.09s ======================
 ```
 
 ---
