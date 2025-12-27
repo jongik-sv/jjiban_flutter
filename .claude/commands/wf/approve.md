@@ -36,8 +36,7 @@ subagent:
 ### Manual 모드 (기본)
 
 1. **문서 존재 확인**
-   - `010-basic-design.md` 확인
-   - `020-detail-design.md` 확인
+   - `010-design.md` 확인
 
 2. **리뷰 현황 표시**
    - `021-design-review-*.md` 파일 목록
@@ -46,8 +45,7 @@ subagent:
 3. **사용자 확인 프롬프트**
    ```
    [INFO] 설계 문서 준비 완료
-   - 기본설계: 010-basic-design.md ✅
-   - 상세설계: 020-detail-design.md ✅
+   - 설계: 010-design.md ✅
    - 리뷰: 021-design-review-claude-1(적용완료).md ✅
 
    설계승인을 진행하시겠습니까? (y/n)
@@ -75,8 +73,7 @@ subagent:
 
 | 조건 | 설명 |
 |------|------|
-| 기본설계 존재 | `010-basic-design.md` 필수 |
-| 상세설계 존재 | `020-detail-design.md` 필수 |
+| 설계 문서 존재 | `010-design.md` 필수 |
 | 리뷰 1건 이상 | `021-design-review-*.md` 존재 |
 | P1 이슈 없음 | Critical/P1 미해결 이슈 0건 |
 
@@ -87,9 +84,8 @@ subagent:
 | 에러 | 메시지 |
 |------|--------|
 | 잘못된 category | `[ERROR] development만 지원합니다` |
-| 잘못된 상태 | `[ERROR] 상세설계 상태가 아닙니다` |
-| 기본설계 없음 | `[ERROR] 010-basic-design.md가 없습니다` |
-| 상세설계 없음 | `[ERROR] 020-detail-design.md가 없습니다` |
+| 잘못된 상태 | `[ERROR] 설계 상태가 아닙니다` |
+| 설계 문서 없음 | `[ERROR] 010-design.md가 없습니다` |
 | Auto 조건 미충족 | `[WARN] Auto 승인 조건 미충족. 수동 모드로 전환` |
 
 ---
@@ -97,6 +93,24 @@ subagent:
 ## 다음 명령어
 
 - `/wf:build` - 구현 시작
+
+---
+
+## 완료 신호
+
+작업 완료 후 **반드시** 다음 형식으로 출력:
+
+**성공:**
+```
+ORCHAY_DONE:{task-id}:approve:success
+```
+
+**실패:**
+```
+ORCHAY_DONE:{task-id}:approve:error:{에러 요약}
+```
+
+> ⚠️ 이 출력은 orchay 스케줄러가 작업 완료를 감지하는 데 사용됩니다. 반드시 정확한 형식으로 출력하세요.
 
 ---
 

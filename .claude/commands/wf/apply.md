@@ -75,8 +75,8 @@ parallel-processing: true
 
 ### 5. 설계 문서 수정
 
-**수정 대상** (분할 3개 문서):
-- `020-detail-design.md` (주요 수정 대상)
+**수정 대상**:
+- `010-design.md` (주요 수정 대상)
 - `025-traceability-matrix.md` (요구사항 매핑 변경 시)
 - `026-test-specification.md` (테스트 관련 이슈 시)
 
@@ -138,7 +138,7 @@ Task: TSK-01-01-01
 └── ⏸️ 보류: 1건 (범위 초과)
 
 📄 수정된 문서:
-├── 020-detail-design.md
+├── 010-design.md
 └── 021-...(적용완료).md
 
 다음: /wf:review (재리뷰) 또는 /wf:build
@@ -161,6 +161,24 @@ Task: TSK-01-01-01
 
 - `/wf:review` - 추가 리뷰 (필요시)
 - `/wf:build` - 구현 시작
+
+---
+
+## 완료 신호
+
+작업 완료 후 **반드시** 다음 형식으로 출력:
+
+**성공:**
+```
+ORCHAY_DONE:{task-id}:apply:success
+```
+
+**실패:**
+```
+ORCHAY_DONE:{task-id}:apply:error:{에러 요약}
+```
+
+> ⚠️ 이 출력은 orchay 스케줄러가 작업 완료를 감지하는 데 사용됩니다. 반드시 정확한 형식으로 출력하세요.
 
 ---
 

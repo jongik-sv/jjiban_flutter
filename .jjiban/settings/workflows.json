@@ -30,9 +30,74 @@
     "audit": { "label": "코드리뷰", "labelEn": "Audit", "icon": "pi-search", "severity": "secondary", "isAction": true },
     "patch": { "label": "패치", "labelEn": "Patch", "icon": "pi-file-edit", "severity": "secondary", "isAction": true }
   },
-  "workflows": {
+  "executionModes": {
+    "design": {
+      "label": "설계 모드",
+      "labelEn": "Design Mode",
+      "description": "설계 문서만 생성 (start만 실행)",
+      "workflowScope": "design-only",
+      "stopAfterCommand": "start",
+      "dependencyCheck": "ignore",
+      "color": "#3b82f6"
+    },
+    "quick": {
+      "label": "빠른 개발",
+      "labelEn": "Quick Dev",
+      "description": "단순 워크플로우 (transitions만, actions 생략)",
+      "workflowScope": "transitions-only",
+      "dependencyCheck": "check-implemented",
+      "color": "#22c55e"
+    },
+    "develop": {
+      "label": "전체 개발",
+      "labelEn": "Full Dev",
+      "description": "전체 워크플로우 (transitions + actions)",
+      "workflowScope": "full",
+      "dependencyCheck": "check-implemented",
+      "color": "#8b5cf6"
+    },
+    "force": {
+      "label": "강제 모드",
+      "labelEn": "Force Mode",
+      "description": "의존성 무시, 단순 워크플로우",
+      "workflowScope": "transitions-only",
+      "dependencyCheck": "ignore",
+      "color": "#f59e0b"
+    }
+  },
+  "categories": {
     "development": {
-      "name": "Development Workflow",
+      "label": "개발",
+      "labelEn": "Development",
+      "icon": "pi-bolt",
+      "color": "#22c55e",
+      "description": "간단한 기능 개발"
+    },
+    "development-full": {
+      "label": "전체개발",
+      "labelEn": "Full Development",
+      "icon": "pi-rocket",
+      "color": "#3b82f6",
+      "description": "신규 기능 개발 (전체 워크플로우)"
+    },
+    "defect": {
+      "label": "결함",
+      "labelEn": "Defect",
+      "icon": "pi-bug",
+      "color": "#ef4444",
+      "description": "결함 수정"
+    },
+    "infrastructure": {
+      "label": "인프라",
+      "labelEn": "Infrastructure",
+      "icon": "pi-cog",
+      "color": "#6b7280",
+      "description": "인프라, 리팩토링 등 기술 작업"
+    }
+  },
+  "workflows": {
+    "development-full": {
+      "name": "Full Development Workflow",
       "states": ["[ ]", "[bd]", "[dd]", "[ap]", "[im]", "[vf]", "[xx]"],
       "transitions": [
         { "from": "[ ]", "to": "[bd]", "command": "start" },
@@ -76,8 +141,8 @@
         "[im]": ["test", "audit", "patch"]
       }
     },
-    "simple-dev": {
-      "name": "Simple Development Workflow",
+    "development": {
+      "name": "Development Workflow",
       "states": ["[ ]", "[dd]", "[im]", "[xx]"],
       "transitions": [
         { "from": "[ ]", "to": "[dd]", "command": "design" },

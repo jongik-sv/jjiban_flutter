@@ -9,7 +9,7 @@ parallel-processing: true
 
 # /wf:ui - 화면설계 (Lite)
 
-> **상태 변경 없음**: `[bd] 기본설계` 유지
+> **상태 변경 없음**: `[dd] 설계` 유지
 > **적용 category**: development only
 > **계층 입력**: WP/ACT/Task 단위 (하위 Task 병렬 처리)
 
@@ -22,7 +22,7 @@ parallel-processing: true
 | 예시 | 설명 |
 |------|------|
 | `/wf:ui TSK-01-01` | Task 단위 |
-| `/wf:ui ACT-01-01` | ACT 내 모든 `[bd]` Task 병렬 |
+| `/wf:ui ACT-01-01` | ACT 내 모든 `[dd]` Task 병렬 |
 | `/wf:ui WP-01` | WP 내 모든 Task 병렬 |
 
 ---
@@ -45,7 +45,7 @@ parallel-processing: true
 
 ### 1. 입력 문서 분석
 
-- `010-basic-design.md` 읽기
+- `010-design.md` 읽기
 - PRD/TRD 화면 요구사항 추출
 - UI 테마 가이드 참조 (`.jjiban/{project}/ui-theme-*.md`)
 
@@ -152,9 +152,9 @@ screen-02-form-loading.svg      # 저장 중
 [wf:ui] 화면설계
 
 Task: TSK-01-01-01
-상태: [bd] (변경 없음)
+상태: [dd] (변경 없음)
 
-📂 기본설계 분석:
+📂 설계 분석:
 ├── 화면 목록: 4개
 ├── 사용자 시나리오: 3개
 └── 화면 흐름: 1개
@@ -169,7 +169,7 @@ Task: TSK-01-01-01
 ├── 011-ui-design.md
 └── ui-assets/ (SVG 7개)
 
-다음: /wf:draft
+다음: /wf:review 또는 /wf:approve
 ```
 
 ---
@@ -179,8 +179,8 @@ Task: TSK-01-01-01
 | 에러 | 메시지 |
 |------|--------|
 | 잘못된 category | `[ERROR] development만 지원합니다` |
-| 잘못된 상태 | `[ERROR] 기본설계 상태가 아닙니다` |
-| 기본설계 없음 | `[ERROR] 010-basic-design.md가 없습니다` |
+| 잘못된 상태 | `[ERROR] 설계 상태가 아닙니다` |
+| 설계 문서 없음 | `[ERROR] 010-design.md가 없습니다` |
 | 화면 요구사항 없음 | `[WARN] 화면 요구사항이 없습니다` |
 | SVG 생성 실패 | `[ERROR] SVG 생성 실패: {파일명}` |
 
@@ -188,7 +188,26 @@ Task: TSK-01-01-01
 
 ## 다음 명령어
 
-- `/wf:draft` - 상세설계 진행
+- `/wf:review` - 설계 리뷰 (선택)
+- `/wf:approve` - 설계 승인
+
+---
+
+## 완료 신호
+
+작업 완료 후 **반드시** 다음 형식으로 출력:
+
+**성공:**
+```
+ORCHAY_DONE:{task-id}:ui:success
+```
+
+**실패:**
+```
+ORCHAY_DONE:{task-id}:ui:error:{에러 요약}
+```
+
+> ⚠️ 이 출력은 orchay 스케줄러가 작업 완료를 감지하는 데 사용됩니다. 반드시 정확한 형식으로 출력하세요.
 
 ---
 

@@ -7,6 +7,7 @@
 | 문서 버전 | 1.0 |
 | 작성일 | 2025-12-27 |
 | 상태 | Draft |
+| 프로젝트 경로 | `./orchay` |
 
 ---
 
@@ -355,7 +356,7 @@ while running:
 | 단계 | 모드 | 의존성 확인 |
 |------|------|------------|
 | 설계 (/wf:start) | 모든 모드 | **무시** (설계는 자유롭게) |
-| 구현 (/wf:approve 이후) | develop | **확인** (선행 Task [dd] 이상) |
+| 구현 (/wf:approve 이후) | develop | **확인** (선행 Task [im] 이상) |
 | 구현 (/wf:approve 이후) | force | **무시** |
 
 #### 스케줄링 알고리즘
@@ -375,7 +376,7 @@ while running:
 
    [develop 모드]
    - 설계 미완료([ ]) Task: 의존성 무시 → 표시
-   - 설계 완료([dd] 이상) Task: depends 선행 Task가 [dd] 이상이면 표시
+   - 설계 완료([dd] 이상) Task: depends 선행 Task가 [im] 이상이면 표시
 
    [force 모드]
    - 모든 미완료 Task 표시
@@ -393,7 +394,12 @@ while running:
 
 ```python
 def filter_executable_tasks(tasks: list, mode: str) -> list:
-    """실행 가능한 Task 필터링"""
+    """실행 가능한 Task 필터링
+
+    → workflows.json executionModes.dependencyCheck 참조:
+      - ignore: 의존성 무시
+      - check-implemented: 선행 Task [im] 이상 확인
+    """
     executable = []
 
     for task in tasks:
@@ -410,17 +416,18 @@ def filter_executable_tasks(tasks: list, mode: str) -> list:
             if task.status == "[ ]":
                 executable.append(task)
 
-        elif mode == "develop":
+        elif mode in ["quick", "develop"]:
+            # quick/develop: 설계는 무시, 구현은 의존성 확인
             if task.status == "[ ]":
                 # 설계 단계: 의존성 무시
                 executable.append(task)
             elif task.status in ["[dd]", "[ap]", "[im]"]:
-                # 구현 단계: 의존성 확인
-                if check_dependencies_completed(task):
+                # 구현 단계: 선행 Task가 [im] 이상이어야 진행
+                if check_dependencies_implemented(task):
                     executable.append(task)
 
         elif mode == "force":
-            # 강제 모드: 모든 미완료 Task
+            # 강제 모드: 모든 미완료 Task (의존성 무시)
             executable.append(task)
 
     return executable
@@ -444,6 +451,7 @@ Claude Code가 입력 대기 상태일 때 출력하는 프롬프트 패턴을 �
 
 | 상태 | 패턴 | 예시 |
 |------|------|------|
+| **done (완료 신호)** | `ORCHAY_DONE:([^:]+):(\w+):(success\|error)` | wf 명령어 완료 |
 | **idle (프롬프트)** | `^>\s*$`, `╭─`, `❯` | Claude Code 입력 대기 |
 | **paused (일시 중단)** | `rate.*limit`, `please.*wait`, `try.*again` | API 제한 |
 | | `weekly.*limit.*reached`, `resets.*at` | Weekly limit |
@@ -451,45 +459,83 @@ Claude Code가 입력 대기 상태일 때 출력하는 프롬프트 패턴을 �
 | **error** | `Error:`, `Failed:`, `Exception:`, `❌` | 작업 실패 |
 | **blocked (질문)** | `\?\s*$`, `\(y/n\)`, `선택` | 사용자 입력 대기 |
 
+#### 완료 신호 형식 (ORCHAY_DONE)
+
+각 `/wf:*` 명령어는 작업 완료 시 다음 형식의 신호를 출력합니다:
+
+```
+ORCHAY_DONE:{task-id}:{action}:{status}[:{message}]
+```
+
+| 필드 | 설명 | 예시 |
+|------|------|------|
+| `task-id` | Task 식별자 | `TSK-01-01-01` |
+| `action` | wf 명령어 | `start`, `build`, `done` 등 |
+| `status` | 완료 상태 | `success` 또는 `error` |
+| `message` | 에러 메시지 (선택) | `테스트 실패` |
+
+**예시:**
+```
+ORCHAY_DONE:TSK-01-01-01:start:success
+ORCHAY_DONE:TSK-01-01-01:build:error:TDD 5회 초과
+```
+
 #### 상태 판정 우선순위
 
 ```python
-def detect_worker_state(pane_id: int) -> str:
-    """Worker 상태 감지 - 우선순위 기반 판정"""
+DONE_PATTERN = r"ORCHAY_DONE:([^:]+):(\w+):(success|error)(?::(.+))?"
+
+def detect_worker_state(pane_id: int) -> tuple[str, dict | None]:
+    """Worker 상태 감지 - 우선순위 기반 판정
+
+    Returns:
+        (state, done_info): state는 상태 문자열, done_info는 완료 신호 정보
+    """
 
     # 0. pane 존재 확인
     if not pane_exists(pane_id):
-        return "dead"
+        return "dead", None
 
     output = wezterm_get_text(pane_id, last_lines=50)
 
-    # 1. 일시 중단 패턴 (최우선)
+    # 1. 완료 신호 패턴 (최우선)
+    done_match = re.search(DONE_PATTERN, output)
+    if done_match:
+        done_info = {
+            "task_id": done_match.group(1),
+            "action": done_match.group(2),
+            "status": done_match.group(3),
+            "message": done_match.group(4)
+        }
+        return "done", done_info
+
+    # 2. 일시 중단 패턴
     pause_patterns = [
         r"rate.*limit", r"please.*wait", r"try.*again",
         r"context.*limit", r"conversation.*too.*long",
         r"overloaded", r"capacity"
     ]
     if any(re.search(p, output, re.I) for p in pause_patterns):
-        return "paused"
+        return "paused", None
 
-    # 2. 에러 패턴
+    # 3. 에러 패턴
     error_patterns = [r"Error:", r"Failed:", r"Exception:", r"❌", r"fatal:"]
     if any(re.search(p, output, re.I) for p in error_patterns):
-        return "error"
+        return "error", None
 
-    # 3. 질문/입력 대기 패턴
+    # 4. 질문/입력 대기 패턴
     question_patterns = [r"\?\s*$", r"\(y/n\)", r"선택", r"Press.*to continue"]
     if any(re.search(p, output, re.I) for p in question_patterns):
-        return "blocked"
+        return "blocked", None
 
-    # 4. 프롬프트 패턴 (idle)
+    # 5. 프롬프트 패턴 (idle)
     prompt_patterns = [r"^>\s*$", r"╭─", r"❯"]
     last_lines = output.strip().split('\n')[-3:]
     if any(re.search(p, line) for p in prompt_patterns for line in last_lines):
-        return "idle"
+        return "idle", None
 
-    # 5. 기본값: 작업 중
-    return "busy"
+    # 6. 기본값: 작업 중
+    return "busy", None
 ```
 
 ### 3.4 작업 분배
@@ -526,8 +572,9 @@ def execute_task(worker, task, mode: str):
 
     # 2. 모드별 workflow 단계 결정
     workflow_steps = get_workflow_steps(task, mode)
-    # design 모드: ["start"]
-    # develop/force 모드: ["start", "approve", "build", "done"]
+    # design: ["start"]
+    # quick/force: ["start", "approve", "build", "done"]
+    # develop: ["start", "review", "apply", "approve", "build", "audit", "patch", "test", "done"]
 
     # 3. 상태 업데이트
     worker.current_task = task
@@ -557,7 +604,10 @@ def execute_task(worker, task, mode: str):
 
 
 def get_workflow_steps(task, mode: str) -> list:
-    """모드와 Task 상태에 따른 workflow 단계 반환"""
+    """모드와 Task 상태에 따른 workflow 단계 반환
+
+    → workflows.json의 executionModes 및 workflows 참조
+    """
 
     if mode == "design":
         # 설계 모드: start만
@@ -565,21 +615,33 @@ def get_workflow_steps(task, mode: str) -> list:
             return ["start"]
         return []  # 이미 설계 완료
 
-    # develop / force 모드: 현재 상태부터 완료까지
-    all_steps = {
-        "development": ["start", "approve", "build", "done"],
-        "defect": ["start", "fix", "verify", "done"],
-        "infrastructure": ["start", "build", "done"]
-    }
+    # 모드별 워크플로우 정의
+    # quick/force: transitions만 (actions 생략)
+    # develop: full (transitions + actions)
 
-    steps = all_steps.get(task.category, ["start", "approve", "build", "done"])
+    if mode in ["quick", "force"]:
+        # transitions만 실행
+        all_steps = {
+            "development": ["start", "approve", "build", "done"],
+            "defect": ["start", "fix", "verify", "done"],
+            "infrastructure": ["start", "build", "done"]
+        }
+    else:  # develop
+        # full workflow (transitions + actions)
+        all_steps = {
+            "development": ["start", "review", "apply", "approve", "build", "audit", "patch", "test", "done"],
+            "defect": ["start", "fix", "audit", "patch", "test", "verify", "done"],
+            "infrastructure": ["start", "build", "audit", "patch", "done"]
+        }
+
+    steps = all_steps.get(task.category, all_steps["development"])
 
     # 현재 상태에 따라 남은 단계만 반환
     status_to_step = {
         "[ ]": 0,   # start부터
-        "[dd]": 1,  # approve부터
+        "[dd]": 1,  # approve/review부터
         "[ap]": 2,  # build부터
-        "[im]": 3   # done만
+        "[im]": 3   # done/verify부터
     }
 
     start_index = status_to_step.get(task.status, 0)
@@ -887,15 +949,27 @@ def main_loop():
 
 ### 3.8 실행 모드
 
-스케줄러의 동작 방식을 결정하는 3가지 실행 모드를 제공합니다.
+스케줄러의 동작 방식을 결정하는 4가지 실행 모드를 제공합니다.
+
+→ 모드 정의: [workflows.json](../../settings/workflows.json) `executionModes` 참조
 
 #### 모드 정의
 
 | 모드 | 설계 단계 | 구현 이후 | 수행 범위 | 용도 |
 |------|----------|----------|----------|------|
-| **design** | 의존성 무시 | - | /wf:start만 | 전체 Task 설계 문서 일괄 생성 |
-| **develop** | 의존성 무시 | 의존성 확인 | 전체 workflow | 정상적인 개발 프로세스 |
-| **force** | 의존성 무시 | 의존성 무시 | 전체 workflow | 긴급 개발, 의존성 무시 필요 시 |
+| **design** | 의존성 무시 | - | start만 | 전체 Task 설계 문서 일괄 생성 |
+| **quick** | 의존성 무시 | 의존성 확인 | transitions만 | 빠른 개발 (리뷰/테스트 생략) |
+| **develop** | 의존성 무시 | 의존성 확인 | full (transitions + actions) | 전체 워크플로우 (리뷰/테스트 포함) |
+| **force** | 의존성 무시 | 의존성 무시 | transitions만 | 긴급 개발, 의존성 무시 |
+
+#### 워크플로우 단계 비교
+
+| 모드 | 워크플로우 단계 |
+|------|----------------|
+| design | `start` |
+| quick | `start → approve → build → done` |
+| develop | `start → review → apply → approve → build → audit → patch → test → done` |
+| force | quick과 동일 |
 
 #### 모드별 동작
 
@@ -907,18 +981,26 @@ def main_loop():
 - 용도: 프로젝트 초기 전체 설계 수행
 ```
 
+**quick 모드:**
+```
+- 설계 단계: 의존관계 무시
+- 구현 단계: 선행 Task가 구현 완료([im]) 이상이어야 진행
+- transitions만 실행 (review, apply, audit, patch, test 생략)
+- 용도: 빠른 개발, 리뷰 불필요한 작업
+```
+
 **develop 모드:**
 ```
 - 설계 단계: 의존관계 무시
-- 구현 단계: 선행 Task가 설계 완료([dd]) 이상이어야 진행
-- 한 Task의 전체 workflow 순차 실행
-- 용도: 정상적인 개발 워크플로우
+- 구현 단계: 선행 Task가 구현 완료([im]) 이상이어야 진행
+- 전체 workflow 순차 실행 (transitions + actions)
+- 용도: 정상적인 개발 워크플로우 (리뷰/테스트 포함)
 ```
 
 **force 모드:**
 ```
 - 모든 단계에서 의존관계 무시
-- 한 Task의 전체 workflow 순차 실행
+- transitions만 실행 (quick과 동일한 단계)
 - 용도: 긴급 개발, 특정 Task 우선 완료 필요 시
 ```
 
@@ -927,26 +1009,142 @@ def main_loop():
 **명령어:**
 ```bash
 mode design   # 설계 모드로 전환
-mode develop  # 개발 모드로 전환
+mode quick    # 빠른 개발 모드로 전환
+mode develop  # 전체 개발 모드로 전환
 mode force    # 강제 모드로 전환
 ```
 
 **Function Key:**
-- `F7`: 모드 순환 (design → develop → force → design)
+- `F7`: 모드 순환 (design → quick → develop → force → design)
 
 #### 모드 표시 UI
 
 ```
 ╔═══════════════════════════════════════════════════════════════╗
-║  orchay - Task Scheduler                   [MODE: develop]    ║
+║  orchay - Task Scheduler                   [MODE: quick]      ║
 ║  Workers: 3 | Queue: 5 | Completed: 12     F7: 모드 전환      ║
 ╚═══════════════════════════════════════════════════════════════╝
 ```
 
 모드 색상 표시:
-- `[MODE: design]` - 청색 (설계 중심)
-- `[MODE: develop]` - 녹색 (정상 개발)
-- `[MODE: force]` - 황색 (주의 필요)
+- `[MODE: design]` - 청색 (#3b82f6)
+- `[MODE: quick]` - 녹색 (#22c55e)
+- `[MODE: develop]` - 보라색 (#8b5cf6)
+- `[MODE: force]` - 황색 (#f59e0b)
+
+### 3.9 작업 중 상태 관리
+
+현재 Worker가 처리 중인 Task와 진행 단계를 추적하는 기능입니다.
+
+#### 저장 위치
+
+`.jjiban/logs/orchay-active.json`
+
+#### 데이터 구조
+
+```json
+{
+  "activeTasks": {
+    "TSK-01-01-01": {
+      "worker": 1,
+      "startedAt": "2025-12-28T10:00:00",
+      "currentStep": "build"
+    },
+    "TSK-01-02-01": {
+      "worker": 2,
+      "startedAt": "2025-12-28T10:05:00",
+      "currentStep": "start"
+    }
+  }
+}
+```
+
+#### 필드 설명
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| `worker` | number | 작업 중인 Worker pane 번호 |
+| `startedAt` | string | Task 시작 시간 (ISO 8601) |
+| `currentStep` | string | 현재 진행 중인 /wf 명령어 |
+
+#### currentStep 값
+
+| 값 | 설명 |
+|---|------|
+| `start` | 설계 시작 (/wf:start) |
+| `draft` | 상세 설계 (/wf:draft) |
+| `review` | 리뷰 (/wf:review) |
+| `apply` | 리뷰 반영 (/wf:apply) |
+| `approve` | 승인 (/wf:approve) |
+| `build` | 구현 (/wf:build) |
+| `audit` | 코드 리뷰 (/wf:audit) |
+| `patch` | 패치 반영 (/wf:patch) |
+| `test` | 테스트 (/wf:test) |
+| `done` | 완료 처리 (/wf:done) |
+
+#### 생명주기
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     작업 중 상태 생명주기                         │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  1. 등록 (Task 분배 시)                                          │
+│     └── worker, startedAt, currentStep 기록                     │
+│                                                                 │
+│  2. 단계 갱신 (각 /wf 명령어 전송 시)                             │
+│     └── currentStep 업데이트                                     │
+│                                                                 │
+│  3. 해제 (ORCHAY_DONE 신호 감지 시)                               │
+│     └── activeTasks에서 해당 Task 삭제                           │
+│                                                                 │
+│  4. 초기화 (스케줄러 시작 시)                                     │
+│     └── 파일 비우기 또는 삭제 (이전 세션 상태 클리어)              │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+#### 상태 관리 로직
+
+```python
+def register_active_task(task_id: str, worker_id: int, step: str):
+    """Task 분배 시 작업 중 상태 등록"""
+    active = load_active_tasks()
+    active["activeTasks"][task_id] = {
+        "worker": worker_id,
+        "startedAt": datetime.now().isoformat(),
+        "currentStep": step
+    }
+    save_active_tasks(active)
+
+
+def update_current_step(task_id: str, step: str):
+    """워크플로우 단계 변경 시 currentStep 갱신"""
+    active = load_active_tasks()
+    if task_id in active["activeTasks"]:
+        active["activeTasks"][task_id]["currentStep"] = step
+        save_active_tasks(active)
+
+
+def unregister_active_task(task_id: str):
+    """Task 완료(ORCHAY_DONE) 시 작업 중 상태 해제"""
+    active = load_active_tasks()
+    if task_id in active["activeTasks"]:
+        del active["activeTasks"][task_id]
+        save_active_tasks(active)
+
+
+def clear_all_active_tasks():
+    """스케줄러 시작 시 모든 작업 중 상태 초기화"""
+    save_active_tasks({"activeTasks": {}})
+```
+
+#### UI 연동
+
+WBS 기반 UI에서 `orchay-active.json` 파일을 모니터링하여:
+- `activeTasks`에 있는 Task는 **스피너 아이콘** 표시
+- `currentStep` 값으로 현재 진행 단계 표시 가능
+- 파일 변경 감지 (polling 또는 file watcher)로 실시간 업데이트
 
 ---
 
@@ -981,6 +1179,7 @@ mode force    # 강제 모드로 전환
   "category": null,
   "project": null,
   "detection": {
+    "donePattern": "ORCHAY_DONE:([^:]+):(\\w+):(success|error)(?::(.+))?",
     "promptPatterns": ["^>\\s*$", "╭─", "❯"],
     "pausePatterns": [
       "rate.*limit", "please.*wait", "try.*again",
@@ -1014,7 +1213,7 @@ mode force    # 강제 모드로 전환
     "captureLines": 500
   },
   "execution": {
-    "mode": "develop",
+    "mode": "quick",
     "allowModeSwitch": true
   }
 }
@@ -1035,6 +1234,7 @@ mode force    # 강제 모드로 전환
 
 | 설정 | 타입 | 설명 | 기본값 |
 |------|------|------|--------|
+| `donePattern` | string | wf 완료 신호 감지 정규식 | `"ORCHAY_DONE:..."` |
 | `promptPatterns` | string[] | idle 상태 감지 정규식 | `["^>\\s*$", "╭─", "❯"]` |
 | `pausePatterns` | string[] | 일시 중단 감지 정규식 | (레이트/토큰 리밋 패턴) |
 | `errorPatterns` | string[] | 에러 감지 정규식 | `["Error:", "Failed:", ...]` |
@@ -1072,8 +1272,10 @@ mode force    # 강제 모드로 전환
 
 | 설정 | 타입 | 설명 | 기본값 |
 |------|------|------|--------|
-| `mode` | string | 실행 모드: "design", "develop", "force" | "develop" |
+| `mode` | string | 실행 모드: "design", "quick", "develop", "force" | "quick" |
 | `allowModeSwitch` | boolean | 실행 중 모드 전환 허용 | true |
+
+→ 모드 상세: [workflows.json](../../settings/workflows.json) `executionModes` 참조
 
 ---
 
@@ -1603,3 +1805,15 @@ Workers: 3 | 초기 분배: TSK-01-01-01, TSK-01-01-02, TSK-02-01
 |     |            | - 실행 모드 3종: design, develop, force (3.8) |
 |     |            | - F7 키로 모드 순환 전환 |
 |     |            | - execution 설정 옵션 추가 (5.1, 5.2) |
+| 1.8 | 2025-12-27 | 실행 모드 확장 및 워크플로우 외부화 |
+|     |            | - 실행 모드 4종으로 확장: design, quick, develop, force (3.8) |
+|     |            | - quick: transitions만 (리뷰/테스트 생략) |
+|     |            | - develop: full workflow (transitions + actions) |
+|     |            | - 의존성 확인: 구현 단계에서 선행 Task [im] 이상 필요 (3.2) |
+|     |            | - workflows.json에 executionModes 섹션 추가 |
+|     |            | - 기본 모드 변경: develop → quick |
+| 1.9 | 2025-12-28 | 작업 중 상태 관리 기능 추가 (3.9) |
+|     |            | - 별도 상태 파일: `.jjiban/logs/orchay-active.json` |
+|     |            | - 데이터 구조: worker, startedAt, currentStep |
+|     |            | - 생명주기: 등록(분배 시) → 갱신(단계 변경 시) → 해제(완료 시) → 초기화(재시작 시) |
+|     |            | - UI 연동: 스피너 표시, 현재 진행 단계 표시 |

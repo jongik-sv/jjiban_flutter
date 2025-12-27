@@ -44,8 +44,8 @@ parallel-processing: true
 
 **development 체크리스트** (4단계 워크플로우):
 - [ ] 설계 (`010-design.md`)
-  - `025-traceability-matrix.md`
-  - `026-test-specification.md`
+- [ ] 추적성 매트릭스 (`025-traceability-matrix.md`)
+- [ ] 테스트 명세 (`026-test-specification.md`)
 - [ ] 설계리뷰 (`021-design-review-*.md`) (선택)
 - [ ] 설계승인 완료 (`[ap]` 상태 거침)
 - [ ] 구현 (`030-implementation.md`)
@@ -160,8 +160,7 @@ Category: [category]
 
 | 문서 | 경로 |
 |------|------|
-| 기본설계 | 010-basic-design.md |
-| 상세설계 본문 | 020-detail-design.md |
+| 설계 | 010-design.md |
 | 추적성 매트릭스 | 025-traceability-matrix.md |
 | 테스트 명세 | 026-test-specification.md |
 | 설계리뷰 | 021-design-review-*.md |
@@ -183,6 +182,24 @@ Category: [category]
 | 잘못된 상태 (infra/simple-dev) | `[ERROR] 구현 상태가 아닙니다` |
 | 필수 문서 없음 | `[ERROR] 필수 문서가 없습니다: {파일명}` |
 | 테스트 미완료 | `[ERROR] 테스트가 완료되지 않았습니다` |
+
+---
+
+## 완료 신호
+
+작업 완료 후 **반드시** 다음 형식으로 출력:
+
+**성공:**
+```
+ORCHAY_DONE:{task-id}:done:success
+```
+
+**실패:**
+```
+ORCHAY_DONE:{task-id}:done:error:{에러 요약}
+```
+
+> ⚠️ 이 출력은 orchay 스케줄러가 작업 완료를 감지하는 데 사용됩니다. 반드시 정확한 형식으로 출력하세요.
 
 ---
 

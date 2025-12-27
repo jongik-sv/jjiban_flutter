@@ -40,11 +40,10 @@ parallel-processing: true
 ### 1. 검증 대상 문서 수집
 
 ```
-필수 문서 (분할 설계):
-├── 020-detail-design.md (상세설계 본문)
+필수 문서:
+├── 010-design.md (통합 설계 문서)
 ├── 025-traceability-matrix.md (추적성 매트릭스)
-├── 026-test-specification.md (테스트 명세)
-└── 010-basic-design.md (기본설계)
+└── 026-test-specification.md (테스트 명세)
 
 참조 문서:
 ├── .jjiban/{project}/prd.md
@@ -98,10 +97,9 @@ parallel-processing: true
 Task: TSK-01-01-01 | 리뷰어: claude-1
 
 📋 검증 대상:
-├── 020-detail-design.md ✅
+├── 010-design.md ✅
 ├── 025-traceability-matrix.md ✅
-├── 026-test-specification.md ✅
-└── 010-basic-design.md ✅
+└── 026-test-specification.md ✅
 
 ┌────────────────┬──────┬─────────────────────┐
 │ 검증 영역      │ 평가 │ 비고                │
@@ -125,8 +123,8 @@ Task: TSK-01-01-01 | 리뷰어: claude-1
 | 에러 | 메시지 |
 |------|--------|
 | 잘못된 category | `[ERROR] development만 지원합니다` |
-| 잘못된 상태 | `[ERROR] 상세설계 상태가 아닙니다` |
-| 상세설계 없음 | `[ERROR] 020-detail-design.md가 없습니다` |
+| 잘못된 상태 | `[ERROR] 설계 상태가 아닙니다` |
+| 설계 문서 없음 | `[ERROR] 010-design.md가 없습니다` |
 | 추적성 매트릭스 없음 | `[ERROR] 025-traceability-matrix.md가 없습니다` |
 | 테스트 명세 없음 | `[ERROR] 026-test-specification.md가 없습니다` |
 
@@ -136,6 +134,24 @@ Task: TSK-01-01-01 | 리뷰어: claude-1
 
 - `/wf:apply` - 리뷰 내용 반영
 - `/wf:build` - 구현 시작 (리뷰 미반영 시)
+
+---
+
+## 완료 신호
+
+작업 완료 후 **반드시** 다음 형식으로 출력:
+
+**성공:**
+```
+ORCHAY_DONE:{task-id}:review:success
+```
+
+**실패:**
+```
+ORCHAY_DONE:{task-id}:review:error:{에러 요약}
+```
+
+> ⚠️ 이 출력은 orchay 스케줄러가 작업 완료를 감지하는 데 사용됩니다. 반드시 정확한 형식으로 출력하세요.
 
 ---
 

@@ -53,14 +53,10 @@ parallel-processing: true
 
 ```
 탐색 경로 (category별):
-├── development:
-│   ├── 020-detail-design.md ✅
+├── development / simple-dev:
+│   ├── 010-design.md ✅ (통합 설계 문서)
 │   ├── 025-traceability-matrix.md (FR/BR → 테스트 매핑) ⭐
 │   └── 026-test-specification.md (UT/E2E 시나리오) ⭐
-├── simple-dev:
-│   ├── 010-design.md ✅ (통합 설계 문서)
-│   ├── 025-traceability-matrix.md ⭐
-│   └── 026-test-specification.md ⭐
 ├── 화면 자료 (Frontend 포함 시):
 │   ├── ui-assets/*.png|jpg|svg ⭐ (최우선 참조)
 │   ├── 011-ui-design.md (Fallback)
@@ -221,9 +217,9 @@ Task: TSK-01-01-01 | Full-stack
 |------|--------|
 | 잘못된 category | `[ERROR] development/infrastructure/simple-dev만 지원` |
 | 잘못된 상태 (dev) | `[ERROR] 설계승인 상태가 아닙니다. /wf:approve 실행 필요` |
-| 잘못된 상태 (simple-dev) | `[ERROR] 상세설계 상태가 아닙니다. /wf:design 실행 필요` |
-| 잘못된 상태 (infra) | `[ERROR] 상세설계 상태가 아닙니다` |
-| 설계 문서 없음 | `[ERROR] 설계 문서가 없습니다 (010-design.md 또는 020-detail-design.md)` |
+| 잘못된 상태 (simple-dev) | `[ERROR] 설계 상태가 아닙니다. /wf:design 실행 필요` |
+| 잘못된 상태 (infra) | `[ERROR] 설계 상태가 아닙니다` |
+| 설계 문서 없음 | `[ERROR] 설계 문서가 없습니다 (010-design.md)` |
 | UI Assets 없음 | `[INFO] ui-assets/ 없음. 문서/테마 참조` |
 | TDD 5회 초과 | `[ERROR] TDD 5회 시도 후 실패. 수동 개입 필요` |
 | E2E 5회 초과 | `[ERROR] E2E 5회 시도 후 실패. 수동 개입 필요` |
@@ -241,6 +237,24 @@ Task: TSK-01-01-01 | Full-stack
 | simple-dev | `/wf:test` | 테스트 실행 (선택) |
 | simple-dev | `/wf:done` | 작업 완료 |
 | infrastructure | `/wf:done` | 작업 완료 |
+
+---
+
+## 완료 신호
+
+작업 완료 후 **반드시** 다음 형식으로 출력:
+
+**성공:**
+```
+ORCHAY_DONE:{task-id}:build:success
+```
+
+**실패:**
+```
+ORCHAY_DONE:{task-id}:build:error:{에러 요약}
+```
+
+> ⚠️ 이 출력은 orchay 스케줄러가 작업 완료를 감지하는 데 사용됩니다. 반드시 정확한 형식으로 출력하세요.
 
 ---
 

@@ -175,6 +175,24 @@ Task: TSK-01-01-01 | 유형: all
 
 ---
 
+## 완료 신호
+
+작업 완료 후 **반드시** 다음 형식으로 출력:
+
+**성공:**
+```
+ORCHAY_DONE:{task-id}:test:success
+```
+
+**실패:**
+```
+ORCHAY_DONE:{task-id}:test:error:{에러 요약}
+```
+
+> ⚠️ 이 출력은 orchay 스케줄러가 작업 완료를 감지하는 데 사용됩니다. 반드시 정확한 형식으로 출력하세요.
+
+---
+
 ## 공통 모듈 참조
 
 @.claude/includes/wf-common-lite.md
