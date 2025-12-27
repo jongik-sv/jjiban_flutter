@@ -162,7 +162,7 @@
 ### TSK-02-01: 자동 재개 메커니즘
 - category: development
 - domain: backend
-- status: detail-design [dd]
+- status: approved [ap]
 - priority: high
 - assignee: -
 - schedule: 2026-01-04 ~ 2026-01-05
@@ -195,7 +195,7 @@
 ### TSK-02-02: TUI 메인 화면
 - category: development
 - domain: frontend
-- status: detail-design [dd]
+- status: approved [ap]
 - priority: high
 - assignee: -
 - schedule: 2026-01-04 ~ 2026-01-06
