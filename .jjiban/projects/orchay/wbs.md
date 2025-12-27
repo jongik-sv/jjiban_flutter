@@ -84,7 +84,7 @@
 ### TSK-01-03: 스케줄러 코어 구현
 - category: development
 - domain: backend
-- status: [ ]
+- status: design [dd]
 - priority: critical
 - assignee: -
 - schedule: 2025-12-30 ~ 2025-12-31
