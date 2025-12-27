@@ -10,5 +10,6 @@
 
 파워쉘 업그레이드 https://dong-it-engineer.tistory.com/39
 파워쉘 7버전에서 가능함
-PS C:\bin\wezterm> ./wezterm.exe cli send-text --no-paste --pane-id 1 안녕
-PS C:\bin\wezterm> ./wezterm.exe cli send-text --no-paste --pane-id 1 `r
+wezterm cli send-text --no-paste --pane-id 1 프롬프트 # 예 : /wf:design TSK-01-01
+wezterm cli send-text --no-paste --pane-id 1 `r # 명령어를 submit 하기 위한 enter 키
+

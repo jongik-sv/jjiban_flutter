@@ -39,6 +39,8 @@ personas: [architect, analyzer, scribe]
 - **워크플로우 상태 표시**: `[ ]`, `[dd]`, `[ap]`, `[im]`, `[xx]`
 - **MECE 원칙**: 상호 배타적 + 전체 포괄 분할
 - **일정 자동 계산**: category별 기간 추정 + 의존성 기반 일정 산출
+- **PRD/TRD 컨텍스트 주입**: 요구사항, 인수조건, 기술스펙을 Task에 직접 포함
+- **자기 완결적 Task**: Task만 보고 개발 착수 가능한 상세 정보 제공
 
 ---
 
@@ -190,6 +192,38 @@ Project (프로젝트) - 6~24개월
 - 권장: 1~3일
 - 최대: 1주 (초과 시 분할)
 
+### 4.5단계: PRD/TRD 컨텍스트 주입 (신규)
+
+각 Task에 PRD/TRD 문서에서 관련 정보를 추출하여 주입합니다.
+
+**PRD → Task 매핑 규칙:**
+
+| PRD 섹션 | Task 속성 | 추출 방법 |
+|----------|----------|----------|
+| 기능 요구사항 (FR-XXX) | prd-ref, requirements | 해당 기능 ID 및 상세 내용 |
+| 인수 조건 (AC) | acceptance | 완료 판정 기준 목록 |
+| 비기능 요구사항 (NFR) | constraints | 성능, 보안, 규격 제한 |
+| 사용자 스토리 | note | 요약 또는 참조 |
+
+**TRD → Task 매핑 규칙:**
+
+| TRD 섹션 | Task 속성 | 추출 방법 |
+|----------|----------|----------|
+| 기술 스택 | tech-spec | 해당 Task에 사용할 기술 |
+| API 설계 | api-spec | 엔드포인트, 스키마, 에러코드 |
+| 데이터 모델 | data-model | 관련 엔티티, 필드, 관계 |
+| UI/컴포넌트 설계 | ui-spec | 컴포넌트, 레이아웃, 스타일 |
+| 성능 요구사항 | constraints | 응답시간, 처리량 제한 |
+
+**상세도 레벨 결정:**
+
+| Task 특성 | 권장 레벨 |
+|----------|----------|
+| 인프라/설정 작업 | minimal |
+| 단순 CRUD | standard |
+| 비즈니스 로직 | detailed |
+| 핵심 기능/신규 개발 | full |
+
 ### 5단계: 일정 계산
 
 **Task 기간 추정 (category별 기본값)**:
@@ -249,25 +283,85 @@ Project (프로젝트) - 6~24개월
 - status: todo
 - schedule: {시작일} ~ {종료일}
 
-#### TSK-01-01-01: {Task명}
+#### TSK-01-01-01: 이메일/비밀번호 로그인 구현
 - category: development
 - domain: backend
 - status: [ ]
 - priority: high
 - assignee: -
 - schedule: {시작일} ~ {종료일}
-- tags: api, crud
+- tags: api, auth, jwt
 - depends: -
 
-#### TSK-01-01-02: {Task명}
+##### PRD 요구사항
+- prd-ref: FR-AUTH-001
+- requirements:
+  - 이메일/비밀번호로 로그인
+  - JWT 액세스 토큰 + 리프레시 토큰 발급
+  - 로그인 실패 시 구체적 에러 메시지 반환
+  - 5회 실패 시 계정 임시 잠금 (15분)
+- acceptance:
+  - 유효한 자격증명 → 토큰 발급 성공
+  - 잘못된 이메일 → "존재하지 않는 계정" 에러
+  - 잘못된 비밀번호 → "비밀번호 불일치" 에러
+  - 잠긴 계정 → 남은 잠금 시간 표시
+- constraints:
+  - 비밀번호 최소 8자, 영문+숫자+특수문자
+  - 응답시간 < 500ms
+- test-criteria:
+  - 정상 로그인 성공
+  - 이메일 형식 검증 실패
+  - 비밀번호 불일치 (1~4회)
+  - 계정 잠금 트리거 (5회 실패)
+
+##### 기술 스펙 (TRD)
+- tech-spec:
+  - Framework: Flutter + Riverpod
+  - Auth: Supabase Auth
+  - Token: JWT (RS256), Access 15분, Refresh 7일
+- api-spec:
+  - POST /api/v1/auth/login
+  - Request: { email: string, password: string }
+  - Response: { accessToken, refreshToken, expiresIn, user }
+  - Errors: 401 Unauthorized, 423 Locked
+- data-model:
+  - User: id, email, passwordHash, failedAttempts, lockedUntil, createdAt
+
+#### TSK-01-01-02: 로그인 화면 UI 구현
 - category: development
 - domain: frontend
 - status: [ ]
 - priority: medium
 - assignee: -
 - schedule: {시작일} ~ {종료일}
-- tags: form, validation
+- tags: ui, form, validation
 - depends: TSK-01-01-01
+
+##### PRD 요구사항
+- prd-ref: FR-AUTH-001, UI-AUTH-001
+- requirements:
+  - 이메일/비밀번호 입력 폼
+  - 실시간 유효성 검사 피드백
+  - 로딩 상태 표시
+  - 에러 메시지 표시
+- acceptance:
+  - 이메일 형식 오류 시 즉시 피드백
+  - 비밀번호 8자 미만 시 경고
+  - 로그인 중 버튼 비활성화 + 스피너
+  - 서버 에러 시 사용자 친화적 메시지
+- constraints:
+  - 모바일 최적화 (터치 영역 최소 44px)
+  - 접근성: 스크린리더 호환
+
+##### 기술 스펙 (TRD)
+- tech-spec:
+  - Widget: StatefulWidget + Riverpod
+  - Validation: flutter_form_builder
+  - State: AsyncValue 패턴
+- ui-spec:
+  - 컴포넌트: EmailField, PasswordField, SubmitButton
+  - 레이아웃: Column, 중앙 정렬, 패딩 24px
+  - 테마: 앱 기본 테마 적용
 
 ---
 
@@ -277,13 +371,13 @@ Project (프로젝트) - 6~24개월
 - schedule: {시작일} ~ {종료일}
 - progress: 0%
 
-### TSK-02-01: {Task명} (3단계 예시 - ACT 생략)
-- category: development
-- domain: fullstack
+### TSK-02-01: {Task명} (3단계 예시 - ACT 생략, minimal 레벨)
+- category: infrastructure
+- domain: infra
 - status: [ ]
 - priority: high
 - assignee: -
-- note: 3단계 구조 예시
+- note: 단순 인프라 작업은 minimal 레벨 사용
 ```
 
 ### ID 패턴
@@ -298,18 +392,13 @@ Project (프로젝트) - 6~24개월
 
 ### Task 속성
 
-| 속성 | 필수 | 설명 | 예시 |
-|------|------|------|------|
-| category | O | 작업 유형 | `development`, `defect`, `infrastructure` |
-| domain | O | 기술 영역 | `frontend`, `backend`, `database`, `infra`, `fullstack`, `docs`, `test` |
-| status | O | 상태 + 기호 | `todo [ ]`, `implement [im]`, `done [xx]` |
-| priority | O | 우선순위 | `critical`, `high`, `medium`, `low` |
-| assignee | - | 담당자 ID | `hong`, `-` (미지정) |
-| schedule | - | 일정 | `2026-01-15 ~ 2026-01-21` |
-| tags | - | 태그 목록 | `auth, crud, validation` |
-| depends | - | 선행 Task | `TSK-01-01-01` |
-| blocked-by | - | 차단 Task | `TSK-01-01-01` |
-| note | - | 비고 | 자유 텍스트 |
+→ [wbs-task-spec.md](../../../.jjiban/docs/wbs-task-spec.md) 참조
+
+**요약:**
+- **기본 속성**: category, domain, status, priority, assignee, schedule, tags, depends, blocked-by, note
+- **PRD 연동 속성**: prd-ref, requirements, acceptance, constraints, test-criteria
+- **TRD 연동 속성**: tech-spec, api-spec, data-model, ui-spec
+- **상세도 레벨**: minimal, standard, detailed, full
 
 ---
 
@@ -358,8 +447,10 @@ Project (프로젝트) - 6~24개월
 
 - **요구사항 커버리지**: PRD 모든 기능이 Task로 분해됨
 - **적정 규모**: 모든 Task가 1일~1주 범위 내
-- **추적성**: 각 Task에 PRD 요구사항 연결
+- **추적성**: 각 Task에 PRD 요구사항 ID (prd-ref) 연결
 - **워크플로우 준비**: 모든 Task에 상태 기호 및 category 표시
+- **컨텍스트 완전성**: 개발 Task는 requirements, acceptance, tech-spec 필수 포함
+- **자기 완결성**: Task만 보고 개발 착수 가능한 수준의 상세도
 
 ---
 
