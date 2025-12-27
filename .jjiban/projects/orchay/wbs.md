@@ -118,7 +118,7 @@
 ### TSK-01-04: Worker 관리 및 WezTerm CLI 통합
 - category: development
 - domain: backend
-- status: implement [im]
+- status: done [xx]
 - priority: critical
 - assignee: -
 - schedule: 2026-01-01 ~ 2026-01-03
