@@ -162,7 +162,7 @@
 ### TSK-02-01: 자동 재개 메커니즘
 - category: development
 - domain: backend
-- status: approved [ap]
+- status: implement [im]
 - priority: high
 - assignee: -
 - schedule: 2026-01-04 ~ 2026-01-05
@@ -263,7 +263,7 @@
 ### TSK-02-04: CLI 및 설정 관리
 - category: development
 - domain: backend
-- status: detail-design [dd]
+- status: detail-design [ap]
 - priority: medium
 - assignee: -
 - schedule: 2026-01-04 ~ 2026-01-05
@@ -297,7 +297,7 @@
 ### TSK-02-05: 테스트 및 문서화
 - category: development
 - domain: test
-- status: detail-design [dd]
+- status: detail-design [ap]
 - priority: medium
 - assignee: -
 - schedule: 2026-01-08 ~ 2026-01-10

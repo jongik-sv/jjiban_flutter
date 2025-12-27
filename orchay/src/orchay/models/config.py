@@ -1,5 +1,7 @@
 """설정 모델 정의."""
 
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 
@@ -42,6 +44,7 @@ class RecoveryConfig(BaseModel):
     resume_text: str = Field(default="계속", description="재개 시 전송할 텍스트")
     default_wait_time: int = Field(default=60, description="기본 대기 시간 (초)")
     context_limit_wait: int = Field(default=5, description="컨텍스트 리밋 대기 시간 (초)")
+    weekly_limit_default: int = Field(default=3600, description="주간 리밋 파싱 실패 시 대기 (초)")
     max_retries: int = Field(default=3, description="최대 재시도 횟수")
     retry_interval: int = Field(default=5, description="재시도 간격 (초)")
 
@@ -68,7 +71,7 @@ class HistoryConfig(BaseModel):
 class ExecutionConfig(BaseModel):
     """실행 모드 설정."""
 
-    mode: str = Field(
+    mode: Literal["design", "quick", "develop", "force"] = Field(
         default="quick",
         description="실행 모드: design, quick, develop, force",
     )
@@ -78,8 +81,8 @@ class ExecutionConfig(BaseModel):
 class Config(BaseModel):
     """orchay 전체 설정."""
 
-    workers: int = Field(default=3, description="Worker pane 수")
-    interval: int = Field(default=5, description="모니터링 간격 (초)")
+    workers: int = Field(default=3, ge=1, le=10, description="Worker pane 수")
+    interval: int = Field(default=5, ge=1, le=60, description="모니터링 간격 (초)")
     category: str | None = Field(default=None, description="카테고리 필터")
     project: str | None = Field(default=None, description="프로젝트 경로")
     detection: DetectionConfig = Field(default_factory=DetectionConfig)
