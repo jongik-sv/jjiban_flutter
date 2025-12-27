@@ -14,9 +14,9 @@
 from __future__ import annotations
 
 import argparse
-import json
 import sys
 from datetime import datetime
+from typing import Any
 
 from rich.console import Console
 from rich.table import Table
@@ -49,19 +49,22 @@ def create_parser() -> argparse.ArgumentParser:
         help="WBS 파일 경로 (기본: .jjiban/projects/orchay/wbs.md)",
     )
     run_parser.add_argument(
-        "-w", "--workers",
+        "-w",
+        "--workers",
         type=int,
         default=3,
         help="Worker 수 (기본: 3)",
     )
     run_parser.add_argument(
-        "-i", "--interval",
+        "-i",
+        "--interval",
         type=int,
         default=5,
         help="모니터링 간격 초 (기본: 5)",
     )
     run_parser.add_argument(
-        "-m", "--mode",
+        "-m",
+        "--mode",
         choices=["design", "quick", "develop", "force"],
         default="quick",
         help="실행 모드 (기본: quick)",
@@ -72,7 +75,8 @@ def create_parser() -> argparse.ArgumentParser:
         help="분배 없이 상태만 표시",
     )
     run_parser.add_argument(
-        "-v", "--verbose",
+        "-v",
+        "--verbose",
         action="store_true",
         help="상세 로그 출력",
     )
@@ -89,13 +93,15 @@ def create_parser() -> argparse.ArgumentParser:
     start_parser.add_argument("task_id", help="Task ID (예: TSK-01-01)")
     start_parser.add_argument("step", help="워크플로우 단계 (예: design, build, done)")
     start_parser.add_argument(
-        "-w", "--worker",
+        "-w",
+        "--worker",
         type=int,
         default=0,
         help="Worker ID (기본: 0)",
     )
     start_parser.add_argument(
-        "-p", "--pane",
+        "-p",
+        "--pane",
         type=int,
         default=0,
         help="Pane ID (기본: 0)",
@@ -115,6 +121,28 @@ def create_parser() -> argparse.ArgumentParser:
 
     # exec clear
     exec_subparsers.add_parser("clear", help="모든 실행 상태 초기화")
+
+    # history 서브커맨드 (작업 히스토리 조회)
+    history_parser = subparsers.add_parser(
+        "history",
+        help="작업 히스토리 조회",
+    )
+    history_parser.add_argument(
+        "task_id",
+        nargs="?",
+        help="조회할 Task ID (생략 시 목록 표시)",
+    )
+    history_parser.add_argument(
+        "--limit",
+        type=int,
+        default=10,
+        help="표시할 항목 수 (기본: 10)",
+    )
+    history_parser.add_argument(
+        "--clear",
+        action="store_true",
+        help="히스토리 삭제",
+    )
 
     return parser
 
@@ -222,6 +250,74 @@ def handle_exec(args: argparse.Namespace) -> int:
         return 1
 
 
+def handle_history(args: argparse.Namespace) -> int:
+    """history 서브커맨드 처리."""
+    from orchay.utils.config import load_config
+    from orchay.utils.history import HistoryManager
+
+    try:
+        config = load_config()
+    except Exception:
+        # 설정 파일 오류 시 기본 경로 사용
+        storage_path = ".jjiban/logs/orchay-history.jsonl"
+        max_entries = 1000
+    else:
+        storage_path = config.history.storage_path
+        max_entries = config.history.max_entries
+
+    manager = HistoryManager(storage_path, max_entries)
+
+    # --clear 옵션
+    if args.clear:
+        manager.clear()
+        console.print("[green]✓[/] 히스토리가 삭제되었습니다.")
+        return 0
+
+    # 특정 Task ID 조회
+    if args.task_id:
+        entry: dict[str, Any] | None = manager.get(args.task_id)
+        if entry:
+            console.print(f"\n[bold]Task:[/] {entry['task_id']}")
+            console.print(f"[bold]Command:[/] {entry['command']}")
+            result_color = "green" if entry["result"] == "success" else "red"
+            console.print(f"[bold]Result:[/] [{result_color}]{entry['result']}[/{result_color}]")
+            console.print(f"[bold]Worker:[/] {entry['worker_id']}")
+            console.print(f"[bold]Timestamp:[/] {entry['timestamp']}")
+            if entry.get("output"):
+                console.print("\n[dim]--- Captured Output ---[/]\n")
+                console.print(entry["output"])
+        else:
+            console.print(f"[yellow]Task {args.task_id}의 히스토리를 찾을 수 없습니다.[/]")
+        return 0
+
+    # 목록 출력
+    entries: list[dict[str, Any]] = manager.list(args.limit)
+    if not entries:
+        console.print("[yellow]히스토리가 없습니다.[/]")
+        return 0
+
+    table = Table(title="Task History")
+    table.add_column("Task ID", style="cyan")
+    table.add_column("Command", style="green")
+    table.add_column("Result")
+    table.add_column("Worker", justify="center")
+    table.add_column("Timestamp", style="dim")
+
+    for e in entries:
+        result_style = "green" if e["result"] == "success" else "red"
+        table.add_row(
+            str(e["task_id"]),
+            str(e["command"]),
+            f"[{result_style}]{e['result']}[/{result_style}]",
+            str(e.get("worker_id", "-")),
+            str(e["timestamp"]),
+        )
+
+    console.print(table)
+    console.print("\n[dim]ℹ️  'orchay history <TASK-ID>'로 상세 출력 확인[/]")
+    return 0
+
+
 def cli_main() -> int:
     """CLI 메인 함수."""
     parser = create_parser()
@@ -230,6 +326,7 @@ def cli_main() -> int:
     if len(sys.argv) == 1:
         # 스케줄러 실행
         from orchay.main import main as run_scheduler
+
         run_scheduler()
         return 0
 
@@ -237,15 +334,19 @@ def cli_main() -> int:
 
     if args.command == "exec":
         return handle_exec(args)
+    elif args.command == "history":
+        return handle_history(args)
     elif args.command == "run":
-        # 스케줄러 실행
-        from orchay.main import async_main
-        import asyncio
-        return asyncio.run(async_main(args))
+        # 스케줄러 실행 (기존 main.py 방식)
+        from orchay.main import main as run_scheduler
+
+        run_scheduler()
+        return 0
     elif args.command is None:
         # 서브커맨드 없이 인자가 있는 경우 (기존 호환성)
         # 기존 main.py 방식으로 처리
         from orchay.main import main as run_scheduler
+
         run_scheduler()
         return 0
     else:

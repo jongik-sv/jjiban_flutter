@@ -263,7 +263,7 @@
 ### TSK-02-04: CLI 및 설정 관리
 - category: development
 - domain: backend
-- status: detail-design [ap]
+- status: implement [im]
 - priority: medium
 - assignee: -
 - schedule: 2026-01-04 ~ 2026-01-05
