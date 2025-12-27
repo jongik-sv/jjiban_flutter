@@ -147,5 +147,49 @@ DataTable > .datatable--cursor {
     color: #f59e0b;
 }
 
+/* 명령어 입력 섹션 */
+#input-section {
+    height: 3;
+    width: 100%;
+    padding: 0 1;
+    margin-top: 1;
+}
+
+#command-input {
+    width: 100%;
+}
+
+/* 큐 인터랙티브 위젯 */
+#queue-widget {
+    layer: modal;
+    width: 80%;
+    height: auto;
+    max-height: 60%;
+    background: $surface;
+    border: solid $primary;
+    padding: 1;
+    margin: 2 5;
+}
+
+/* 도움말 모달 */
+#help-modal {
+    layer: modal;
+    width: 70;
+    height: auto;
+    background: $surface;
+    border: solid $success;
+    padding: 1;
+    margin: 2 10;
+    color: $text;
+}
+
+/* 액션 메뉴 */
+#action-menu {
+    width: 40;
+    height: auto;
+    background: $surface;
+    border: solid $warning;
+}
+
 /* Note: Textual does not support media queries.
    Responsive behavior is handled programmatically. */
