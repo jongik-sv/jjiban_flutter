@@ -17,7 +17,7 @@
 ### TSK-01-01: 프로젝트 초기화 및 핵심 모델
 - category: infrastructure
 - domain: infra
-- status: design [dd]
+- status: implement [im]
 - priority: critical
 - assignee: -
 - schedule: 2025-12-28 ~ 2025-12-28

@@ -1,0 +1,60 @@
+"""Task 모델 정의."""
+
+from enum import Enum
+
+from pydantic import BaseModel, Field
+
+
+class TaskCategory(str, Enum):
+    """Task 카테고리."""
+
+    DEVELOPMENT = "development"
+    DEFECT = "defect"
+    INFRASTRUCTURE = "infrastructure"
+    SIMPLE_DEV = "simple-dev"
+
+
+class TaskStatus(str, Enum):
+    """Task 상태."""
+
+    TODO = "[ ]"
+    BASIC_DESIGN = "[bd]"
+    DETAIL_DESIGN = "[dd]"
+    ANALYSIS = "[an]"
+    DESIGN = "[ds]"
+    APPROVED = "[ap]"
+    IMPLEMENT = "[im]"
+    FIX = "[fx]"
+    VERIFY = "[vf]"
+    DONE = "[xx]"
+
+
+class TaskPriority(str, Enum):
+    """Task 우선순위."""
+
+    CRITICAL = "critical"
+    HIGH = "high"
+    MEDIUM = "medium"
+    LOW = "low"
+
+
+class Task(BaseModel):
+    """WBS Task 모델."""
+
+    id: str = Field(description="Task ID (예: TSK-01-01)")
+    title: str = Field(description="Task 제목")
+    category: TaskCategory = Field(description="Task 카테고리")
+    domain: str = Field(default="", description="기술 도메인 (backend, frontend 등)")
+    status: TaskStatus = Field(default=TaskStatus.TODO, description="현재 상태")
+    priority: TaskPriority = Field(default=TaskPriority.MEDIUM, description="우선순위")
+    depends: list[str] = Field(default_factory=list, description="의존 Task ID 목록")
+    blocked_by: str | None = Field(default=None, description="블로킹 사유")
+    is_running: bool = Field(default=False, description="현재 실행 중 여부")
+
+    def is_executable(self) -> bool:
+        """실행 가능 여부 확인."""
+        return (
+            self.status != TaskStatus.DONE
+            and self.blocked_by is None
+            and not self.is_running
+        )
