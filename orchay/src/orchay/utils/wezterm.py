@@ -5,7 +5,6 @@ WezTerm 터미널의 pane을 관리하기 위한 비동기 CLI 래퍼입니다.
 
 import asyncio
 import json
-import shlex
 from dataclasses import dataclass
 
 
@@ -44,10 +43,11 @@ async def wezterm_list_panes() -> list[PaneInfo]:
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
-        stdout, stderr = await process.communicate()
+        stdout, _ = await process.communicate()
     except FileNotFoundError as e:
         raise WezTermNotFoundError(
-            "WezTerm CLI를 찾을 수 없습니다. WezTerm이 설치되어 있고 PATH에 등록되어 있는지 확인하세요."
+            "WezTerm CLI를 찾을 수 없습니다. "
+            "WezTerm이 설치되어 있고 PATH에 등록되어 있는지 확인하세요."
         ) from e
 
     if process.returncode != 0:
@@ -91,7 +91,7 @@ async def wezterm_get_text(pane_id: int, lines: int = 50) -> str:
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
-        stdout, stderr = await process.communicate()
+        stdout, _ = await process.communicate()
     except FileNotFoundError:
         return ""
 
@@ -134,7 +134,7 @@ async def wezterm_send_text(pane_id: int, text: str) -> None:
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
-        stdout, stderr = await process.communicate()
+        _, stderr = await process.communicate()
     except FileNotFoundError as e:
         raise WezTermNotFoundError(
             "WezTerm CLI를 찾을 수 없습니다."

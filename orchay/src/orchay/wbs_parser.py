@@ -7,11 +7,13 @@ wbs.md 파일을 파싱하여 Task 리스트를 반환하고,
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 import re
+from collections.abc import Awaitable, Callable
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Awaitable, Callable
+from typing import TYPE_CHECKING
 
 from watchdog.events import FileSystemEvent, FileSystemEventHandler
 from watchdog.observers import Observer
@@ -27,6 +29,7 @@ logger = logging.getLogger(__name__)
 TASK_HEADER_PATTERN = re.compile(r"^###\s+(TSK-\d+-\d+(?:-\d+)?):\s*(.+)$")
 STATUS_PATTERN = re.compile(r"\[([^\]]*)\]")
 ATTRIBUTE_PATTERN = re.compile(r"^-\s*(\w+(?:-\w+)?):\s*(.*)$")
+METADATA_PATTERN = re.compile(r"^>\s*([\w-]+):\s*(.*)$")
 
 
 class WbsParseError(Exception):
@@ -112,7 +115,18 @@ class WbsParser:
     def __init__(self, path: str | Path) -> None:
         self._path = Path(path)
         self._cache: list[Task] = []
+        self._metadata: dict[str, str] = {}
         self._last_parsed: datetime | None = None
+
+    @property
+    def project_root(self) -> str | None:
+        """project-root 메타데이터 값 반환."""
+        return self._metadata.get("project-root")
+
+    @property
+    def metadata(self) -> dict[str, str]:
+        """전체 메타데이터 반환."""
+        return self._metadata.copy()
 
     async def parse(self) -> list[Task]:
         """wbs.md 파일을 파싱하여 Task 리스트 반환.
@@ -129,6 +143,7 @@ class WbsParser:
                 return [] if not self._cache else self._cache
 
             content = self._path.read_text(encoding="utf-8")
+            self._parse_metadata(content)
             tasks = self._parse_content(content)
 
             # 파싱 결과가 비어있고 이전 캐시가 있으면 캐시 반환 (BR-01)
@@ -147,6 +162,25 @@ class WbsParser:
             # 캐시 반환
             return self._cache
 
+    def _parse_metadata(self, content: str) -> None:
+        """메타데이터 블록 파싱.
+
+        wbs.md 상단의 `> key: value` 형식 메타데이터를 파싱합니다.
+        """
+        self._metadata.clear()
+        for line in content.split("\n"):
+            # 빈 줄이나 구분선(---)을 만나면 메타데이터 블록 종료
+            stripped = line.strip()
+            if stripped.startswith("---"):
+                break
+            if not stripped:
+                continue
+
+            match = METADATA_PATTERN.match(line)
+            if match:
+                key, value = match.groups()
+                self._metadata[key] = value.strip()
+
     def _parse_content(self, content: str) -> list[Task]:
         """마크다운 콘텐츠를 파싱하여 Task 리스트 반환."""
         tasks: list[Task] = []
@@ -158,7 +192,7 @@ class WbsParser:
         while i < len(lines):
             line = lines[i]
 
-            # Task 헤더 감지
+            # Task 헤더 감지 (### TSK-...)
             header_match = TASK_HEADER_PATTERN.match(line)
             if header_match:
                 # 이전 Task 저장
@@ -175,7 +209,18 @@ class WbsParser:
                 i += 1
                 continue
 
-            # 속성 파싱
+            # WP 헤더 감지 (## WP-...) - 현재 Task 저장 후 초기화
+            # 이렇게 하면 WP 속성이 Task에 적용되지 않음
+            if line.startswith("## "):
+                if current_task:
+                    task = self._create_task(current_task)
+                    if task:
+                        tasks.append(task)
+                    current_task = None
+                i += 1
+                continue
+
+            # 속성 파싱 (현재 Task가 있을 때만)
             if current_task:
                 attr_match = ATTRIBUTE_PATTERN.match(line)
                 if attr_match:
@@ -230,6 +275,7 @@ class WbsParser:
                 tags=_parse_list(data.get("tags", "")),
                 depends=_parse_list(data.get("depends", "")),
                 blocked_by=blocked_by,
+                workflow=data.get("workflow", "design"),
             )
         except Exception as e:
             logger.error(f"Task 생성 오류: {e}")
@@ -290,10 +336,8 @@ class WbsFileHandler(FileSystemEventHandler):
 
         # 새 태스크 예약
         future = asyncio.run_coroutine_threadsafe(self._debounced_callback(), self._loop)
-        try:
+        with contextlib.suppress(Exception):
             self._pending_task = future.result(timeout=1.0)
-        except Exception:
-            pass
 
     async def _debounced_callback(self) -> asyncio.Task[None]:
         """디바운스된 콜백 실행."""

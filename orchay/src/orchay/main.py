@@ -7,7 +7,9 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import contextlib
 import logging
+import os
 import signal
 import sys
 from pathlib import Path
@@ -16,7 +18,13 @@ from rich.console import Console
 from rich.table import Table
 
 from orchay.models import Config, ExecutionConfig, Task, Worker, WorkerState
-from orchay.scheduler import ExecutionMode, dispatch_task, filter_executable_tasks
+from orchay.scheduler import (
+    ExecutionMode,
+    dispatch_task,
+    filter_executable_tasks,
+    get_next_workflow_command,
+)
+from orchay.utils.active_tasks import clear_active_tasks
 from orchay.utils.wezterm import (
     WezTermNotFoundError,
     wezterm_list_panes,
@@ -35,9 +43,13 @@ class Orchestrator:
     WBS 파일을 모니터링하고 Worker에 Task를 분배합니다.
     """
 
-    def __init__(self, config: Config, wbs_path: Path) -> None:
+    def __init__(
+        self, config: Config, wbs_path: Path, base_dir: Path, project_name: str
+    ) -> None:
         self.config = config
         self.wbs_path = wbs_path
+        self.base_dir = base_dir  # 프로젝트 루트 디렉토리
+        self.project_name = project_name  # 프로젝트명 (예: orchay)
         self.parser = WbsParser(wbs_path)
         self.workers: list[Worker] = []
         self.tasks: list[Task] = []
@@ -52,6 +64,9 @@ class Orchestrator:
             성공 여부
         """
         console.print("[bold cyan]orchay[/] - Task Scheduler v0.1.0\n")
+
+        # 이전 세션 상태 클리어 (파일 기반 상태 관리)
+        clear_active_tasks()
 
         # WBS 파일 확인
         if not self.wbs_path.exists():
@@ -70,11 +85,15 @@ class Orchestrator:
             return False
 
         # Worker 초기화 (현재 pane 제외, 최대 config.workers 개)
-        # 현재 pane은 orchay가 실행 중인 pane
+        # 현재 pane은 orchay가 실행 중인 pane (WEZTERM_PANE 환경변수 또는 pane 0)
+        current_pane_id = int(os.environ.get("WEZTERM_PANE", 0))
         worker_count = 0
         for pane in panes:
             if worker_count >= self.config.workers:
                 break
+            # 현재 pane (orchay 실행 중) 제외
+            if pane.pane_id == current_pane_id:
+                continue
             # Worker pane으로 등록
             self.workers.append(
                 Worker(
@@ -180,17 +199,37 @@ class Orchestrator:
         # /clear 전송 (옵션)
         if self.config.dispatch.clear_before_dispatch:
             try:
-                await wezterm_send_text(worker.pane_id, "/clear\n")
+                await wezterm_send_text(worker.pane_id, "/clear")
+                await wezterm_send_text(worker.pane_id, "\r")
                 await asyncio.sleep(self.config.dispatch.clear_wait_time)
             except Exception as e:
                 logger.warning(f"Worker {worker.id} /clear 실패: {e}")
 
         # 워크플로우 명령 전송
-        command = f"/wf:run {task.id}\n"
-        try:
-            await wezterm_send_text(worker.pane_id, command)
+        # 형식: /wf:{workflow} {project}/{task_id}
+        # Task 상태에 따라 다음 workflow 결정
+        next_workflow = get_next_workflow_command(task)
+
+        # transition이 없으면 dispatch 안 함
+        if next_workflow is None:
             console.print(
-                f"[cyan]Dispatch:[/] {task.id} → Worker {worker.id} ({self.mode.value})"
+                f"[red]Error:[/] {task.id} ({task.status.value}) - "
+                f"다음 transition을 찾을 수 없음 (category: {task.category.value})"
+            )
+            worker.reset()
+            self.running_tasks.discard(task.id)
+            return
+
+        command = f"/wf:{next_workflow} {self.project_name}/{task.id}"
+
+        try:
+            # 명령어 전송
+            await wezterm_send_text(worker.pane_id, command)
+            # Enter 키 전송 (submit)
+            await wezterm_send_text(worker.pane_id, "\r")
+            console.print(
+                f"[cyan]Dispatch:[/] {task.id} ({task.status.value}) → Worker {worker.id} "
+                f"(/wf:{next_workflow})"
             )
         except Exception as e:
             logger.error(f"Worker {worker.id} 명령 전송 실패: {e}")
@@ -247,10 +286,10 @@ def parse_args() -> argparse.Namespace:
         description="WezTerm 기반 Task 스케줄러",
     )
     parser.add_argument(
-        "wbs",
+        "project",
         nargs="?",
-        default=".jjiban/projects/orchay/wbs.md",
-        help="WBS 파일 경로 (기본: .jjiban/projects/orchay/wbs.md)",
+        default="orchay",
+        help="프로젝트명 (.jjiban/projects/{project}/ 사용, 기본: orchay)",
     )
     parser.add_argument(
         "-w", "--workers",
@@ -283,6 +322,40 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def find_jjiban_root() -> Path | None:
+    """`.jjiban` 폴더가 있는 프로젝트 루트를 찾습니다.
+
+    현재 디렉토리부터 상위로 탐색합니다.
+
+    Returns:
+        프로젝트 루트 경로 또는 None
+    """
+    cwd = Path.cwd().resolve()
+    for parent in [cwd, *cwd.parents]:
+        if (parent / ".jjiban").is_dir():
+            return parent
+    return None
+
+
+def get_project_paths(project_name: str) -> tuple[Path, Path]:
+    """프로젝트명으로 WBS 경로와 베이스 디렉토리 반환.
+
+    Args:
+        project_name: 프로젝트명
+
+    Returns:
+        (wbs_path, base_dir) 튜플
+    """
+    base_dir = find_jjiban_root()
+    if base_dir is None:
+        # .jjiban 폴더를 찾지 못하면 현재 디렉토리 사용
+        base_dir = Path.cwd()
+
+    jjiban_dir = base_dir / ".jjiban" / "projects" / project_name
+    wbs_path = jjiban_dir / "wbs.md"
+    return wbs_path, base_dir
+
+
 async def async_main() -> int:
     """비동기 메인 함수."""
     args = parse_args()
@@ -301,13 +374,11 @@ async def async_main() -> int:
         execution=ExecutionConfig(mode=args.mode),
     )
 
-    # WBS 경로
-    wbs_path = Path(args.wbs)
-    if not wbs_path.is_absolute():
-        wbs_path = Path.cwd() / wbs_path
+    # 프로젝트 경로 계산
+    wbs_path, base_dir = get_project_paths(args.project)
 
     # 오케스트레이터 생성 및 초기화
-    orchestrator = Orchestrator(config, wbs_path)
+    orchestrator = Orchestrator(config, wbs_path, base_dir, args.project)
 
     if not await orchestrator.initialize():
         return 1
@@ -324,11 +395,9 @@ async def async_main() -> int:
 
     loop = asyncio.get_event_loop()
     for sig in (signal.SIGINT, signal.SIGTERM):
-        try:
-            loop.add_signal_handler(sig, signal_handler)
-        except NotImplementedError:
+        with contextlib.suppress(NotImplementedError):
             # Windows에서는 add_signal_handler가 지원되지 않음
-            pass
+            loop.add_signal_handler(sig, signal_handler)
 
     # 메인 루프 실행
     try:

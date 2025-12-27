@@ -95,10 +95,7 @@ def unregister_active_task(task_id: str) -> None:
 def is_pane_active(pane_id: int) -> bool:
     """해당 pane이 작업 중인지 확인."""
     data = load_active_tasks()
-    for task_info in data["activeTasks"].values():
-        if task_info["paneId"] == pane_id:
-            return True
-    return False
+    return any(task_info["paneId"] == pane_id for task_info in data["activeTasks"].values())
 
 
 def get_task_by_pane(pane_id: int) -> str | None:
