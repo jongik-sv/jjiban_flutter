@@ -229,7 +229,7 @@
 ### TSK-02-03: TUI 인터랙티브 기능
 - category: development
 - domain: frontend
-- status: [ ]
+- status: detail-design [dd]
 - priority: medium
 - assignee: -
 - schedule: 2026-01-06 ~ 2026-01-08
