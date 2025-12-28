@@ -1,6 +1,7 @@
 """FastAPI 웹 서버 테스트.
 
 TSK-01-01: FastAPI 앱 및 라우트 정의 테스트
+TSK-02-01: 트리 데이터 API 테스트
 """
 
 from unittest.mock import Mock
@@ -184,3 +185,159 @@ async def test_detail_api_not_found() -> None:
 
     assert response.status_code == 404
     assert "찾을 수 없습니다" in response.text
+
+
+# =============================================================================
+# TSK-02-01: 트리 데이터 API 테스트
+# =============================================================================
+
+
+# TC-02-01: WP 하위 노드 API 정상 응답
+@pytest.mark.asyncio
+async def test_get_wp_children() -> None:
+    """GET /api/tree/{wp_id} 요청 시 해당 WP의 하위 노드만 반환."""
+    from httpx import ASGITransport, AsyncClient
+
+    from orchay.web.server import create_app
+
+    # WP-01과 WP-02에 각각 Task 생성
+    mock_task1 = Mock()
+    mock_task1.id = "TSK-01-01"
+    mock_task1.title = "Task 1"
+    mock_task1.status = Mock(value="[ ]")
+
+    mock_task2 = Mock()
+    mock_task2.id = "TSK-02-01"
+    mock_task2.title = "트리 API"
+    mock_task2.status = Mock(value="[bd]")
+
+    mock_task3 = Mock()
+    mock_task3.id = "TSK-02-02"
+    mock_task3.title = "트리 템플릿"
+    mock_task3.status = Mock(value="[ ]")
+
+    mock_orchestrator = Mock()
+    mock_orchestrator.project_name = "test_project"
+    mock_orchestrator.mode = Mock(value="quick")
+    mock_orchestrator.tasks = [mock_task1, mock_task2, mock_task3]
+    mock_orchestrator.workers = []
+
+    app = create_app(mock_orchestrator)
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/api/tree/WP-02")
+
+    assert response.status_code == 200
+    assert "TSK-02-01" in response.text
+    assert "TSK-02-02" in response.text
+    # WP-01 Task는 포함되지 않음
+    assert "TSK-01-01" not in response.text
+
+
+# TC-02-05: 존재하지 않는 WP 404 응답
+@pytest.mark.asyncio
+async def test_get_invalid_wp_returns_404() -> None:
+    """존재하지 않는 WP 요청 시 404 반환."""
+    from httpx import ASGITransport, AsyncClient
+
+    from orchay.web.server import create_app
+
+    mock_task = Mock()
+    mock_task.id = "TSK-01-01"
+    mock_task.title = "Task 1"
+    mock_task.status = Mock(value="[ ]")
+
+    mock_orchestrator = Mock()
+    mock_orchestrator.project_name = "test_project"
+    mock_orchestrator.mode = Mock(value="quick")
+    mock_orchestrator.tasks = [mock_task]
+    mock_orchestrator.workers = []
+
+    app = create_app(mock_orchestrator)
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/api/tree/WP-99")
+
+    assert response.status_code == 404
+    assert "찾을 수 없습니다" in response.text
+
+
+# TC-02-03: 트리 구조에 진행률 포함
+@pytest.mark.asyncio
+async def test_tree_includes_progress() -> None:
+    """트리 API 응답에 진행률이 포함되는지 테스트."""
+    from httpx import ASGITransport, AsyncClient
+
+    from orchay.web.server import create_app
+
+    # 2개 완료, 2개 미완료 = 50%
+    mock_task1 = Mock()
+    mock_task1.id = "TSK-01-01"
+    mock_task1.title = "Task 1"
+    mock_task1.status = Mock(value="[xx]")
+
+    mock_task2 = Mock()
+    mock_task2.id = "TSK-01-02"
+    mock_task2.title = "Task 2"
+    mock_task2.status = Mock(value="[xx]")
+
+    mock_task3 = Mock()
+    mock_task3.id = "TSK-01-03"
+    mock_task3.title = "Task 3"
+    mock_task3.status = Mock(value="[im]")
+
+    mock_task4 = Mock()
+    mock_task4.id = "TSK-01-04"
+    mock_task4.title = "Task 4"
+    mock_task4.status = Mock(value="[ ]")
+
+    mock_orchestrator = Mock()
+    mock_orchestrator.project_name = "test_project"
+    mock_orchestrator.mode = Mock(value="quick")
+    mock_orchestrator.tasks = [mock_task1, mock_task2, mock_task3, mock_task4]
+    mock_orchestrator.workers = []
+
+    app = create_app(mock_orchestrator)
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/api/tree")
+
+    assert response.status_code == 200
+    # 진행률 표시 확인 (50%)
+    assert "50%" in response.text
+
+
+# TC-02-04: 진행률 계산 함수 테스트
+def test_calculate_progress() -> None:
+    """calculate_progress 함수 테스트."""
+    from orchay.web.tree import calculate_progress
+
+    # 2/4 = 50%
+    tasks_50 = [
+        Mock(status=Mock(value="[xx]")),
+        Mock(status=Mock(value="[xx]")),
+        Mock(status=Mock(value="[im]")),
+        Mock(status=Mock(value="[ ]")),
+    ]
+    assert calculate_progress(tasks_50) == 50.0
+
+
+def test_calculate_progress_empty() -> None:
+    """빈 목록의 진행률은 0."""
+    from orchay.web.tree import calculate_progress
+
+    assert calculate_progress([]) == 0.0
+
+
+def test_calculate_progress_all_complete() -> None:
+    """모두 완료 시 100%."""
+    from orchay.web.tree import calculate_progress
+
+    tasks = [
+        Mock(status=Mock(value="[xx]")),
+        Mock(status=Mock(value="[xx]")),
+    ]
+    assert calculate_progress(tasks) == 100.0

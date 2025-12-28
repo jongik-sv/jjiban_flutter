@@ -1,6 +1,7 @@
 """FastAPI 웹 서버 모듈.
 
 TSK-01-01: FastAPI 앱 및 라우트 정의
+TSK-02-01: 트리 데이터 API
 """
 
 from __future__ import annotations
@@ -12,6 +13,9 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+
+from orchay.web.filters import status_bg, status_icon
+from orchay.web.tree import build_tree, build_wp_children
 
 if TYPE_CHECKING:
     from orchay.main import Orchestrator
@@ -32,6 +36,10 @@ def create_app(orchestrator: Orchestrator) -> FastAPI:
     # 경로 설정
     base_dir = Path(__file__).parent
     templates = Jinja2Templates(directory=base_dir / "templates")
+
+    # Jinja2 필터 등록
+    templates.env.filters["status_icon"] = status_icon
+    templates.env.filters["status_bg"] = status_bg
 
     # 정적 파일 마운트
     static_dir = base_dir / "static"
@@ -57,11 +65,31 @@ def create_app(orchestrator: Orchestrator) -> FastAPI:
     async def _get_tree(request: Request) -> HTMLResponse:
         """WBS 트리 HTML 조각."""
         tasks = orchestrator.tasks
-        tree = _build_tree(tasks)
+        tree = build_tree(tasks)
         return templates.TemplateResponse(
             request,
             "partials/tree.html",
             {"tree": tree},
+        )
+
+    @app.get("/api/tree/{wp_id}", response_class=HTMLResponse)
+    async def _get_wp_children(request: Request, wp_id: str) -> HTMLResponse:
+        """WP 하위 노드 HTML 조각."""
+        tasks = orchestrator.tasks
+        try:
+            children = build_wp_children(tasks, wp_id)
+        except ValueError:
+            return templates.TemplateResponse(
+                request,
+                "partials/error.html",
+                {"message": f"WP '{wp_id}'를 찾을 수 없습니다"},
+                status_code=404,
+            )
+
+        return templates.TemplateResponse(
+            request,
+            "partials/wp_children.html",
+            {"wp_id": wp_id, "children": children},
         )
 
     @app.get("/api/detail/{task_id}", response_class=HTMLResponse)
