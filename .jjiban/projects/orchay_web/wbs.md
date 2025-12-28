@@ -312,7 +312,14 @@
 #### 기술 스펙 (TRD)
 - tech-spec:
   - HTMX hx-trigger="every 5s"
-  - hx-swap="innerHTML" (부분 교체)
+  - hx-swap="morph:innerHTML" (DOM morphing으로 깜빡임 없는 갱신)
+  - htmx-ext-morph 2.0 확장 필수
+
+#### 버그 수정 이력
+- **2025-12-28**: idiomorph CDN 경로 수정 (HTMX 2.0 호환)
+  - 원인: `idiomorph@0.3.0/dist/idiomorph-ext.min.js`가 HTMX 2.0과 호환되지 않음
+  - 수정: `htmx-ext-morph@2.0.0/morph.js`로 변경
+  - 결과: morph 확장 정상 작동, 깜빡임 해소
 
 ---
 
@@ -380,7 +387,7 @@
 ### TSK-04-03: 문서화
 - category: development
 - domain: docs
-- status: implement [im]
+- status: done [xx]
 - priority: low
 - assignee: -
 - schedule: 2026-01-05 ~ 2026-01-05
@@ -399,6 +406,162 @@
 
 ---
 
+## WP-05: Document Viewer
+- status: planned
+- priority: high
+- schedule: 2026-01-06 ~ 2026-01-07
+- progress: 0%
+- note: 문서 및 이미지 뷰어 모달
+
+### TSK-05-01: Document Viewer 구현
+- category: development
+- domain: fullstack
+- status: detail-design [dd]
+- priority: high
+- assignee: -
+- schedule: 2026-01-06 ~ 2026-01-07
+- tags: viewer, markdown, mermaid, modal
+- depends: TSK-03-01
+
+#### PRD 요구사항
+- prd-ref: PRD 3.5 Document Viewer
+- requirements:
+  - 문서 API 엔드포인트 (/api/document/{task_id}/{doc_name})
+  - MD 파일 렌더링 (marked.js)
+  - Mermaid 다이어그램 지원
+  - 이미지 파일 표시 (png, jpg, gif, webp)
+  - 모달 팝업 UI
+  - ESC 키로 닫기
+- acceptance:
+  - 문서 클릭 시 모달에 내용 표시
+  - Mermaid 코드블록 다이어그램 렌더링
+  - 이미지 정상 표시
+  - Path traversal 공격 차단
+
+#### 기술 스펙 (TRD)
+- tech-spec:
+  - marked.js (CDN) - 마크다운 렌더링
+  - mermaid.js (CDN) - 다이어그램 (다크 테마)
+  - FastAPI FileResponse/PlainTextResponse
+- api-spec:
+  - GET /api/document/{task_id}/{doc_name}
+    - .md → PlainTextResponse (클라이언트 렌더링)
+    - 이미지 → FileResponse
+- security-spec:
+  - Path traversal 방지: is_relative_to() 검증
+  - 허용 확장자: .md, .png, .jpg, .jpeg, .gif, .webp
+
+---
+
+## WP-06: UI 개선 (Vue 스타일)
+- status: planned
+- priority: high
+- schedule: 2026-01-08 ~ 2026-01-10
+- progress: 0%
+- note: Vue WBS 페이지 스타일 적용
+
+### TSK-06-01: 트리 패널 개선
+- category: development
+- domain: frontend
+- status: detail-design [  ]
+- priority: high
+- assignee: -
+- schedule: 2026-01-08 ~ 2026-01-08
+- tags: tree, stats, search, ui
+- depends: TSK-02-02
+
+#### PRD 요구사항
+- prd-ref: PRD 3.6.2 트리 패널 개선, PRD 3.6.3 트리 노드 인터랙션
+- requirements:
+  - 통계 배지 (WP/ACT/TSK 개수, 전체 진행률)
+  - 검색창 (Task ID/제목 필터링)
+  - 전체 펼치기/접기 버튼
+  - WP/ACT 텍스트 클릭 → Detail 패널에 설명 표시
+  - 앞 아이콘 클릭 → 트리 열기/닫기
+- acceptance:
+  - 통계 배지에 정확한 수치 표시
+  - 검색 시 실시간 필터링
+  - 펼치기/접기 일괄 동작
+  - WP/ACT 클릭 시 Detail 패널 업데이트
+
+#### 기술 스펙 (TRD)
+- tech-spec:
+  - 통계 계산: server.py에서 WP/ACT/TSK 집계
+  - 검색: 클라이언트 사이드 JavaScript 필터
+  - 펼치기/접기: expandAll(), collapseAll() 함수
+- ui-spec:
+  - 통계 배지: flex gap-4, 둥근 카드 형태
+  - 검색창: w-full, bg-gray-800, border rounded
+
+---
+
+### TSK-06-02: Task Detail 패널 개선
+- category: development
+- domain: frontend
+- status: detail-design [  ]
+- priority: high
+- assignee: -
+- schedule: 2026-01-09 ~ 2026-01-09
+- tags: detail, card, stepper, ui
+- depends: TSK-03-01
+
+#### PRD 요구사항
+- prd-ref: PRD 3.6.4 Task Detail 패널 개선
+- requirements:
+  - 카드 기반 섹션 분리 (기본 정보, 진행 상태, 요구사항, 기술 스펙)
+  - Task ID 배지 형태 (프로젝트 + 카테고리 + ID)
+  - 워크플로우 스테퍼 (시작 전 → 설계 → 구현 → 완료)
+  - 진행률 바 표시
+  - PRD 요구사항 표시 섹션
+  - 기술 스펙 표시 섹션
+  - 각 섹션 접기/펼치기 기능
+- acceptance:
+  - 각 섹션이 카드로 분리되어 표시
+  - 워크플로우 스테퍼에서 현재 단계 하이라이트
+  - 요구사항/기술 스펙 정확히 표시
+
+#### 기술 스펙 (TRD)
+- tech-spec:
+  - 카드 스타일: bg-gray-800 rounded-lg p-4 mb-4
+  - 스테퍼: flex items-center, 원형 아이콘 + 연결선
+  - 접기/펼치기: CSS max-height transition
+- ui-spec:
+  - 배지: px-2 py-1 rounded text-sm
+  - 진행률 바: bg-gray-700 h-2 rounded-full
+
+---
+
+### TSK-06-03: 문서 테이블
+- category: development
+- domain: frontend
+- status: todo [ ]
+- priority: medium
+- assignee: -
+- schedule: 2026-01-10 ~ 2026-01-10
+- tags: document, table, ui
+- depends: TSK-05-01, TSK-06-02
+
+#### PRD 요구사항
+- prd-ref: PRD 3.6.4 관련 문서 섹션
+- requirements:
+  - 문서 테이블 형태 표시 (문서명, 타입, 크기, 수정일)
+  - 클릭 시 TSK-05-01 Document Viewer 호출
+  - 접기/펼치기 기능
+- acceptance:
+  - 문서 목록이 테이블로 표시
+  - 파일 메타정보 (타입, 크기, 수정일) 정확히 표시
+  - 클릭 시 Document Viewer 모달 열림
+
+#### 기술 스펙 (TRD)
+- tech-spec:
+  - 문서 메타정보: server.py에서 파일 stat 조회
+  - 테이블: w-full text-sm, hover:bg-gray-700
+  - Document Viewer 호출: openDocument(taskId, docName)
+- api-spec:
+  - 기존 /api/detail/{task_id} 응답에 documents 메타정보 포함
+
+---
+
 ## 요약
 
 | 단계 | Task 수 | 개발 방식 | 예상 기간 |
@@ -407,7 +570,9 @@
 | WP-02 (트리 UI) | 3개 | 순차 | 2일 |
 | WP-03 (상세/상태) | 3개 | 순차 | 2일 |
 | WP-04 (마무리) | 3개 | 순차 | 2일 |
-| **총합** | **12개** | - | **8일** |
+| WP-05 (Document Viewer) | 1개 | 순차 | 2일 |
+| WP-06 (UI 개선) | 3개 | 순차 | 3일 |
+| **총합** | **16개** | - | **13일** |
 
 ### 의존성 그래프
 
@@ -423,21 +588,27 @@ TSK-01-02  TSK-01-03  TSK-02-01
     │               TSK-02-02
     │               (트리 템플릿)
     │                     │
-    ├─────────────────────┤
-    ▼                     ▼
-TSK-03-02           TSK-02-03
-(Worker 상태)       (트리 인터랙션)
+    ├─────────────────────┼─────────────────┐
+    ▼                     ▼                 ▼
+TSK-03-02           TSK-02-03          TSK-06-01
+(Worker 상태)       (트리 인터랙션)    (트리 패널 개선)
     │                     │
     └──────────┬──────────┘
                ▼
          TSK-03-01
          (Task 상세)
                │
-               ▼
-         TSK-03-03
-         (실시간 갱신)
-               │
-               ▼
-         TSK-04-01 → TSK-04-02 → TSK-04-03
-         (의존성)    (테스트)    (문서화)
+    ┌──────────┼──────────┐
+    ▼          ▼          ▼
+TSK-03-03  TSK-05-01  TSK-06-02
+(실시간)   (Doc Viewer) (Detail 개선)
+               │          │
+               └────┬─────┘
+                    ▼
+              TSK-06-03
+              (문서 테이블)
+                    │
+                    ▼
+   TSK-04-01 → TSK-04-02 → TSK-04-03
+   (의존성)    (테스트)    (문서화)
 ```
