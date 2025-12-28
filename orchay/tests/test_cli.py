@@ -459,6 +459,96 @@ class TestHandleExec:
         assert result == 1
 
 
+class TestWebOptions:
+    """TSK-01-03: 웹서버 CLI 옵션 테스트."""
+
+    def test_web_option_parsing(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """TC-01: --web 옵션이 정상 파싱되는지 확인."""
+        import sys
+        from orchay.main import parse_args
+
+        monkeypatch.setattr(sys, "argv", ["orchay", "jjiban", "--web"])
+        args = parse_args()
+
+        assert args.web is True
+        assert args.web_only is False
+        assert args.port == 8080
+
+    def test_web_only_option_parsing(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """TC-02: --web-only 옵션이 정상 파싱되는지 확인."""
+        import sys
+        from orchay.main import parse_args
+
+        monkeypatch.setattr(sys, "argv", ["orchay", "jjiban", "--web-only"])
+        args = parse_args()
+
+        assert args.web_only is True
+        assert args.web is False
+
+    def test_port_option_parsing(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """TC-03: --port 옵션이 정상 파싱되는지 확인."""
+        import sys
+        from orchay.main import parse_args
+
+        monkeypatch.setattr(sys, "argv", ["orchay", "jjiban", "--web", "--port", "3000"])
+        args = parse_args()
+
+        assert args.port == 3000
+
+    def test_web_options_mutually_exclusive(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """TC-04: --web과 --web-only 동시 사용 시 에러."""
+        import sys
+        from orchay.main import parse_args
+
+        monkeypatch.setattr(sys, "argv", ["orchay", "jjiban", "--web", "--web-only"])
+        with pytest.raises(SystemExit):
+            parse_args()
+
+    def test_invalid_port_too_high(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """TC-05: 유효 범위 외 포트 (너무 큼)."""
+        import sys
+        from orchay.main import parse_args
+
+        monkeypatch.setattr(sys, "argv", ["orchay", "--web", "--port", "99999"])
+        with pytest.raises(SystemExit):
+            parse_args()
+
+    def test_invalid_port_too_low(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """TC-05b: 유효 범위 외 포트 (너무 작음)."""
+        import sys
+        from orchay.main import parse_args
+
+        monkeypatch.setattr(sys, "argv", ["orchay", "--web", "--port", "0"])
+        with pytest.raises(SystemExit):
+            parse_args()
+
+    def test_invalid_port_non_numeric(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """TC-05c: 숫자가 아닌 포트."""
+        import sys
+        from orchay.main import parse_args
+
+        monkeypatch.setattr(sys, "argv", ["orchay", "--web", "--port", "abc"])
+        with pytest.raises(SystemExit):
+            parse_args()
+
+    def test_web_with_other_options(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """웹 옵션과 다른 옵션 조합."""
+        import sys
+        from orchay.main import parse_args
+
+        monkeypatch.setattr(
+            sys, "argv",
+            ["orchay", "my-project", "--web", "--port", "3000", "-m", "design", "-w", "2"]
+        )
+        args = parse_args()
+
+        assert args.project == "my-project"
+        assert args.web is True
+        assert args.port == 3000
+        assert args.mode == "design"
+        assert args.workers == 2
+
+
 class TestHandleHistory:
     """handle_history 함수 테스트."""
 
@@ -605,3 +695,51 @@ class TestHandleHistory:
         result = handle_history(args)
 
         assert result == 0
+
+
+class TestWebConfigInConfig:
+    """TSK-01-03: WebConfig 테스트."""
+
+    def test_web_config_default_values(self) -> None:
+        """WebConfig 기본값 테스트."""
+        from orchay.models.config import WebConfig
+
+        web_config = WebConfig()
+        assert web_config.enabled is False
+        assert web_config.web_only is False
+        assert web_config.port == 8080
+        assert web_config.host == "127.0.0.1"
+
+    def test_web_config_custom_values(self) -> None:
+        """WebConfig 커스텀 값 테스트."""
+        from orchay.models.config import WebConfig
+
+        web_config = WebConfig(
+            enabled=True,
+            web_only=True,
+            port=3000,
+            host="0.0.0.0",
+        )
+        assert web_config.enabled is True
+        assert web_config.web_only is True
+        assert web_config.port == 3000
+        assert web_config.host == "0.0.0.0"
+
+    def test_config_with_web_config(self) -> None:
+        """Config에 WebConfig 포함 테스트."""
+        from orchay.models.config import Config, WebConfig
+
+        web_config = WebConfig(enabled=True, port=3000)
+        config = Config(web=web_config)
+
+        assert config.web.enabled is True
+        assert config.web.port == 3000
+        assert config.web.web_only is False
+
+    def test_config_default_web_config(self) -> None:
+        """Config의 기본 WebConfig 테스트."""
+        from orchay.models.config import Config
+
+        config = Config()
+        assert config.web.enabled is False
+        assert config.web.port == 8080

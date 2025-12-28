@@ -17,7 +17,7 @@ from pathlib import Path
 from rich.console import Console
 from rich.table import Table
 
-from orchay.models import Config, ExecutionConfig, Task, TaskStatus, Worker, WorkerState
+from orchay.models import Config, ExecutionConfig, Task, TaskStatus, WebConfig, Worker, WorkerState
 from orchay.scheduler import (
     ExecutionMode,
     dispatch_task,
@@ -205,7 +205,7 @@ class Orchestrator:
     async def _update_worker_states(self) -> None:
         """모든 Worker의 상태를 업데이트."""
         for worker in self.workers:
-            state, _done_info = await detect_worker_state(worker.pane_id)
+            state, done_info = await detect_worker_state(worker.pane_id)
 
             # 상태 매핑
             state_map = {
@@ -219,15 +219,38 @@ class Orchestrator:
             }
             new_state = state_map.get(state, WorkerState.BUSY)
 
-            # done 상태 처리
-            if new_state == WorkerState.DONE and worker.current_task:
-                self.running_tasks.discard(worker.current_task)
-                worker.reset()
-            elif new_state == WorkerState.IDLE and worker.state == WorkerState.BUSY:
-                # busy → idle 전환: Task 완료로 간주
+            # done 상태 처리: active 파일에서 Task 제거
+            if new_state == WorkerState.DONE:
+                # 이미 DONE 상태면 중복 처리 방지 (다음 tick에서 idle로 전환됨)
+                if worker.state == WorkerState.DONE:
+                    continue
+
+                # done_info 또는 worker.current_task에서 task_id 획득
+                task_id = done_info.task_id if done_info else worker.current_task
+                if task_id:
+                    self.running_tasks.discard(task_id)
+                    # active 파일에서도 제거
+                    unregister_active_task(task_id)
                 if worker.current_task:
                     self.running_tasks.discard(worker.current_task)
-                worker.reset()
+
+                # DONE 상태로 유지 (다음 tick에서 신호가 사라지면 idle로 전환)
+                worker.state = WorkerState.DONE
+                worker.current_task = None
+                worker.current_step = None
+
+            elif new_state == WorkerState.IDLE:
+                # DONE → IDLE 전환: ORCHAY_DONE 신호가 사라짐
+                if worker.state == WorkerState.DONE:
+                    worker.reset()
+                # BUSY → IDLE 전환: Task 완료로 간주
+                elif worker.state == WorkerState.BUSY:
+                    if worker.current_task:
+                        self.running_tasks.discard(worker.current_task)
+                        unregister_active_task(worker.current_task)
+                    worker.reset()
+                else:
+                    worker.state = new_state
             else:
                 worker.state = new_state
 
@@ -320,6 +343,31 @@ class Orchestrator:
         self._running = False
 
 
+def _validate_port(value: str) -> int:
+    """포트 번호 유효성 검증.
+
+    Args:
+        value: 포트 번호 문자열
+
+    Returns:
+        유효한 포트 번호
+
+    Raises:
+        argparse.ArgumentTypeError: 유효하지 않은 포트 번호
+    """
+    try:
+        port = int(value)
+    except ValueError:
+        msg = f"Invalid port number: {value}"
+        raise argparse.ArgumentTypeError(msg) from None
+
+    if not (1 <= port <= 65535):
+        msg = f"Invalid port number: {value} (must be 1-65535)"
+        raise argparse.ArgumentTypeError(msg)
+
+    return port
+
+
 def parse_args() -> argparse.Namespace:
     """CLI 인자 파싱."""
     parser = argparse.ArgumentParser(
@@ -365,6 +413,26 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="TUI 없이 CLI 모드로 실행",
     )
+
+    # 웹서버 옵션 그룹 (TSK-01-03)
+    web_group = parser.add_mutually_exclusive_group()
+    web_group.add_argument(
+        "--web",
+        action="store_true",
+        help="웹서버 활성화 (기본 포트: 8080)",
+    )
+    web_group.add_argument(
+        "--web-only",
+        action="store_true",
+        help="웹서버만 실행 (스케줄링 비활성화)",
+    )
+    parser.add_argument(
+        "--port",
+        type=_validate_port,
+        default=8080,
+        help="웹서버 포트 (기본: 8080)",
+    )
+
     return parser.parse_args()
 
 
@@ -402,6 +470,40 @@ def get_project_paths(project_name: str) -> tuple[Path, Path]:
     return wbs_path, base_dir
 
 
+async def _run_web_server(
+    orchestrator: Orchestrator,
+    host: str,
+    port: int,
+) -> None:
+    """uvicorn 웹서버 비동기 실행.
+
+    Args:
+        orchestrator: Orchestrator 인스턴스
+        host: 바인딩 호스트
+        port: 바인딩 포트
+    """
+    try:
+        import uvicorn
+
+        from orchay.web.server import create_app
+    except ImportError as e:
+        console.print(
+            f"[red]Error:[/] 웹서버 의존성이 설치되지 않았습니다: {e}\n"
+            "[dim]설치: pip install fastapi uvicorn jinja2[/]"
+        )
+        raise
+
+    app = create_app(orchestrator)
+    config = uvicorn.Config(
+        app,
+        host=host,
+        port=port,
+        log_level="warning",
+    )
+    server = uvicorn.Server(config)
+    await server.serve()
+
+
 async def async_main() -> int:
     """비동기 메인 함수."""
     args = parse_args()
@@ -413,11 +515,19 @@ async def async_main() -> int:
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     )
 
+    # WebConfig 생성 (TSK-01-03)
+    web_config = WebConfig(
+        enabled=args.web or args.web_only,
+        web_only=args.web_only,
+        port=args.port,
+    )
+
     # Config 생성
     config = Config(
         workers=args.workers,
         interval=args.interval,
         execution=ExecutionConfig(mode=args.mode),
+        web=web_config,
     )
 
     # 프로젝트 경로 계산
@@ -426,6 +536,34 @@ async def async_main() -> int:
     # 오케스트레이터 생성 및 초기화
     orchestrator = Orchestrator(config, wbs_path, base_dir, args.project)
 
+    # --web-only 모드: 스케줄링 초기화 스킵 가능 (WezTerm 불필요)
+    if args.web_only:
+        console.print("[bold cyan]orchay[/] - Web Monitor (web-only mode)\n")
+        console.print(f"[green]Project:[/] {args.project}")
+        console.print(f"[green]WBS:[/] {wbs_path}")
+
+        # WBS 파일 확인
+        if not wbs_path.exists():
+            console.print(f"[red]Error:[/] WBS 파일을 찾을 수 없습니다: {wbs_path}")
+            return 1
+
+        # WBS 파싱 (Task 데이터 로드)
+        orchestrator.tasks = await orchestrator.parser.parse()
+        console.print(f"[green]Tasks:[/] {len(orchestrator.tasks)}개\n")
+
+        # 웹서버만 실행
+        console.print(
+            f"[bold green]웹서버 시작[/] http://{web_config.host}:{web_config.port}"
+        )
+        console.print("[dim]Ctrl+C로 종료[/]\n")
+
+        with contextlib.suppress(KeyboardInterrupt):
+            await _run_web_server(orchestrator, web_config.host, web_config.port)
+
+        console.print("\n[yellow]웹서버 종료[/]")
+        return 0
+
+    # 일반 모드: 전체 초기화
     if not await orchestrator.initialize():
         return 1
 
@@ -462,7 +600,24 @@ async def async_main() -> int:
             # Windows에서는 add_signal_handler가 지원되지 않음
             loop.add_signal_handler(sig, signal_handler)
 
-    # 메인 루프 실행
+    # --web 모드: TUI/CLI + 웹서버 병렬 실행
+    if args.web:
+        console.print(
+            f"[bold green]웹서버 시작[/] http://{web_config.host}:{web_config.port}"
+        )
+        console.print("[dim]Ctrl+C로 종료[/]\n")
+
+        try:
+            await asyncio.gather(
+                orchestrator.run(),
+                _run_web_server(orchestrator, web_config.host, web_config.port),
+            )
+        except KeyboardInterrupt:
+            orchestrator.stop()
+
+        return 0
+
+    # 메인 루프 실행 (웹서버 없음)
     try:
         await orchestrator.run()
     except KeyboardInterrupt:

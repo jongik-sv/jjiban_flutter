@@ -78,6 +78,18 @@ class ExecutionConfig(BaseModel):
     allow_mode_switch: bool = Field(default=True, description="실행 중 모드 전환 허용")
 
 
+class WebConfig(BaseModel):
+    """웹서버 설정.
+
+    TSK-01-03: CLI 옵션 및 서버 통합
+    """
+
+    enabled: bool = Field(default=False, description="웹서버 활성화 (--web)")
+    web_only: bool = Field(default=False, description="웹서버만 실행 (--web-only)")
+    port: int = Field(default=8080, ge=1, le=65535, description="웹서버 포트 (--port)")
+    host: str = Field(default="127.0.0.1", description="웹서버 호스트 (localhost only)")
+
+
 class Config(BaseModel):
     """orchay 전체 설정."""
 
@@ -90,3 +102,4 @@ class Config(BaseModel):
     dispatch: DispatchConfig = Field(default_factory=DispatchConfig)
     history: HistoryConfig = Field(default_factory=HistoryConfig)
     execution: ExecutionConfig = Field(default_factory=ExecutionConfig)
+    web: WebConfig = Field(default_factory=WebConfig)
