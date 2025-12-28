@@ -416,7 +416,7 @@
 ### TSK-05-01: Document Viewer 구현
 - category: development
 - domain: fullstack
-- status: implement [im]
+- status: done [xx]
 - priority: high
 - assignee: -
 - schedule: 2026-01-06 ~ 2026-01-07
