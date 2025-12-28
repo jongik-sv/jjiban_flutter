@@ -86,7 +86,7 @@
 ### TSK-01-03: CLI 옵션 및 서버 통합
 - category: development
 - domain: backend
-- status: implement [im]
+- status: done [xx]
 - priority: high
 - assignee: -
 - schedule: 2025-12-30 ~ 2025-12-30
