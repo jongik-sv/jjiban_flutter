@@ -1,0 +1,64 @@
+{# TSK-06-01: WP 상세 정보 템플릿 #}
+<div class="bg-orchay-card rounded-lg p-4 border border-orchay-border" data-testid="wp-detail">
+    <!-- WP Header -->
+    <div class="flex items-center gap-3 mb-4 pb-4 border-b border-orchay-border">
+        <span class="px-2 py-1 bg-blue-900 text-blue-300 rounded text-sm font-medium">WP</span>
+        <h3 class="text-xl font-bold">{{ wp.id }}</h3>
+    </div>
+
+    <!-- WP Title -->
+    <div class="mb-4">
+        <span class="text-orchay-muted text-sm">Title</span>
+        <p class="font-medium">{{ wp.title }}</p>
+    </div>
+
+    <!-- Progress -->
+    <div class="mb-4">
+        <span class="text-orchay-muted text-sm">Progress</span>
+        <div class="flex items-center gap-3 mt-1">
+            <div class="flex-1 h-3 bg-gray-700 rounded-full overflow-hidden">
+                <div class="h-full bg-emerald-500 transition-all duration-300"
+                     style="width: {{ wp.progress }}%"></div>
+            </div>
+            <span class="text-sm font-medium min-w-[50px]">{{ wp.progress }}%</span>
+        </div>
+    </div>
+
+    <!-- Task Count -->
+    <div class="grid grid-cols-2 gap-4">
+        <div>
+            <span class="text-orchay-muted text-sm">Total Tasks</span>
+            <p class="text-2xl font-bold">{{ wp.child_count }}</p>
+        </div>
+        <div>
+            <span class="text-orchay-muted text-sm">Completed</span>
+            <p class="text-2xl font-bold text-emerald-400">{{ wp.done_count }}</p>
+        </div>
+    </div>
+
+    <!-- Task List -->
+    <div class="mt-4 pt-4 border-t border-orchay-border">
+        <span class="text-orchay-muted text-sm">Tasks in this WP</span>
+        <div class="mt-2 space-y-1 max-h-60 overflow-auto">
+            {% for task in wp.tasks %}
+            <div class="flex items-center gap-2 text-sm cursor-pointer hover:bg-gray-700 rounded px-2 py-1.5 -mx-2 transition-colors"
+                 hx-get="/api/detail/{{ task.id }}"
+                 hx-target="#detail-panel"
+                 hx-swap="innerHTML"
+                 onclick="selectTask(document.querySelector('.tree-node.task[data-id=&quot;{{ task.id }}&quot;]'))">
+                <span class="text-yellow-400 font-medium">T</span>
+                <span class="truncate flex-1">{{ task.id }}: {{ task.title }}</span>
+                <span class="px-1.5 py-0.5 text-xs rounded
+                    {% if task.status.value == '[xx]' %}bg-emerald-500
+                    {% elif task.status.value == '[im]' %}bg-yellow-500
+                    {% elif task.status.value == '[ap]' %}bg-green-500
+                    {% elif task.status.value == '[dd]' %}bg-purple-500
+                    {% elif task.status.value == '[bd]' %}bg-blue-500
+                    {% else %}bg-gray-500{% endif %} text-white min-w-[32px] text-center">
+                    {{ task.status.value }}
+                </span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>

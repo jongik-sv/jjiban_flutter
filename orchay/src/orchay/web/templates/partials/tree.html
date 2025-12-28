@@ -1,6 +1,7 @@
 {#
   트리 템플릿 (tree.html)
   TSK-02-02: 트리 템플릿 구현
+  TSK-06-01: 통계 배지, 검색창, 펼치기/접기, 노드 클릭 분리
 
   상태 색상 매핑:
     [ ]  → bg-gray-500    (Todo)
@@ -34,6 +35,47 @@
       data-testid="status-badge">{{ status }}</span>
 {% endmacro %}
 
+{# TSK-06-01: 통계 배지 #}
+{% if stats %}
+<div class="stats-bar flex flex-wrap gap-3 mb-4 p-3 bg-gray-800 rounded-lg" data-testid="stats-bar">
+    <div class="stat-badge flex items-center gap-1.5 px-3 py-1 bg-blue-900/50 rounded-full text-sm">
+        <span class="text-blue-400 font-medium">WP</span>
+        <span class="text-white font-bold">{{ stats.wp_count }}</span>
+    </div>
+    <div class="stat-badge flex items-center gap-1.5 px-3 py-1 bg-green-900/50 rounded-full text-sm">
+        <span class="text-green-400 font-medium">ACT</span>
+        <span class="text-white font-bold">{{ stats.act_count }}</span>
+    </div>
+    <div class="stat-badge flex items-center gap-1.5 px-3 py-1 bg-yellow-900/50 rounded-full text-sm">
+        <span class="text-yellow-400 font-medium">TSK</span>
+        <span class="text-white font-bold">{{ stats.tsk_count }}</span>
+    </div>
+    <div class="flex-1"></div>
+    <div class="progress-badge flex items-center gap-2" data-testid="progress-bar">
+        <div class="w-24 h-2 bg-gray-700 rounded-full overflow-hidden">
+            <div class="h-full bg-emerald-500 transition-all duration-300" style="width: {{ stats.percentage }}%"></div>
+        </div>
+        <span class="text-sm text-gray-400 min-w-[40px]">{{ stats.percentage }}%</span>
+    </div>
+</div>
+{% endif %}
+
+{# TSK-06-01: 검색창 및 전체 펼치기/접기 버튼 #}
+<div class="search-bar flex gap-2 mb-4">
+    <input type="text"
+           id="tree-search"
+           data-testid="search-input"
+           class="flex-1 bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+           placeholder="Task 검색 (ID 또는 제목)..."
+           oninput="filterTree(this.value)">
+    <button id="expand-all-btn"
+            data-testid="expand-all-btn"
+            class="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded text-sm whitespace-nowrap transition-colors"
+            onclick="toggleExpandAll()">
+        전체 펼치기
+    </button>
+</div>
+
 {# Task 노드 매크로 #}
 {% macro render_task(task, indent_class='') %}
 <div class="tree-node task flex items-center gap-2 py-1.5 cursor-pointer hover:bg-gray-800 rounded px-2 transition-colors duration-150 {{ indent_class }}"
@@ -53,19 +95,26 @@
 <div class="tree-root space-y-1" data-testid="tree-root">
 {% for wp in tree %}
 <div class="mb-3" data-id="{{ wp.id }}">
-    <!-- WP Node -->
-    <div class="tree-node wp group flex items-center gap-2 py-1.5 cursor-pointer hover:bg-gray-800 rounded px-2 transition-colors duration-150"
+    <!-- WP Node (TSK-06-01: 아이콘/텍스트 클릭 분리) -->
+    <div class="tree-node wp group flex items-center gap-2 py-1.5 hover:bg-gray-800 rounded px-2 transition-colors duration-150"
          data-id="{{ wp.id }}"
          data-type="wp"
          data-expanded="false"
          data-testid="tree-node-wp"
          hx-get="/api/tree/{{ wp.id }}"
          hx-target="#wp-children-{{ wp.id }}"
-         hx-swap="innerHTML"
-         onclick="toggleWp(this)">
-        <span class="toggle-icon w-4 text-gray-400 transition-transform duration-200" data-testid="toggle-icon">▶</span>
+         hx-swap="innerHTML">
+        <!-- 토글 아이콘: 트리 열기/닫기만 -->
+        <span class="toggle-icon w-4 text-gray-400 transition-transform duration-200 cursor-pointer hover:text-white"
+              data-testid="toggle-icon"
+              onclick="event.stopPropagation(); toggleWp(this.parentElement)">▶</span>
         <span class="text-blue-400 font-bold text-xs">WP</span>
-        <span class="font-medium text-gray-200 truncate flex-1">{{ wp.id }}: {{ wp.title }}</span>
+        <!-- WP 텍스트: Detail 패널에 WP 정보 표시 -->
+        <span class="wp-text font-medium text-gray-200 truncate flex-1 cursor-pointer hover:text-blue-300"
+              hx-get="/api/wp-detail/{{ wp.id }}"
+              hx-target="#detail-panel"
+              hx-swap="innerHTML"
+              onclick="event.stopPropagation(); selectWp(this.parentElement)">{{ wp.id }}: {{ wp.title }}</span>
         <span class="text-sm text-gray-400" data-testid="wp-progress">({{ wp.progress | round(0) | int }}%)</span>
     </div>
 

@@ -9,12 +9,12 @@
     </div>
 </header>
 
-<!-- Worker Bar (TSK-03-03: settle 추가로 깜빡임 최소화) -->
+<!-- Worker Bar (idiomorph로 상태 유지하며 갱신) -->
 <div id="workers-bar"
      class="bg-gray-800 border-b border-gray-700 px-4 py-2"
      hx-get="/api/workers"
      hx-trigger="load, every 5s"
-     hx-swap="innerHTML settle:100ms">
+     hx-swap="morph:innerHTML">
     <div class="animate-pulse flex items-center gap-4">
         <span class="text-gray-500">Workers: 로딩 중...</span>
     </div>
@@ -22,13 +22,13 @@
 
 <!-- Main Content: 2-Column Layout -->
 <main class="flex h-[calc(100vh-100px)]">
-    <!-- Left: WBS Tree (TSK-03-03: settle 추가로 깜빡임 최소화) -->
+    <!-- Left: WBS Tree (idiomorph로 확장 상태 유지하며 갱신) -->
     <div class="w-1/2 border-r border-gray-700 overflow-auto p-4"
          id="tree-panel"
          data-testid="tree-panel"
          hx-get="/api/tree"
          hx-trigger="load, every 5s"
-         hx-swap="innerHTML settle:100ms">
+         hx-swap="morph:innerHTML">
         <div class="animate-pulse">
             <div class="h-4 bg-gray-700 rounded w-3/4 mb-2"></div>
             <div class="h-4 bg-gray-700 rounded w-1/2 mb-2 ml-4"></div>
@@ -47,6 +47,37 @@
 
 <!-- 에러 토스트 컨테이너 -->
 <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+<!-- TSK-05-01: Document Viewer 모달 -->
+<div id="document-modal" class="hidden fixed inset-0 z-40 flex items-center justify-center">
+    <!-- 배경 오버레이 (클릭 시 닫기) -->
+    <div id="document-modal-backdrop"
+         class="absolute inset-0 bg-black bg-opacity-70"
+         onclick="closeDocument()"></div>
+
+    <!-- 모달 컨텐츠 -->
+    <div class="relative bg-gray-800 rounded-lg shadow-2xl w-[90%] max-w-[900px] max-h-[85vh] flex flex-col border border-gray-600">
+        <!-- 모달 헤더 -->
+        <div class="flex items-center justify-between px-4 py-3 border-b border-gray-600">
+            <div class="flex items-center gap-2">
+                <span id="document-icon">📄</span>
+                <h3 id="document-title" class="font-medium text-gray-200">문서 로딩 중...</h3>
+            </div>
+            <button id="document-close-btn"
+                    onclick="closeDocument()"
+                    class="text-gray-400 hover:text-white text-2xl leading-none px-2"
+                    aria-label="닫기">&times;</button>
+        </div>
+
+        <!-- 모달 본문 (스크롤 가능) -->
+        <div id="document-content"
+             class="flex-1 overflow-auto p-6 prose prose-invert prose-sm max-w-none">
+            <div class="flex items-center justify-center h-32">
+                <span class="text-gray-500">불러오는 중...</span>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- 글로벌 스크립트 -->
 <script>
@@ -122,7 +153,7 @@ function startDetailRefresh() {
         if (selectedTaskId) {
             htmx.ajax('GET', '/api/detail/' + selectedTaskId, {
                 target: '#detail-panel',
-                swap: 'innerHTML settle:100ms'
+                swap: 'morph:innerHTML'
             }).then(() => {
                 // 갱신 후에도 data-selected-task 유지
                 detailPanel.setAttribute('data-selected-task', selectedTaskId);
@@ -136,27 +167,182 @@ document.addEventListener('DOMContentLoaded', startDetailRefresh);
 
 // ========== WP 확장/축소 토글 ==========
 function toggleWp(el) {
-    const wpDiv = el.closest('[data-id^="WP-"]');
-    const childrenDiv = wpDiv.querySelector('.children');
+    const wpId = el.dataset.id;
+    const childrenDiv = document.getElementById('wp-children-' + wpId);
     const toggleIcon = el.querySelector('.toggle-icon');
     const isExpanded = el.dataset.expanded === 'true';
+
+    if (!childrenDiv) {
+        console.warn('Children container not found for WP:', wpId);
+        return;
+    }
 
     if (isExpanded) {
         // 축소
         childrenDiv.classList.remove('max-h-[2000px]', 'opacity-100');
         childrenDiv.classList.add('max-h-0', 'opacity-0');
-        toggleIcon.classList.remove('rotate-90');
+        toggleIcon?.classList.remove('rotate-90');
         el.dataset.expanded = 'false';
     } else {
         // 확장
         childrenDiv.classList.remove('max-h-0', 'opacity-0');
         childrenDiv.classList.add('max-h-[2000px]', 'opacity-100');
-        toggleIcon.classList.add('rotate-90');
+        toggleIcon?.classList.add('rotate-90');
         el.dataset.expanded = 'true';
     }
     // 상태 저장
     saveState();
 }
+
+// ========== TSK-06-01: WP 선택 표시 ==========
+function selectWp(el) {
+    // 기존 Task/WP 선택 해제
+    document.querySelectorAll('.tree-node.selected').forEach(node => {
+        node.classList.remove('selected', 'bg-gray-700', 'ring-2', 'ring-blue-500');
+    });
+    // WP 선택 표시
+    el.classList.add('selected', 'bg-gray-700', 'ring-2', 'ring-blue-500');
+}
+
+// ========== TSK-06-01: 검색 필터링 ==========
+function filterTree(query) {
+    const q = query.toLowerCase().trim();
+    const taskNodes = document.querySelectorAll('.tree-node.task');
+    const wpContainers = document.querySelectorAll('.tree-root > .mb-3');
+
+    if (!q) {
+        // 검색어 없으면 전체 표시
+        taskNodes.forEach(n => n.style.display = '');
+        wpContainers.forEach(n => n.style.display = '');
+        return;
+    }
+
+    let matchCount = 0;
+
+    // 먼저 모든 WP 컨테이너 숨김
+    wpContainers.forEach(container => {
+        container.style.display = 'none';
+    });
+
+    // Task 노드 필터링
+    taskNodes.forEach(node => {
+        const text = node.textContent.toLowerCase();
+        const match = text.includes(q);
+        node.style.display = match ? '' : 'none';
+
+        if (match) {
+            matchCount++;
+            // 상위 WP 컨테이너 표시 및 펼치기
+            const wpContainer = node.closest('.mb-3[data-id]');
+            if (wpContainer) {
+                wpContainer.style.display = '';
+                const wpNode = wpContainer.querySelector('.tree-node.wp');
+                if (wpNode && wpNode.dataset.expanded === 'false') {
+                    toggleWp(wpNode);
+                }
+            }
+        }
+    });
+}
+
+// ========== TSK-06-01: 전체 펼치기/접기 ==========
+let allExpanded = false;
+
+function toggleExpandAll() {
+    const btn = document.getElementById('expand-all-btn');
+    const wps = document.querySelectorAll('.tree-node.wp');
+
+    allExpanded = !allExpanded;
+    btn.textContent = allExpanded ? '전체 접기' : '전체 펼치기';
+
+    wps.forEach(wp => {
+        const isExpanded = wp.dataset.expanded === 'true';
+        if (allExpanded && !isExpanded) {
+            toggleWp(wp);
+        } else if (!allExpanded && isExpanded) {
+            toggleWp(wp);
+        }
+    });
+}
+
+// ========== TSK-05-01: Document Viewer ==========
+let currentDocumentTaskId = null;
+
+async function openDocument(taskId, docName) {
+    const modal = document.getElementById('document-modal');
+    const content = document.getElementById('document-content');
+    const title = document.getElementById('document-title');
+    const icon = document.getElementById('document-icon');
+
+    // 저장 (ESC 핸들러용)
+    currentDocumentTaskId = taskId;
+
+    // 제목 및 아이콘 설정
+    title.textContent = docName;
+    const isImage = /\.(png|jpg|jpeg|gif|webp)$/i.test(docName);
+    icon.textContent = isImage ? '🖼️' : '📄';
+
+    // 로딩 표시
+    content.innerHTML = '<div class="flex items-center justify-center h-32"><span class="text-gray-500">불러오는 중...</span></div>';
+
+    // 모달 표시
+    modal.classList.remove('hidden');
+
+    try {
+        const res = await fetch(`/api/document/${taskId}/${docName}`);
+
+        if (!res.ok) {
+            const errorText = await res.text();
+            throw new Error(errorText || `HTTP ${res.status}`);
+        }
+
+        if (isImage) {
+            // 이미지: img 태그로 표시
+            content.innerHTML = `<div class="flex items-center justify-center"><img src="/api/document/${taskId}/${docName}" class="max-w-full max-h-[70vh] rounded" alt="${docName}" /></div>`;
+        } else {
+            // 마크다운: marked.js로 렌더링
+            const text = await res.text();
+            content.innerHTML = marked.parse(text);
+
+            // Mermaid 다이어그램 렌더링
+            const mermaidBlocks = content.querySelectorAll('pre code.language-mermaid');
+            if (mermaidBlocks.length > 0) {
+                mermaidBlocks.forEach((block, idx) => {
+                    const code = block.textContent;
+                    const container = document.createElement('div');
+                    container.className = 'mermaid';
+                    container.textContent = code;
+                    container.id = `mermaid-${Date.now()}-${idx}`;
+                    block.parentElement.replaceWith(container);
+                });
+                // Mermaid 렌더링 실행
+                await mermaid.run({ querySelector: '.mermaid' });
+            }
+        }
+    } catch (error) {
+        console.error('Document load error:', error);
+        content.innerHTML = `
+            <div class="flex flex-col items-center justify-center h-32 text-red-400">
+                <span class="text-4xl mb-2">⚠️</span>
+                <p>문서를 불러올 수 없습니다</p>
+                <p class="text-sm text-gray-500 mt-1">${error.message}</p>
+            </div>
+        `;
+    }
+}
+
+function closeDocument() {
+    const modal = document.getElementById('document-modal');
+    modal.classList.add('hidden');
+    currentDocumentTaskId = null;
+}
+
+// ESC 키로 모달 닫기
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && currentDocumentTaskId !== null) {
+        closeDocument();
+    }
+});
 
 // ========== 에러 토스트 ==========
 function showToast(message, type = 'error') {

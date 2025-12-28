@@ -463,7 +463,7 @@
 ### TSK-06-01: 트리 패널 개선
 - category: development
 - domain: frontend
-- status: approve [ap]
+- status: implement [im]
 - priority: high
 - assignee: -
 - schedule: 2026-01-08 ~ 2026-01-08
