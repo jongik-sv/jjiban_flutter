@@ -30,6 +30,77 @@ pip install -e ".[dev]"
 
 ## 실행
 
+### 방법 1: launcher.py 사용 (권장)
+
+**launcher.py**는 WezTerm을 자동으로 구성하고 orchay를 실행합니다:
+- 스케줄러 pane (좌측)
+- Worker panes (우측, Claude Code 인스턴스들)
+
+```bash
+cd {프로젝트 루트}  # .jjiban 폴더가 있는 위치
+python orchay/launcher.py [ORCHAY_OPTIONS] [LAUNCHER_OPTIONS]
+```
+
+**옵션 구분:**
+
+| 구분 | 옵션 | 용도 |
+|------|------|------|
+| **orchay 옵션** | 모든 표준 옵션 | orchay에 그대로 전달됨 |
+| **launcher 전용** | `--scheduler-cols`, `--worker-cols`, `--font-size` | WezTerm 레이아웃 설정 |
+
+**예시:**
+
+```bash
+# 기본 실행 (orchay 프로젝트, Worker 3개, 웹서버 포함)
+python orchay/launcher.py
+
+# 다른 프로젝트 실행
+python orchay/launcher.py my_project
+
+# Worker 5개로 실행
+python orchay/launcher.py my_project -w 5
+
+# 웹서버 포함 (포트 9000)
+python orchay/launcher.py my_project -w 3 --web --port 9000
+
+# 폰트 크기와 레이아웃 조정 (launcher 전용 옵션)
+python orchay/launcher.py my_project --font-size 9 --scheduler-cols 80 --worker-cols 100
+
+# 조합 사용
+python orchay/launcher.py my_project -w 5 -m quick --web --font-size 10
+```
+
+**launcher 전용 옵션:**
+
+| 옵션 | 기본값 | 설명 |
+|------|--------|------|
+| `--scheduler-cols N` | 100 | 스케줄러 pane 너비 (columns) |
+| `--worker-cols N` | 120 | 각 Worker pane 너비 (columns) |
+| `--font-size F` | 11.0 | WezTerm 폰트 크기 (pt) |
+
+**내부 동작:**
+
+```
+launcher.py
+    │
+    ├─ 1. 환경변수 설정 (레이아웃 정보)
+    ├─ 2. 기존 WezTerm 프로세스 종료
+    └─ 3. WezTerm 실행
+          │
+          └─ ~/.wezterm-orchay.lua 설정 로드
+                │
+                ├─ 레이아웃 구성: [스케줄러] [Worker1] [Worker2] ...
+                └─ 0번 pane에서 orchay 실행
+```
+
+> **Note:** launcher.py를 사용하려면 `~/.wezterm-orchay.lua` 설정 파일이 필요합니다.
+
+---
+
+### 방법 2: 직접 실행 (수동 pane 관리)
+
+WezTerm pane을 직접 구성한 경우:
+
 ```bash
 # uv 사용 (권장)
 cd {프로젝트 루트}  # .jjiban 폴더가 있는 위치
@@ -48,6 +119,7 @@ python -m orchay [PROJECT] [OPTIONS]
 ```
 usage: orchay [-h] [-w WORKERS] [-i INTERVAL]
               [-m {design,quick,develop,force}] [--dry-run] [-v] [--no-tui]
+              [--web | --web-only] [--port PORT]
               [project]
 
 positional arguments:
@@ -60,6 +132,11 @@ options:
   --dry-run             분배 없이 상태만 표시
   -v, --verbose         상세 로그 출력
   --no-tui              TUI 없이 CLI 모드로 실행
+
+웹서버 옵션:
+  --web                 웹서버 포함 실행 (TUI/CLI + 웹 동시)
+  --web-only            웹서버만 실행 (스케줄링 비활성화)
+  --port PORT           웹서버 포트 (기본: 8080)
 ```
 
 > **Note:** 기본적으로 TUI(Textual UI) 모드로 실행됩니다. CLI 모드가 필요하면 `--no-tui` 옵션을 사용하세요.
@@ -113,6 +190,67 @@ Tasks: 9개
 Queue: 5 pending, 1 running, 3 done
 ```
 
+---
+
+## Web UI
+
+orchay에 내장된 웹서버를 통해 브라우저에서 WBS 진행 상황을 모니터링할 수 있습니다.
+
+### 시작하기
+
+```bash
+# 스케줄러 + 웹서버 동시 실행
+uv run python -m orchay jjiban --web
+
+# 웹서버만 실행 (스케줄링 없음, WezTerm 불필요)
+uv run python -m orchay jjiban --web-only
+
+# 포트 지정 (기본: 8080)
+uv run python -m orchay jjiban --web --port 3000
+
+# launcher.py와 함께 사용
+python orchay/launcher.py my_project --web --port 9000
+```
+
+웹서버 시작 후 http://localhost:8080 (또는 지정한 포트)로 접속합니다.
+
+### 웹서버 옵션
+
+| 옵션 | 설명 | 기본값 |
+|------|------|--------|
+| `--web` | 스케줄러 + 웹서버 동시 실행 | 비활성화 |
+| `--web-only` | 웹서버만 실행 (스케줄링 없음) | - |
+| `--port PORT` | 웹서버 포트 번호 | 8080 |
+
+> **Note:** `--web`과 `--web-only`는 상호 배타적 옵션입니다.
+
+### 웹 UI 기능
+
+- **WBS 트리**: 계층적 Task 구조 표시 (WP → ACT → Task)
+- **Task 상세**: 선택한 Task의 상세 정보 확인
+- **Worker 상태**: 각 Worker의 현재 상태 및 작업 표시
+- **실시간 갱신**: 5초마다 자동으로 상태 업데이트
+
+### 사용 시나리오
+
+**시나리오 1: 원격 모니터링**
+```bash
+# 서버에서 웹서버만 실행
+uv run python -m orchay jjiban --web-only --port 8080
+
+# 브라우저에서 http://server-ip:8080 접속
+```
+
+**시나리오 2: 로컬 개발 + 웹 모니터링**
+```bash
+# TUI + 웹서버 동시 실행
+python orchay/launcher.py jjiban --web
+
+# 터미널에서는 TUI로, 브라우저에서는 웹 UI로 모니터링
+```
+
+---
+
 ## 아키텍처
 
 ```
@@ -126,8 +264,18 @@ orchay/
 │   │   ├── task.py      # Task 모델
 │   │   ├── worker.py    # Worker 모델
 │   │   └── config.py    # 설정 모델
-│   └── utils/
-│       └── wezterm.py   # WezTerm CLI 래퍼
+│   ├── utils/
+│   │   └── wezterm.py   # WezTerm CLI 래퍼
+│   └── web/             # 웹서버 모듈
+│       ├── server.py    # FastAPI 앱, 라우트 정의
+│       ├── static/      # 정적 파일 (CSS, JS)
+│       └── templates/   # Jinja2 템플릿
+│           ├── base.html    # 기본 레이아웃
+│           ├── index.html   # 메인 페이지
+│           └── partials/    # HTMX 파셜 템플릿
+│               ├── tree.html    # WBS 트리
+│               ├── detail.html  # Task 상세
+│               └── workers.html # Worker 상태
 └── tests/               # 테스트 코드
 ```
 
@@ -310,6 +458,9 @@ pyright src tests
 | rich | >=14.0 | 터미널 출력 포매팅 |
 | watchdog | >=4.0 | 파일 변경 감시 |
 | pydantic | >=2.0 | 데이터 모델 검증 |
+| fastapi | >=0.115 | 웹서버 프레임워크 |
+| uvicorn[standard] | - | ASGI 서버 |
+| jinja2 | >=3.0 | HTML 템플릿 엔진 |
 
 ### 개발 의존성
 

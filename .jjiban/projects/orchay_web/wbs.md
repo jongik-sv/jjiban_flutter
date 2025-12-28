@@ -380,7 +380,7 @@
 ### TSK-04-03: 문서화
 - category: development
 - domain: docs
-- status: approved [ap]
+- status: implement [im]
 - priority: low
 - assignee: -
 - schedule: 2026-01-05 ~ 2026-01-05
