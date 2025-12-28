@@ -188,7 +188,7 @@
 ### TSK-02-03: 트리 인터랙션 구현
 - category: development
 - domain: frontend
-- status: implement [im]
+- status: done [xx]
 - priority: medium
 - assignee: -
 - schedule: 2026-01-01 ~ 2026-01-01
