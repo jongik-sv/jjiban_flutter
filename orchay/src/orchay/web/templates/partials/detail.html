@@ -220,7 +220,7 @@
     </div>
     {% endif %}
 
-    <!-- Documents 섹션 (TSK-06-03에서 테이블로 확장 예정) -->
+    <!-- Documents 섹션 (TSK-06-03: 테이블 형태) -->
     <div class="bg-orchay-card rounded-lg border border-orchay-border overflow-hidden" data-testid="documents-section">
         <button type="button" class="collapsible-header w-full flex items-center justify-between p-4 text-left hover:bg-gray-700/50 transition-colors"
                 onclick="toggleSection(this)">
@@ -231,16 +231,45 @@
             <span class="toggle-icon transition-transform">▼</span>
         </button>
         <div class="collapsible-content p-4 pt-0">
-            <div class="space-y-1" data-testid="documents-list">
+            <div data-testid="documents-list">
                 {% if documents %}
-                {% for doc in documents %}
-                <div class="flex items-center gap-2 text-sm cursor-pointer hover:bg-gray-700 rounded px-2 py-1 -mx-2 transition-colors"
-                     data-testid="document-item"
-                     onclick="openDocument('{{ task.id }}', '{{ doc }}')">
-                    <span>{% if doc.endswith('.md') %}📄{% else %}🖼️{% endif %}</span>
-                    <span class="text-orchay-accent hover:underline">{{ doc }}</span>
-                </div>
-                {% endfor %}
+                <!-- TSK-06-03: 문서 테이블 -->
+                <table class="w-full text-sm" data-testid="documents-table">
+                    <thead>
+                        <tr class="text-left text-orchay-muted border-b border-orchay-border">
+                            <th class="pb-2">문서명</th>
+                            <th class="pb-2 w-16 text-center">타입</th>
+                            <th class="pb-2 w-20 text-right hidden sm:table-cell">크기</th>
+                            <th class="pb-2 w-28 text-right hidden md:table-cell">수정일</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for doc in documents %}
+                        <tr class="cursor-pointer hover:bg-gray-700 transition-colors border-b border-orchay-border/50 last:border-0"
+                            data-testid="document-row"
+                            onclick="openDocument('{{ task.id }}', '{{ doc.name }}')"
+                            tabindex="0"
+                            onkeydown="if(event.key==='Enter')openDocument('{{ task.id }}', '{{ doc.name }}')">
+                            <td class="py-2">
+                                <div class="flex items-center gap-2">
+                                    <span>{% if doc.type == 'MD' %}📄{% else %}🖼️{% endif %}</span>
+                                    <span class="text-orchay-accent hover:underline truncate max-w-[200px]" title="{{ doc.name }}">{{ doc.name }}</span>
+                                </div>
+                            </td>
+                            <td class="py-2 text-center">
+                                <span class="px-1.5 py-0.5 rounded text-xs
+                                    {% if doc.type == 'MD' %}bg-blue-900 text-blue-300
+                                    {% elif doc.type in ['PNG', 'JPG', 'JPEG', 'GIF', 'WEBP'] %}bg-purple-900 text-purple-300
+                                    {% else %}bg-gray-700 text-gray-300{% endif %}">
+                                    {{ doc.type }}
+                                </span>
+                            </td>
+                            <td class="py-2 text-right text-orchay-muted hidden sm:table-cell">{{ doc.size_formatted }}</td>
+                            <td class="py-2 text-right text-orchay-muted hidden md:table-cell">{{ doc.modified_formatted }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
                 {% else %}
                 <p class="text-orchay-muted text-sm">문서 없음</p>
                 {% endif %}

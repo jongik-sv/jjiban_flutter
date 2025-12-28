@@ -6,9 +6,13 @@ TSK-03-01: Task 상세 API 및 템플릿
 TSK-05-01: Document Viewer API
 TSK-06-01: 트리 패널 개선 (통계 배지, 검색, WP/ACT Detail)
 TSK-06-02: Task Detail 패널 개선 (워크플로우 스테퍼, 진행률)
+TSK-06-03: 문서 테이블 (메타정보 포함)
 """
 
 from __future__ import annotations
+
+import os
+from datetime import datetime
 
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -84,6 +88,35 @@ def get_task_progress(status: str) -> int:
     return STATUS_TO_PROGRESS.get(status, 0)
 
 
+def format_file_size(size_bytes: int) -> str:
+    """파일 크기를 사람이 읽기 쉬운 형태로 변환 (TSK-06-03 BR-02).
+
+    Args:
+        size_bytes: 파일 크기 (바이트)
+
+    Returns:
+        포맷된 크기 문자열 (예: "8.3 KB")
+    """
+    if size_bytes < 1024:
+        return f"{size_bytes} B"
+    elif size_bytes < 1024 * 1024:
+        return f"{size_bytes / 1024:.1f} KB"
+    else:
+        return f"{size_bytes / (1024 * 1024):.1f} MB"
+
+
+def format_date(timestamp: float) -> str:
+    """Unix timestamp를 YYYY-MM-DD 형식으로 변환 (TSK-06-03 BR-03).
+
+    Args:
+        timestamp: Unix timestamp
+
+    Returns:
+        포맷된 날짜 문자열 (예: "2025-12-28")
+    """
+    return datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d")
+
+
 def calculate_stats(tasks: list[Task]) -> dict[str, int]:
     """통계 정보 계산 (TSK-06-01).
 
@@ -137,8 +170,8 @@ def get_task_documents(
     task_id: str,
     base_path: Path | None = None,
     project_name: str = "",
-) -> list[str]:
-    """Task 관련 문서 목록 조회 (TSK-05-01: 이미지 지원 추가).
+) -> list[dict[str, str | int]]:
+    """Task 관련 문서 목록 조회 (TSK-06-03: 메타정보 포함).
 
     Args:
         task_id: Task ID (예: TSK-01-01)
@@ -146,7 +179,8 @@ def get_task_documents(
         project_name: 프로젝트 이름
 
     Returns:
-        존재하는 문서/이미지 파일명 목록 (정렬됨)
+        문서 메타정보 딕셔너리 목록 (정렬됨)
+        각 항목: {name, type, size, size_formatted, modified, modified_formatted}
     """
     if base_path is None:
         # 기본 경로: .jjiban/projects/{project}/tasks/{task_id}/
@@ -157,13 +191,35 @@ def get_task_documents(
     if not task_dir.exists() or not task_dir.is_dir():
         return []
 
-    # 허용된 확장자 파일만 반환, 정렬
-    docs = [
-        f.name
-        for f in task_dir.iterdir()
-        if f.is_file() and f.suffix.lower() in ALLOWED_EXTENSIONS
-    ]
-    return sorted(docs)
+    docs: list[dict[str, str | int]] = []
+
+    for f in task_dir.iterdir():
+        if not f.is_file():
+            continue
+        suffix = f.suffix.lower()
+        if suffix not in ALLOWED_EXTENSIONS:
+            continue
+
+        # 파일 메타정보 조회 (TSK-06-03)
+        try:
+            stat = os.stat(f)
+            size = stat.st_size
+            modified = stat.st_mtime
+        except OSError:
+            size = 0
+            modified = 0.0
+
+        docs.append({
+            "name": f.name,
+            "type": suffix[1:].upper(),  # ".md" -> "MD"
+            "size": size,
+            "size_formatted": format_file_size(size),
+            "modified": modified,
+            "modified_formatted": format_date(modified) if modified > 0 else "-",
+        })
+
+    # 파일명 기준 정렬
+    return sorted(docs, key=lambda d: str(d["name"]))
 
 
 def create_app(orchestrator: Orchestrator) -> FastAPI:

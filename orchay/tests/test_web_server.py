@@ -616,7 +616,7 @@ async def test_get_task_detail_all_properties() -> None:
 
 # UT-003: get_task_documents 문서 목록 조회
 def test_get_task_documents_returns_existing_files(tmp_path: pytest.TempPathFactory) -> None:
-    """존재하는 파일만 문서 목록에 포함."""
+    """존재하는 파일만 문서 목록에 포함 (TSK-06-03: 메타정보 포함)."""
     from orchay.web.server import get_task_documents
 
     # Given
@@ -627,11 +627,20 @@ def test_get_task_documents_returns_existing_files(tmp_path: pytest.TempPathFact
 
     # When
     docs = get_task_documents("TSK-03-01", base_path=tmp_path)
+    doc_names = [d["name"] for d in docs]
 
     # Then
     assert len(docs) == 2
-    assert "010-design.md" in docs
-    assert "025-traceability-matrix.md" in docs
+    assert "010-design.md" in doc_names
+    assert "025-traceability-matrix.md" in doc_names
+    # TSK-06-03: 메타정보 필드 검증
+    for doc in docs:
+        assert "name" in doc
+        assert "type" in doc
+        assert "size" in doc
+        assert "size_formatted" in doc
+        assert "modified" in doc
+        assert "modified_formatted" in doc
 
 
 # UT-003-2: get_task_documents 문서 없는 경우
@@ -1667,7 +1676,7 @@ async def test_document_viewer_javascript_functions() -> None:
 
 # get_task_documents 이미지 지원 확인
 def test_get_task_documents_includes_images(tmp_path: pytest.TempPathFactory) -> None:
-    """get_task_documents가 이미지 파일도 반환하는지 확인."""
+    """get_task_documents가 이미지 파일도 반환하는지 확인 (TSK-06-03: 메타정보 포함)."""
     from orchay.web.server import get_task_documents
 
     # Given
@@ -1680,13 +1689,19 @@ def test_get_task_documents_includes_images(tmp_path: pytest.TempPathFactory) ->
 
     # When
     docs = get_task_documents("TSK-TEST", base_path=tmp_path)
+    doc_names = [d["name"] for d in docs]
 
     # Then
     assert len(docs) == 3  # md + png + jpg (pdf 제외)
-    assert "010-design.md" in docs
-    assert "wireframe.png" in docs
-    assert "screenshot.jpg" in docs
-    assert "secret.pdf" not in docs
+    assert "010-design.md" in doc_names
+    assert "wireframe.png" in doc_names
+    assert "screenshot.jpg" in doc_names
+    assert "secret.pdf" not in doc_names
+    # TSK-06-03: 타입 필드 검증
+    doc_types = {d["name"]: d["type"] for d in docs}
+    assert doc_types["010-design.md"] == "MD"
+    assert doc_types["wireframe.png"] == "PNG"
+    assert doc_types["screenshot.jpg"] == "JPG"
 
 
 # =============================================================================
