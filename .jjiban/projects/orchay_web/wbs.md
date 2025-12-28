@@ -52,7 +52,7 @@
 ### TSK-01-02: Jinja2 템플릿 기본 구조
 - category: development
 - domain: frontend
-- status: detail-design [dd]
+- status: approved [ap]
 - priority: critical
 - assignee: -
 - schedule: 2025-12-29 ~ 2025-12-29
@@ -86,7 +86,7 @@
 ### TSK-01-03: CLI 옵션 및 서버 통합
 - category: development
 - domain: backend
-- status: detail [dd]
+- status: approved [ap]
 - priority: high
 - assignee: -
 - schedule: 2025-12-30 ~ 2025-12-30
@@ -123,7 +123,7 @@
 ### TSK-02-01: 트리 데이터 API
 - category: development
 - domain: backend
-- status: detail-design [dd]
+- status: approved [ap]
 - priority: high
 - assignee: -
 - schedule: 2025-12-31 ~ 2025-12-31
@@ -155,7 +155,7 @@
 ### TSK-02-02: 트리 템플릿 구현
 - category: development
 - domain: frontend
-- status: detail [dd]
+- status: approved [ap]
 - priority: high
 - assignee: -
 - schedule: 2025-12-31 ~ 2025-12-31
@@ -188,7 +188,7 @@
 ### TSK-02-03: 트리 인터랙션 구현
 - category: development
 - domain: frontend
-- status: [ ]
+- status: detail-design [dd]
 - priority: medium
 - assignee: -
 - schedule: 2026-01-01 ~ 2026-01-01
@@ -227,7 +227,7 @@
 ### TSK-03-01: Task 상세 API 및 템플릿
 - category: development
 - domain: fullstack
-- status: detail-design [dd]
+- status: approved [ap]
 - priority: high
 - assignee: -
 - schedule: 2026-01-02 ~ 2026-01-02
@@ -259,7 +259,7 @@
 ### TSK-03-02: Worker 상태 바 구현
 - category: development
 - domain: fullstack
-- status: detail-design [dd]
+- status: approved [ap]
 - priority: high
 - assignee: -
 - schedule: 2026-01-02 ~ 2026-01-02
@@ -326,7 +326,7 @@
 ### TSK-04-01: 의존성 및 pyproject.toml 업데이트
 - category: infrastructure
 - domain: infra
-- status: detail-design [dd]
+- status: approved [ap]
 - priority: high
 - assignee: -
 - schedule: 2026-01-04 ~ 2026-01-04
