@@ -5,6 +5,7 @@ TSK-02-01: 트리 데이터 API
 TSK-03-01: Task 상세 API 및 템플릿
 TSK-05-01: Document Viewer API
 TSK-06-01: 트리 패널 개선 (통계 배지, 검색, WP/ACT Detail)
+TSK-06-02: Task Detail 패널 개선 (워크플로우 스테퍼, 진행률)
 """
 
 from __future__ import annotations
@@ -26,6 +27,61 @@ if TYPE_CHECKING:
 
 # TSK-05-01: Document Viewer 허용 확장자
 ALLOWED_EXTENSIONS = {".md", ".png", ".jpg", ".jpeg", ".gif", ".webp"}
+
+# TSK-06-02: 워크플로우 단계 정의
+WORKFLOW_STEPS = ["시작 전", "설계", "승인", "구현", "검증", "완료"]
+
+# TSK-06-02: 상태별 워크플로우 단계 인덱스 매핑
+STATUS_TO_STEP: dict[str, int] = {
+    "[ ]": 0,  # 시작 전
+    "[bd]": 1,  # 설계
+    "[dd]": 1,  # 설계
+    "[an]": 1,  # 설계
+    "[ds]": 1,  # 설계
+    "[ap]": 2,  # 승인
+    "[im]": 3,  # 구현
+    "[fx]": 3,  # 구현
+    "[vf]": 4,  # 검증
+    "[xx]": 5,  # 완료
+}
+
+# TSK-06-02: 상태별 진행률 (BR-002)
+STATUS_TO_PROGRESS: dict[str, int] = {
+    "[ ]": 0,
+    "[bd]": 15,
+    "[dd]": 25,
+    "[an]": 25,
+    "[ds]": 25,
+    "[ap]": 40,
+    "[im]": 60,
+    "[fx]": 60,
+    "[vf]": 80,
+    "[xx]": 100,
+}
+
+
+def get_workflow_step(status: str) -> int:
+    """상태 코드에서 워크플로우 단계 인덱스 반환 (TSK-06-02).
+
+    Args:
+        status: 상태 코드 (예: '[dd]')
+
+    Returns:
+        워크플로우 단계 인덱스 (0-5)
+    """
+    return STATUS_TO_STEP.get(status, 0)
+
+
+def get_task_progress(status: str) -> int:
+    """상태 코드에서 진행률 반환 (TSK-06-02).
+
+    Args:
+        status: 상태 코드 (예: '[dd]')
+
+    Returns:
+        진행률 (0-100)
+    """
+    return STATUS_TO_PROGRESS.get(status, 0)
 
 
 def calculate_stats(tasks: list[Task]) -> dict[str, int]:
@@ -183,7 +239,7 @@ def create_app(orchestrator: Orchestrator) -> FastAPI:
 
     @app.get("/api/detail/{task_id}", response_class=HTMLResponse)
     async def _get_detail(request: Request, task_id: str) -> HTMLResponse:
-        """Task 상세 HTML 조각."""
+        """Task 상세 HTML 조각 (TSK-06-02: 워크플로우 스테퍼, 요구사항 추가)."""
         task = _find_task(orchestrator.tasks, task_id)
         if not task:
             return templates.TemplateResponse(
@@ -199,10 +255,21 @@ def create_app(orchestrator: Orchestrator) -> FastAPI:
             project_name=orchestrator.project_name,
         )
 
+        # TSK-06-02: 워크플로우 스테퍼 및 진행률 데이터
+        current_step = get_workflow_step(task.status.value)
+        task_progress = get_task_progress(task.status.value)
+
         return templates.TemplateResponse(
             request,
             "partials/detail.html",
-            {"task": task, "documents": documents},
+            {
+                "task": task,
+                "documents": documents,
+                "project_name": orchestrator.project_name,
+                "workflow_steps": WORKFLOW_STEPS,
+                "current_step": current_step,
+                "task_progress": task_progress,
+            },
         )
 
     @app.get("/api/workers", response_class=HTMLResponse)

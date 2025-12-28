@@ -186,7 +186,8 @@ class WbsParser:
         tasks: list[Task] = []
         lines = content.split("\n")
 
-        current_task: dict[str, str] | None = None
+        current_task: dict[str, str | list[str]] | None = None
+        current_list_key: str | None = None  # 현재 파싱 중인 중첩 리스트 키
         i = 0
 
         while i < len(lines):
@@ -206,6 +207,7 @@ class WbsParser:
                     "id": header_match.group(1),
                     "title": header_match.group(2).strip(),
                 }
+                current_list_key = None
                 i += 1
                 continue
 
@@ -217,16 +219,43 @@ class WbsParser:
                     if task:
                         tasks.append(task)
                     current_task = None
+                current_list_key = None
                 i += 1
                 continue
 
             # 속성 파싱 (현재 Task가 있을 때만)
             if current_task:
+                # 중첩 리스트 항목 감지 (  - item)
+                if line.startswith("  - ") and current_list_key:
+                    item = line[4:].strip()
+                    if current_list_key not in current_task:
+                        current_task[current_list_key] = []
+                    list_val = current_task[current_list_key]
+                    if isinstance(list_val, list):
+                        list_val.append(item)
+                    i += 1
+                    continue
+
                 attr_match = ATTRIBUTE_PATTERN.match(line)
                 if attr_match:
                     key = attr_match.group(1)
                     value = attr_match.group(2).strip()
-                    current_task[key] = value
+                    # 중첩 리스트 시작 감지 (value가 비어있으면 다음 줄부터 리스트)
+                    if key in ("requirements", "acceptance", "tech-spec", "api-spec", "ui-spec"):
+                        if value:
+                            # 단일 줄 값
+                            current_task[key] = value
+                        else:
+                            # 빈 값이면 중첩 리스트 시작
+                            current_task[key] = []
+                        current_list_key = key
+                    else:
+                        current_task[key] = value
+                        current_list_key = None
+                else:
+                    # 속성이 아닌 줄이면 리스트 파싱 종료
+                    if not line.strip().startswith("-") and not line.strip().startswith("#"):
+                        current_list_key = None
 
             i += 1
 
@@ -238,44 +267,67 @@ class WbsParser:
 
         return tasks
 
-    def _create_task(self, data: dict[str, str]) -> Task | None:
+    def _create_task(self, data: dict[str, str | list[str]]) -> Task | None:
         """딕셔너리에서 Task 객체 생성."""
         try:
-            task_id = data.get("id", "")
-            title = data.get("title", "")
+            raw_id = data.get("id", "")
+            raw_title = data.get("title", "")
+            task_id = raw_id if isinstance(raw_id, str) else ""
+            title = raw_title if isinstance(raw_title, str) else ""
 
             if not task_id or not title:
                 return None
 
+            # 문자열 값 가져오기 헬퍼
+            def get_str(key: str, default: str = "") -> str:
+                val = data.get(key, default)
+                return val if isinstance(val, str) else default
+
+            # 리스트 값 가져오기 헬퍼
+            def get_list(key: str) -> list[str]:
+                val = data.get(key)
+                if isinstance(val, list):
+                    return val
+                if isinstance(val, str) and val:
+                    return _parse_list(val)
+                return []
+
             # 상태 코드 추출
-            status_line = data.get("status", "[ ]")
+            status_line = get_str("status", "[ ]")
             status_code = extract_status_code(f"- status: {status_line}")
             status = _parse_status(status_code)
 
             # 카테고리
-            category_str = data.get("category", "development")
+            category_str = get_str("category", "development")
             category = _parse_category(category_str)
 
             # 우선순위
-            priority_str = data.get("priority", "medium")
+            priority_str = get_str("priority", "medium")
             priority = _parse_priority(priority_str)
 
-            blocked_by_value = data.get("blocked-by")
+            blocked_by_value = get_str("blocked-by")
             blocked_by: str | None = blocked_by_value if blocked_by_value != "-" else None
 
             return Task(
                 id=task_id,
                 title=title,
                 category=category,
-                domain=data.get("domain", ""),
+                domain=get_str("domain", ""),
                 status=status,
                 priority=priority,
-                assignee=data.get("assignee", "-"),
-                schedule=data.get("schedule", ""),
-                tags=_parse_list(data.get("tags", "")),
-                depends=_parse_list(data.get("depends", "")),
+                assignee=get_str("assignee", "-"),
+                schedule=get_str("schedule", ""),
+                tags=_parse_list(get_str("tags", "")),
+                depends=_parse_list(get_str("depends", "")),
                 blocked_by=blocked_by,
-                workflow=data.get("workflow", "design"),
+                workflow=get_str("workflow", "design"),
+                # TSK-06-02: 요구사항/기술 스펙 필드
+                prd_ref=get_str("prd-ref", ""),
+                requirements=get_list("requirements"),
+                acceptance=get_list("acceptance"),
+                tech_spec=get_list("tech-spec"),
+                api_spec=get_list("api-spec"),
+                ui_spec=get_list("ui-spec"),
             )
         except Exception as e:
             logger.error(f"Task 생성 오류: {e}")

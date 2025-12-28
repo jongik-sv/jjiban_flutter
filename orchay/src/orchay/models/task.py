@@ -54,6 +54,13 @@ class Task(BaseModel):
     blocked_by: str | None = Field(default=None, description="블로킹 사유")
     is_running: bool = Field(default=False, description="현재 실행 중 여부")
     workflow: str = Field(default="design", description="실행할 workflow 명령어 (design, build 등)")
+    # TSK-06-02: 요구사항/기술 스펙 필드
+    prd_ref: str = Field(default="", description="PRD 참조 섹션")
+    requirements: list[str] = Field(default_factory=list, description="요구사항 목록")
+    acceptance: list[str] = Field(default_factory=list, description="인수 조건 목록")
+    tech_spec: list[str] = Field(default_factory=list, description="기술 스펙 목록")
+    api_spec: list[str] = Field(default_factory=list, description="API 스펙 목록")
+    ui_spec: list[str] = Field(default_factory=list, description="UI 스펙 목록")
 
     def is_executable(self) -> bool:
         """실행 가능 여부 확인."""

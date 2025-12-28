@@ -114,8 +114,16 @@ async def test_detail_api() -> None:
     mock_task.priority = Mock(value="high")
     mock_task.domain = "backend"
     mock_task.assignee = "developer"
+    mock_task.schedule = ""
     mock_task.tags = ["test"]
     mock_task.depends = []
+    # TSK-06-02: 요구사항/기술 스펙 필드
+    mock_task.prd_ref = ""
+    mock_task.requirements = []
+    mock_task.acceptance = []
+    mock_task.tech_spec = []
+    mock_task.api_spec = []
+    mock_task.ui_spec = []
 
     mock_orchestrator = Mock()
     mock_orchestrator.project_name = "test_project"
@@ -571,8 +579,16 @@ async def test_get_task_detail_all_properties() -> None:
     mock_task.priority = Mock(value="high")
     mock_task.domain = "fullstack"
     mock_task.assignee = "developer"
+    mock_task.schedule = ""
     mock_task.tags = ["api", "detail", "template"]
     mock_task.depends = ["TSK-02-02"]
+    # TSK-06-02: 요구사항/기술 스펙 필드
+    mock_task.prd_ref = "PRD 3.2"
+    mock_task.requirements = ["요구사항1", "요구사항2"]
+    mock_task.acceptance = []
+    mock_task.tech_spec = ["스펙1"]
+    mock_task.api_spec = []
+    mock_task.ui_spec = []
 
     mock_orchestrator = Mock()
     mock_orchestrator.project_name = "orchay_web"
@@ -647,8 +663,16 @@ async def test_task_detail_shows_documents_section() -> None:
     mock_task.priority = Mock(value="high")
     mock_task.domain = "fullstack"
     mock_task.assignee = "developer"
+    mock_task.schedule = ""
     mock_task.tags = []
     mock_task.depends = []
+    # TSK-06-02: 요구사항/기술 스펙 필드
+    mock_task.prd_ref = ""
+    mock_task.requirements = []
+    mock_task.acceptance = []
+    mock_task.tech_spec = []
+    mock_task.api_spec = []
+    mock_task.ui_spec = []
 
     mock_orchestrator = Mock()
     mock_orchestrator.project_name = "orchay_web"

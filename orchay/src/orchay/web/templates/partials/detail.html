@@ -1,89 +1,283 @@
-<div class="bg-orchay-card rounded-lg p-4 border border-orchay-border">
-    <!-- Task Header -->
-    <div class="flex items-center gap-3 mb-4 pb-4 border-b border-orchay-border">
-        <h3 class="text-xl font-bold">{{ task.id }}</h3>
-        <span class="px-2 py-1 rounded text-sm
-            {% if task.status.value == '[xx]' %}bg-green-900 text-green-300
-            {% elif task.status.value == '[im]' %}bg-blue-900 text-blue-300
-            {% elif task.status.value == '[ap]' %}bg-purple-900 text-purple-300
-            {% elif task.status.value == '[dd]' %}bg-yellow-900 text-yellow-300
-            {% elif task.status.value == '[bd]' %}bg-orange-900 text-orange-300
-            {% else %}bg-gray-700 text-gray-300{% endif %}">
-            {{ task.status.value }}
-        </span>
-    </div>
+<!-- TSK-06-02: Task Detail 패널 개선 -->
+<div class="space-y-4" data-testid="detail-panel">
+    <!-- 기본 정보 카드 -->
+    <div class="bg-orchay-card rounded-lg p-4 border border-orchay-border" data-testid="basic-info-card">
+        <!-- Task ID 배지 -->
+        <div class="flex items-center gap-2 mb-3">
+            <span class="px-2 py-1 bg-blue-900 text-blue-300 rounded text-xs" data-testid="project-badge">
+                {{ project_name }}
+            </span>
+            <span class="px-2 py-1 bg-purple-900 text-purple-300 rounded text-xs" data-testid="category-badge">
+                {{ task.category.value }}
+            </span>
+            <span class="px-2 py-1 bg-gray-700 text-gray-300 rounded text-xs font-mono" data-testid="task-id-badge">
+                {{ task.id }}
+            </span>
+        </div>
 
-    <!-- Task Title -->
-    <div class="mb-4">
-        <span class="text-orchay-muted text-sm">Title</span>
-        <p class="font-medium">{{ task.title }}</p>
-    </div>
+        <!-- Task 제목 및 상태 -->
+        <div class="flex items-center gap-3 mb-4">
+            <h3 class="text-lg font-bold flex-1">{{ task.title }}</h3>
+            <span class="px-2 py-1 rounded text-sm
+                {% if task.status.value == '[xx]' %}bg-green-900 text-green-300
+                {% elif task.status.value == '[im]' %}bg-blue-900 text-blue-300
+                {% elif task.status.value == '[ap]' %}bg-purple-900 text-purple-300
+                {% elif task.status.value == '[dd]' %}bg-yellow-900 text-yellow-300
+                {% elif task.status.value == '[bd]' %}bg-orange-900 text-orange-300
+                {% else %}bg-gray-700 text-gray-300{% endif %}">
+                {{ task.status.value }}
+            </span>
+        </div>
 
-    <!-- Task Properties -->
-    <div class="grid grid-cols-2 gap-4">
-        <div>
-            <span class="text-orchay-muted text-sm">Category</span>
-            <p>{{ task.category.value }}</p>
-        </div>
-        <div>
-            <span class="text-orchay-muted text-sm">Priority</span>
-            <p class="{% if task.priority.value == 'critical' %}text-red-400
-                      {% elif task.priority.value == 'high' %}text-orange-400
-                      {% elif task.priority.value == 'medium' %}text-yellow-400
-                      {% else %}text-gray-400{% endif %}">
-                {{ task.priority.value }}
-            </p>
-        </div>
-        <div>
-            <span class="text-orchay-muted text-sm">Domain</span>
-            <p>{{ task.domain or '-' }}</p>
-        </div>
-        <div>
-            <span class="text-orchay-muted text-sm">Assignee</span>
-            <p>{{ task.assignee or '-' }}</p>
-        </div>
-    </div>
-
-    <!-- Tags -->
-    {% if task.tags %}
-    <div class="mt-4">
-        <span class="text-orchay-muted text-sm">Tags</span>
-        <div class="flex flex-wrap gap-2 mt-1">
-            {% for tag in task.tags %}
-            <span class="px-2 py-1 bg-orchay-bg rounded text-sm">{{ tag }}</span>
-            {% endfor %}
-        </div>
-    </div>
-    {% endif %}
-
-    <!-- Dependencies -->
-    {% if task.depends %}
-    <div class="mt-4">
-        <span class="text-orchay-muted text-sm">Dependencies</span>
-        <div class="flex flex-wrap gap-2 mt-1">
-            {% for dep in task.depends %}
-            <span class="px-2 py-1 bg-orchay-bg rounded text-sm text-orchay-accent">{{ dep }}</span>
-            {% endfor %}
-        </div>
-    </div>
-    {% endif %}
-
-    <!-- Documents (FR-007 + TSK-05-01: Document Viewer) -->
-    <div class="mt-4 pt-4 border-t border-orchay-border" data-testid="documents-section">
-        <span class="text-orchay-muted text-sm">Documents</span>
-        <div class="mt-2 space-y-1" data-testid="documents-list">
-            {% if documents %}
-            {% for doc in documents %}
-            <div class="flex items-center gap-2 text-sm cursor-pointer hover:bg-gray-700 rounded px-2 py-1 -mx-2 transition-colors"
-                 data-testid="document-item"
-                 onclick="openDocument('{{ task.id }}', '{{ doc }}')">
-                <span>{% if doc.endswith('.md') %}📄{% else %}🖼️{% endif %}</span>
-                <span class="text-orchay-accent hover:underline">{{ doc }}</span>
+        <!-- Task 속성 그리드 -->
+        <div class="grid grid-cols-2 gap-3 text-sm">
+            <div>
+                <span class="text-orchay-muted">Priority</span>
+                <p class="{% if task.priority.value == 'critical' %}text-red-400
+                          {% elif task.priority.value == 'high' %}text-orange-400
+                          {% elif task.priority.value == 'medium' %}text-yellow-400
+                          {% else %}text-gray-400{% endif %}">
+                    {{ task.priority.value }}
+                </p>
             </div>
-            {% endfor %}
-            {% else %}
-            <p class="text-orchay-muted text-sm">문서 없음</p>
-            {% endif %}
+            <div>
+                <span class="text-orchay-muted">Domain</span>
+                <p>{{ task.domain or '-' }}</p>
+            </div>
+            <div>
+                <span class="text-orchay-muted">Assignee</span>
+                <p>{{ task.assignee or '-' }}</p>
+            </div>
+            <div>
+                <span class="text-orchay-muted">Schedule</span>
+                <p>{{ task.schedule or '-' }}</p>
+            </div>
+        </div>
+
+        <!-- Tags -->
+        {% if task.tags %}
+        <div class="mt-3">
+            <div class="flex flex-wrap gap-1">
+                {% for tag in task.tags %}
+                <span class="px-2 py-0.5 bg-orchay-bg rounded text-xs text-orchay-muted">{{ tag }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Dependencies -->
+        {% if task.depends %}
+        <div class="mt-3">
+            <span class="text-orchay-muted text-sm">Depends:</span>
+            <span class="text-orchay-accent text-sm">{{ task.depends | join(', ') }}</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- 진행 상태 섹션 (접기/펼치기) -->
+    <div class="bg-orchay-card rounded-lg border border-orchay-border overflow-hidden" data-testid="progress-section">
+        <button type="button" class="collapsible-header w-full flex items-center justify-between p-4 text-left hover:bg-gray-700/50 transition-colors"
+                onclick="toggleSection(this)" data-testid="progress-header">
+            <span class="font-medium">진행 상태</span>
+            <span class="toggle-icon transition-transform" data-testid="toggle-icon">▼</span>
+        </button>
+        <div class="collapsible-content p-4 pt-0">
+            <!-- 워크플로우 스테퍼 -->
+            <div class="mb-4" data-testid="workflow-stepper">
+                <div class="flex items-center justify-between">
+                    {% for step in workflow_steps %}
+                    <div class="flex flex-col items-center flex-1" data-testid="step-item">
+                        <!-- 스텝 원 -->
+                        <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold
+                            {% if loop.index0 < current_step %}bg-green-600 text-white
+                            {% elif loop.index0 == current_step %}bg-blue-600 text-white ring-2 ring-blue-400
+                            {% else %}bg-gray-700 text-gray-400{% endif %}"
+                            {% if loop.index0 == current_step %}data-testid="current-step"{% endif %}>
+                            {% if loop.index0 < current_step %}✓{% else %}{{ loop.index0 + 1 }}{% endif %}
+                        </div>
+                        <!-- 스텝 라벨 -->
+                        <span class="mt-1 text-xs text-center
+                            {% if loop.index0 == current_step %}text-blue-400 font-medium{% else %}text-gray-500{% endif %}">
+                            {{ step }}
+                        </span>
+                    </div>
+                    {% if not loop.last %}
+                    <!-- 연결선 -->
+                    <div class="flex-1 h-0.5 mx-1
+                        {% if loop.index0 < current_step %}bg-green-600{% else %}bg-gray-700{% endif %}"></div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- 진행률 바 -->
+            <div data-testid="progress-bar">
+                <div class="flex justify-between text-xs text-orchay-muted mb-1">
+                    <span>진행률</span>
+                    <span>{{ task_progress }}%</span>
+                </div>
+                <div class="bg-gray-700 h-2 rounded-full overflow-hidden">
+                    <div class="h-full bg-blue-600 transition-all duration-300"
+                         style="width: {{ task_progress }}%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 요구사항 섹션 (접기/펼치기 - 기본 접힘) -->
+    {% if task.prd_ref or task.requirements or task.acceptance %}
+    <div class="bg-orchay-card rounded-lg border border-orchay-border overflow-hidden" data-testid="requirements-section">
+        <button type="button" class="collapsible-header w-full flex items-center justify-between p-4 text-left hover:bg-gray-700/50 transition-colors"
+                onclick="toggleSection(this)" data-testid="requirements-header">
+            <span class="font-medium">요구사항</span>
+            <span class="toggle-icon transition-transform rotate-[-90deg]">▼</span>
+        </button>
+        <div class="collapsible-content max-h-0 overflow-hidden transition-all duration-300">
+            <div class="p-4 pt-0 space-y-3">
+                <!-- PRD 참조 -->
+                {% if task.prd_ref %}
+                <div data-testid="prd-ref">
+                    <span class="text-orchay-muted text-sm">PRD 참조:</span>
+                    <span class="text-orchay-accent text-sm ml-1">{{ task.prd_ref }}</span>
+                </div>
+                {% endif %}
+
+                <!-- 요구사항 목록 -->
+                {% if task.requirements %}
+                <div data-testid="requirements-list">
+                    <span class="text-orchay-muted text-sm block mb-1">Requirements:</span>
+                    <ul class="text-sm space-y-1 pl-4">
+                        {% for req in task.requirements %}
+                        <li class="text-gray-300 list-disc">{{ req }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                <!-- 인수 조건 -->
+                {% if task.acceptance %}
+                <div>
+                    <span class="text-orchay-muted text-sm block mb-1">Acceptance:</span>
+                    <ul class="text-sm space-y-1 pl-4">
+                        {% for acc in task.acceptance %}
+                        <li class="text-gray-300 list-disc">{{ acc }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- 기술 스펙 섹션 (접기/펼치기 - 기본 접힘) -->
+    {% if task.tech_spec or task.api_spec or task.ui_spec %}
+    <div class="bg-orchay-card rounded-lg border border-orchay-border overflow-hidden" data-testid="tech-spec-section">
+        <button type="button" class="collapsible-header w-full flex items-center justify-between p-4 text-left hover:bg-gray-700/50 transition-colors"
+                onclick="toggleSection(this)">
+            <span class="font-medium">기술 스펙</span>
+            <span class="toggle-icon transition-transform rotate-[-90deg]">▼</span>
+        </button>
+        <div class="collapsible-content max-h-0 overflow-hidden transition-all duration-300">
+            <div class="p-4 pt-0 space-y-3" data-testid="tech-spec-content">
+                <!-- tech-spec -->
+                {% if task.tech_spec %}
+                <div>
+                    <span class="text-orchay-muted text-sm block mb-1">Tech Spec:</span>
+                    <ul class="text-sm space-y-1 pl-4">
+                        {% for spec in task.tech_spec %}
+                        <li class="text-gray-300 list-disc font-mono text-xs">{{ spec }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                <!-- api-spec -->
+                {% if task.api_spec %}
+                <div>
+                    <span class="text-orchay-muted text-sm block mb-1">API Spec:</span>
+                    <ul class="text-sm space-y-1 pl-4">
+                        {% for spec in task.api_spec %}
+                        <li class="text-gray-300 list-disc font-mono text-xs">{{ spec }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                <!-- ui-spec -->
+                {% if task.ui_spec %}
+                <div>
+                    <span class="text-orchay-muted text-sm block mb-1">UI Spec:</span>
+                    <ul class="text-sm space-y-1 pl-4">
+                        {% for spec in task.ui_spec %}
+                        <li class="text-gray-300 list-disc font-mono text-xs">{{ spec }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Documents 섹션 (TSK-06-03에서 테이블로 확장 예정) -->
+    <div class="bg-orchay-card rounded-lg border border-orchay-border overflow-hidden" data-testid="documents-section">
+        <button type="button" class="collapsible-header w-full flex items-center justify-between p-4 text-left hover:bg-gray-700/50 transition-colors"
+                onclick="toggleSection(this)">
+            <div class="flex items-center gap-2">
+                <span class="font-medium">관련 문서</span>
+                <span class="text-xs text-orchay-muted">({{ documents | length }}개)</span>
+            </div>
+            <span class="toggle-icon transition-transform">▼</span>
+        </button>
+        <div class="collapsible-content p-4 pt-0">
+            <div class="space-y-1" data-testid="documents-list">
+                {% if documents %}
+                {% for doc in documents %}
+                <div class="flex items-center gap-2 text-sm cursor-pointer hover:bg-gray-700 rounded px-2 py-1 -mx-2 transition-colors"
+                     data-testid="document-item"
+                     onclick="openDocument('{{ task.id }}', '{{ doc }}')">
+                    <span>{% if doc.endswith('.md') %}📄{% else %}🖼️{% endif %}</span>
+                    <span class="text-orchay-accent hover:underline">{{ doc }}</span>
+                </div>
+                {% endfor %}
+                {% else %}
+                <p class="text-orchay-muted text-sm">문서 없음</p>
+                {% endif %}
+            </div>
         </div>
     </div>
 </div>
+
+<script>
+// 섹션 접기/펼치기 함수
+function toggleSection(button) {
+    const content = button.nextElementSibling;
+    const icon = button.querySelector('.toggle-icon');
+
+    if (content.style.maxHeight && content.style.maxHeight !== '0px') {
+        // 접기
+        content.style.maxHeight = '0px';
+        icon.style.transform = 'rotate(-90deg)';
+    } else {
+        // 펼치기
+        content.style.maxHeight = content.scrollHeight + 'px';
+        icon.style.transform = 'rotate(0deg)';
+    }
+}
+
+// 초기화: 기본 펼침 상태 설정
+document.addEventListener('DOMContentLoaded', function() {
+    // 진행 상태 섹션은 기본 펼침
+    const progressContent = document.querySelector('[data-testid="progress-section"] .collapsible-content');
+    if (progressContent) {
+        progressContent.style.maxHeight = progressContent.scrollHeight + 'px';
+    }
+
+    // 문서 섹션도 기본 펼침
+    const docsContent = document.querySelector('[data-testid="documents-section"] .collapsible-content');
+    if (docsContent) {
+        docsContent.style.maxHeight = docsContent.scrollHeight + 'px';
+    }
+});
+</script>
