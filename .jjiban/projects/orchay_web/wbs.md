@@ -416,7 +416,7 @@
 ### TSK-05-01: Document Viewer 구현
 - category: development
 - domain: fullstack
-- status: detail-design [dd]
+- status: approve [ap]
 - priority: high
 - assignee: -
 - schedule: 2026-01-06 ~ 2026-01-07
@@ -463,7 +463,7 @@
 ### TSK-06-01: 트리 패널 개선
 - category: development
 - domain: frontend
-- status: detail-design [dd]
+- status: approve [ap]
 - priority: high
 - assignee: -
 - schedule: 2026-01-08 ~ 2026-01-08
@@ -534,7 +534,7 @@
 ### TSK-06-03: 문서 테이블
 - category: development
 - domain: frontend
-- status: todo [ ]
+- status: detail-design [dd]
 - priority: medium
 - assignee: -
 - schedule: 2026-01-10 ~ 2026-01-10
