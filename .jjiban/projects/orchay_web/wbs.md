@@ -534,7 +534,7 @@
 ### TSK-06-03: 문서 테이블
 - category: development
 - domain: frontend
-- status: detail-design [dd]
+- status: approve [ap]
 - priority: medium
 - assignee: -
 - schedule: 2026-01-10 ~ 2026-01-10
