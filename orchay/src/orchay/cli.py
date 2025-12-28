@@ -21,13 +21,7 @@ from typing import Any
 from rich.console import Console
 from rich.table import Table
 
-from orchay.utils.active_tasks import (
-    clear_active_tasks,
-    load_active_tasks,
-    register_active_task,
-    unregister_active_task,
-    update_active_task_step,
-)
+from orchay.utils.active_tasks import load_active_tasks
 
 console = Console()
 
@@ -179,89 +173,38 @@ def create_parser() -> argparse.ArgumentParser:
 
 
 def exec_start(args: argparse.Namespace) -> int:
-    """Task 실행 시작 등록."""
-    try:
-        register_active_task(
-            task_id=args.task_id,
-            worker_id=args.worker,
-            pane_id=args.pane,
-            step=args.step,
-        )
-        console.print(f"[green]✓[/] {args.task_id} 실행 시작 등록 (step: {args.step})")
-        return 0
-    except Exception as e:
-        console.print(f"[red]✗[/] 등록 실패: {e}")
-        return 1
+    """Task 실행 시작 등록 (deprecated)."""
+    console.print("[yellow]⚠ exec start 명령어는 더 이상 사용되지 않습니다.[/]")
+    console.print("[dim]Task 할당은 Orchestrator 메모리에서 자동으로 관리됩니다.[/]")
+    return 0
 
 
 def exec_stop(args: argparse.Namespace) -> int:
-    """Task 실행 완료 해제."""
-    try:
-        unregister_active_task(args.task_id)
-        console.print(f"[green]✓[/] {args.task_id} 실행 완료 해제")
-        return 0
-    except Exception as e:
-        console.print(f"[red]✗[/] 해제 실패: {e}")
-        return 1
+    """Task 실행 완료 해제 (deprecated)."""
+    console.print("[yellow]⚠ exec stop 명령어는 더 이상 사용되지 않습니다.[/]")
+    console.print("[dim]Task 해제는 Orchestrator 메모리에서 자동으로 관리됩니다.[/]")
+    return 0
 
 
 def exec_update(args: argparse.Namespace) -> int:
-    """Task 단계 갱신."""
-    try:
-        update_active_task_step(args.task_id, args.step)
-        console.print(f"[green]✓[/] {args.task_id} 단계 갱신 → {args.step}")
-        return 0
-    except Exception as e:
-        console.print(f"[red]✗[/] 갱신 실패: {e}")
-        return 1
+    """Task 단계 갱신 (deprecated)."""
+    console.print("[yellow]⚠ exec update 명령어는 더 이상 사용되지 않습니다.[/]")
+    console.print("[dim]Task 단계는 WBS 상태에서 자동으로 동기화됩니다.[/]")
+    return 0
 
 
 def exec_list(_args: argparse.Namespace) -> int:
-    """실행 중인 Task 목록 출력."""
-    data = load_active_tasks()
-    active = data.get("activeTasks", {})
-
-    if not active:
-        console.print("[dim]실행 중인 Task가 없습니다.[/]")
-        return 0
-
-    table = Table(title="실행 중인 Task", show_header=True)
-    table.add_column("Task ID", style="cyan")
-    table.add_column("Worker", justify="center")
-    table.add_column("Pane", justify="center")
-    table.add_column("Step", style="yellow")
-    table.add_column("Started At", style="dim")
-
-    for task_id, info in active.items():
-        started = info.get("startedAt", "-")
-        if started != "-":
-            try:
-                dt = datetime.fromisoformat(started)
-                started = dt.strftime("%H:%M:%S")
-            except ValueError:
-                pass
-
-        table.add_row(
-            task_id,
-            str(info.get("worker", "-")),
-            str(info.get("paneId", "-")),
-            info.get("currentStep", "-"),
-            started,
-        )
-
-    console.print(table)
+    """실행 중인 Task 목록 출력 (deprecated)."""
+    console.print("[yellow]⚠ exec list 명령어는 더 이상 사용되지 않습니다.[/]")
+    console.print("[dim]실행 중인 Task는 TUI 또는 웹 UI에서 확인하세요.[/]")
     return 0
 
 
 def exec_clear(_args: argparse.Namespace) -> int:
-    """모든 실행 상태 초기화."""
-    try:
-        clear_active_tasks()
-        console.print("[green]✓[/] 모든 실행 상태 초기화 완료")
-        return 0
-    except Exception as e:
-        console.print(f"[red]✗[/] 초기화 실패: {e}")
-        return 1
+    """모든 실행 상태 초기화 (deprecated)."""
+    console.print("[yellow]⚠ exec clear 명령어는 더 이상 사용되지 않습니다.[/]")
+    console.print("[dim]Orchestrator 재시작 시 상태가 자동으로 초기화됩니다.[/]")
+    return 0
 
 
 def handle_exec(args: argparse.Namespace) -> int:

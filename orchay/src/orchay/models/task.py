@@ -52,7 +52,7 @@ class Task(BaseModel):
     tags: list[str] = Field(default_factory=list, description="태그 목록")
     depends: list[str] = Field(default_factory=list, description="의존 Task ID 목록")
     blocked_by: str | None = Field(default=None, description="블로킹 사유")
-    is_running: bool = Field(default=False, description="현재 실행 중 여부")
+    assigned_worker: int | None = Field(default=None, description="할당된 Worker ID")
     workflow: str = Field(default="design", description="실행할 workflow 명령어 (design, build 등)")
     # TSK-06-02: 요구사항/기술 스펙 필드
     prd_ref: str = Field(default="", description="PRD 참조 섹션")
@@ -67,5 +67,5 @@ class Task(BaseModel):
         return (
             self.status != TaskStatus.DONE
             and self.blocked_by is None
-            and not self.is_running
+            and self.assigned_worker is None
         )

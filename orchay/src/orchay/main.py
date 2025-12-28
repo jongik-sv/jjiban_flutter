@@ -20,14 +20,14 @@ from pathlib import Path
 from rich.console import Console
 from rich.table import Table
 
-from orchay.models import Config, ExecutionConfig, Task, TaskQueue, TaskStatus, WebConfig, Worker, WorkerState
+from orchay.models import Config, ExecutionConfig, Task, TaskStatus, WebConfig, Worker, WorkerState
 from orchay.scheduler import (
     ExecutionMode,
     dispatch_task,
     filter_executable_tasks,
     get_next_workflow_command,
 )
-from orchay.utils.active_tasks import clear_active_tasks, load_active_tasks, unregister_active_task
+from orchay.utils.active_tasks import load_active_tasks
 from orchay.utils.wezterm import (
     WezTermNotFoundError,
     get_active_pane_id,
@@ -57,7 +57,6 @@ class Orchestrator:
         self.parser = WbsParser(wbs_path)
         self.workers: list[Worker] = []
         self.tasks: list[Task] = []
-        self.task_queue = TaskQueue()  # 메모리 기반 할당 관리
         self.mode = ExecutionMode(config.execution.mode)
         self._running = False
         self._paused = False
@@ -69,10 +68,6 @@ class Orchestrator:
             성공 여부
         """
         console.print("[bold cyan]orchay[/] - Task Scheduler v0.1.0\n")
-
-        # 시작 시 active tasks 초기화 (이전 세션의 stale 데이터 제거)
-        clear_active_tasks()
-        self.running_tasks = set()
 
         # WBS 파일 확인
         if not self.wbs_path.exists():
@@ -172,12 +167,10 @@ class Orchestrator:
         # 3.5. Worker의 current_step을 WBS 상태 기반으로 업데이트
         self._sync_worker_steps()
 
-        # 4. 실행 가능 Task 필터링 (TaskQueue 기반)
-        assigned_ids = self.task_queue.get_assigned_task_ids()
+        # 4. 실행 가능 Task 필터링 (assigned_worker 기반)
         executable = await filter_executable_tasks(
             self.tasks,
             self.mode,
-            assigned_ids,  # 메모리 기반 할당 상태
         )
 
         # 5. idle Worker에 Task 분배 (일시정지 상태가 아닐 때만)
@@ -189,12 +182,6 @@ class Orchestrator:
                 logger.debug(f"Worker {worker.id}: state={worker.state.value}, manually_paused={worker.is_manually_paused}")
                 if worker.state == WorkerState.IDLE and not worker.is_manually_paused:
                     task = executable.pop(0)
-
-                    # TaskQueue로 할당 시도 (즉시 메모리에서 확인)
-                    if not self.task_queue.try_assign(task.id, worker.id):
-                        logger.debug(f"Task {task.id} 이미 할당됨, 건너뜀")
-                        continue
-
                     logger.info(f"Dispatch: {task.id} -> Worker {worker.id}")
                     await self._dispatch_to_worker(worker, task)
 
@@ -232,10 +219,6 @@ class Orchestrator:
 
             if new_step and new_step != worker.current_step:
                 worker.current_step = new_step
-                # 파일도 업데이트
-                from orchay.utils.active_tasks import update_active_task_step
-
-                update_active_task_step(worker.current_task, new_step)
 
     def _cleanup_completed_tasks(self) -> None:
         """stopAtState에 도달한 Task를 active에서 제거.
@@ -258,13 +241,10 @@ class Orchestrator:
         # WBS에서 stopAtState 이상인 Task들의 ID 수집
         completed_task_ids = {t.id for t in self.tasks if t.status in stop_statuses}
 
-        # active tasks에서 완료된 것들 제거
-        # TaskQueue에서 완료된 Task 해제
-        for task_id in list(self.task_queue.get_assigned_task_ids()):
-            pure_id = task_id.split("/")[-1] if "/" in task_id else task_id
-            if pure_id in completed_task_ids or task_id in completed_task_ids:
-                self.task_queue.release(task_id)
-                unregister_active_task(task_id)  # 파일도 정리
+        # 완료된 Task의 할당 해제
+        for task in self.tasks:
+            if task.status in stop_statuses and task.assigned_worker is not None:
+                task.assigned_worker = None
 
     async def _update_worker_states(self) -> None:
         """모든 Worker의 상태를 업데이트."""
@@ -293,19 +273,18 @@ class Orchestrator:
             }
             new_state = state_map.get(state, WorkerState.BUSY)
 
-            # done 상태 처리: TaskQueue에서 Task 해제
+            # done 상태 처리: Task 할당 해제
             if new_state == WorkerState.DONE:
                 # 이미 DONE 상태면 중복 처리 방지 (다음 tick에서 idle로 전환됨)
                 if worker.state == WorkerState.DONE:
                     continue
 
-                # done_info 또는 worker.current_task에서 task_id 획득
+                # Task 할당 해제
                 task_id = done_info.task_id if done_info else worker.current_task
                 if task_id:
-                    self.task_queue.release(task_id)
-                    unregister_active_task(task_id)  # 파일도 정리
-                if worker.current_task and worker.current_task != task_id:
-                    self.task_queue.release(worker.current_task)
+                    task = next((t for t in self.tasks if t.id == task_id), None)
+                    if task:
+                        task.assigned_worker = None
 
                 # DONE 상태로 유지 (다음 tick에서 신호가 사라지면 idle로 전환)
                 worker.state = WorkerState.DONE
@@ -318,9 +297,23 @@ class Orchestrator:
                     worker.reset()
                 # BUSY → IDLE 전환: Task 완료로 간주
                 elif worker.state == WorkerState.BUSY:
+                    # 추가 검증: dispatch 후 최소 시간 경과 확인
+                    # 너무 빨리 끝나면 잘못된 idle 판정일 수 있음
+                    if worker.dispatch_time:
+                        elapsed = (datetime.now() - worker.dispatch_time).total_seconds()
+                        if elapsed < self.config.dispatch.min_task_duration:
+                            logger.warning(
+                                f"Worker {worker.id}: 비정상 조기 완료 "
+                                f"({elapsed:.1f}s < {self.config.dispatch.min_task_duration}s), "
+                                f"idle 전환 거부"
+                            )
+                            # idle 전환 거부, BUSY 상태 유지
+                            continue
+
                     if worker.current_task:
-                        self.task_queue.release(worker.current_task)
-                        unregister_active_task(worker.current_task)
+                        task = next((t for t in self.tasks if t.id == worker.current_task), None)
+                        if task:
+                            task.assigned_worker = None
                     worker.reset()
                 else:
                     worker.state = new_state
@@ -354,8 +347,8 @@ class Orchestrator:
                 f"[red]Error:[/] {task.id} ({task.status.value}) - "
                 f"다음 transition을 찾을 수 없음 (category: {task.category.value})"
             )
+            task.assigned_worker = None
             worker.reset()
-            self.task_queue.release(task.id)
             return
 
         command = f"/wf:{next_workflow} {self.project_name}/{task.id}"
@@ -373,8 +366,8 @@ class Orchestrator:
             )
         except Exception as e:
             logger.error(f"Worker {worker.id} 명령 전송 실패: {e}")
+            task.assigned_worker = None
             worker.reset()
-            self.task_queue.release(task.id)
 
     def print_status(self) -> None:
         """현재 상태 출력."""
@@ -408,7 +401,7 @@ class Orchestrator:
 
         # 큐 상태
         pending = sum(1 for t in self.tasks if t.status.value == "[ ]")
-        running = len(self.running_tasks)
+        running = sum(1 for t in self.tasks if t.assigned_worker is not None)
         done = sum(1 for t in self.tasks if t.status.value == "[xx]")
         console.print(
             f"\n[dim]Queue:[/] {pending} pending, {running} running, {done} done\n"

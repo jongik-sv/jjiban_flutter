@@ -23,7 +23,6 @@ from orchay.utils.active_tasks import (
     pause_worker,
     resume_worker,
     set_scheduler_state,
-    unregister_active_task,
 )
 
 
@@ -1047,12 +1046,14 @@ class OrchayApp(App[None]):
             # Worker 리셋
             worker.reset()
 
-            # active_tasks에서 제거
-            if current_task:
-                unregister_active_task(current_task)
-                # Orchestrator의 running_tasks에서도 제거
-                if self._real_orchestrator is not None:
-                    self._real_orchestrator.running_tasks.discard(current_task)
+            # Task의 할당 해제
+            if current_task and self._real_orchestrator is not None:
+                task = next(
+                    (t for t in self._real_orchestrator.tasks if t.id == current_task),
+                    None
+                )
+                if task:
+                    task.assigned_worker = None
 
             self.notify(f"Worker {worker.id} reset to idle")
             self._update_worker_panel()

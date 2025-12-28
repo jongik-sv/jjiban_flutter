@@ -71,8 +71,8 @@ class TestFilterExecutableTasks:
         assert result[0].id == "TSK-01-02"
 
     @pytest.mark.asyncio
-    async def test_filter_excludes_running_tasks(self) -> None:
-        """TC-03: 실행 중인 Task 제외 확인."""
+    async def test_filter_excludes_assigned_tasks(self) -> None:
+        """TC-03: 할당된 Task 제외 확인."""
         tasks = [
             Task(
                 id="TSK-01-01",
@@ -80,6 +80,7 @@ class TestFilterExecutableTasks:
                 category=TaskCategory.DEVELOPMENT,
                 status=TaskStatus.TODO,
                 priority=TaskPriority.HIGH,
+                assigned_worker=1,  # Worker 1에 할당됨
             ),
             Task(
                 id="TSK-01-02",
@@ -89,9 +90,7 @@ class TestFilterExecutableTasks:
                 priority=TaskPriority.HIGH,
             ),
         ]
-        result = await filter_executable_tasks(
-            tasks, ExecutionMode.QUICK, running_tasks={"TSK-01-01"}
-        )
+        result = await filter_executable_tasks(tasks, ExecutionMode.QUICK)
         assert len(result) == 1
         assert result[0].id == "TSK-01-02"
 
@@ -227,14 +226,13 @@ class TestFilterExecutableTasks:
                 priority=TaskPriority.CRITICAL,
             ),
         ]
-        # 첫 번째 호출
+        # 첫 번째 호출 (할당 전)
         result1 = await filter_executable_tasks(tasks, ExecutionMode.QUICK)
         assert len(result1) == 1
 
-        # 분배 후 running_tasks에 추가
-        result2 = await filter_executable_tasks(
-            tasks, ExecutionMode.QUICK, running_tasks={"TSK-01-01"}
-        )
+        # 분배 후 assigned_worker 설정
+        tasks[0].assigned_worker = 1
+        result2 = await filter_executable_tasks(tasks, ExecutionMode.QUICK)
         assert len(result2) == 0
 
 

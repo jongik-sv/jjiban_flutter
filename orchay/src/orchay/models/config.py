@@ -55,6 +55,9 @@ class DispatchConfig(BaseModel):
     clear_before_dispatch: bool = Field(default=True, description="분배 전 /clear 전송")
     clear_wait_time: int = Field(default=2, description="/clear 후 대기 시간 (초)")
     grace_period: int = Field(default=20, description="dispatch 후 상태 체크 무시 시간 (초)")
+    min_task_duration: int = Field(
+        default=30, description="Task 최소 실행 시간 (초) - 이보다 빨리 끝나면 잘못된 idle 판정 의심"
+    )
 
 
 class HistoryConfig(BaseModel):

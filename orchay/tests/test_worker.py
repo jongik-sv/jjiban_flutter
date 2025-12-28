@@ -104,8 +104,11 @@ class TestDetectWorkerState:
     @pytest.mark.asyncio
     async def test_detect_idle(self) -> None:
         """UT-005: idle 상태 감지."""
-        with patch("orchay.worker.wezterm_get_text") as mock_get_text:
-            mock_get_text.return_value = "작업 완료\n> "
+        with (
+            patch("orchay.worker.pane_exists") as mock_pane_exists,
+            patch("orchay.worker.wezterm_get_text") as mock_get_text):
+            mock_pane_exists.return_value = True
+            mock_get_text.return_value = "작업 완료\n> "  # 파일에 작업 없음
 
             state, done_info = await detect_worker_state(pane_id=1)
 
@@ -115,8 +118,11 @@ class TestDetectWorkerState:
     @pytest.mark.asyncio
     async def test_detect_busy(self) -> None:
         """UT-006: busy 상태 감지."""
-        with patch("orchay.worker.wezterm_get_text") as mock_get_text:
-            mock_get_text.return_value = "[wf:build] 구현 중...\n진행률: 50%"
+        with (
+            patch("orchay.worker.pane_exists") as mock_pane_exists,
+            patch("orchay.worker.wezterm_get_text") as mock_get_text):
+            mock_pane_exists.return_value = True
+            mock_get_text.return_value = "[wf:build] 구현 중...\n진행률: 50%"  # 파일에 없지만 busy 패턴 감지
 
             state, done_info = await detect_worker_state(pane_id=1)
 
@@ -128,12 +134,9 @@ class TestDetectWorkerState:
         """UT-007: done 상태 감지 (active pane에서)."""
         with (
             patch("orchay.worker.pane_exists") as mock_pane_exists,
-            patch("orchay.worker.wezterm_get_text") as mock_get_text,
-            patch("orchay.worker.is_pane_active") as mock_is_active,
-        ):
+            patch("orchay.worker.wezterm_get_text") as mock_get_text):
             mock_pane_exists.return_value = True
-            mock_get_text.return_value = "ORCHAY_DONE:TSK-01-04:build:success\n> "
-            mock_is_active.return_value = True  # active 상태에서만 done 반환
+            mock_get_text.return_value = "ORCHAY_DONE:TSK-01-04:build:success\n> "  # active 상태에서만 done 반환
 
             state, done_info = await detect_worker_state(pane_id=1)
 
@@ -146,7 +149,10 @@ class TestDetectWorkerState:
     @pytest.mark.asyncio
     async def test_detect_paused_rate_limit(self) -> None:
         """UT-008: paused 상태 감지 (rate limit)."""
-        with patch("orchay.worker.wezterm_get_text") as mock_get_text:
+        with (
+            patch("orchay.worker.pane_exists") as mock_pane_exists,
+            patch("orchay.worker.wezterm_get_text") as mock_get_text):
+            mock_pane_exists.return_value = True
             mock_get_text.return_value = "rate limit exceeded, please wait..."
 
             state, done_info = await detect_worker_state(pane_id=1)
@@ -157,7 +163,10 @@ class TestDetectWorkerState:
     @pytest.mark.asyncio
     async def test_detect_paused_weekly_limit(self) -> None:
         """paused 상태 감지 (weekly limit)."""
-        with patch("orchay.worker.wezterm_get_text") as mock_get_text:
+        with (
+            patch("orchay.worker.pane_exists") as mock_pane_exists,
+            patch("orchay.worker.wezterm_get_text") as mock_get_text):
+            mock_pane_exists.return_value = True
             mock_get_text.return_value = "weekly limit reached, resets at Oct 9 10:30am"
 
             state, done_info = await detect_worker_state(pane_id=1)
@@ -167,7 +176,10 @@ class TestDetectWorkerState:
     @pytest.mark.asyncio
     async def test_detect_paused_context_limit(self) -> None:
         """paused 상태 감지 (context limit)."""
-        with patch("orchay.worker.wezterm_get_text") as mock_get_text:
+        with (
+            patch("orchay.worker.pane_exists") as mock_pane_exists,
+            patch("orchay.worker.wezterm_get_text") as mock_get_text):
+            mock_pane_exists.return_value = True
             mock_get_text.return_value = "context limit exceeded, conversation too long"
 
             state, done_info = await detect_worker_state(pane_id=1)
@@ -177,7 +189,10 @@ class TestDetectWorkerState:
     @pytest.mark.asyncio
     async def test_detect_error(self) -> None:
         """UT-009: error 상태 감지."""
-        with patch("orchay.worker.wezterm_get_text") as mock_get_text:
+        with (
+            patch("orchay.worker.pane_exists") as mock_pane_exists,
+            patch("orchay.worker.wezterm_get_text") as mock_get_text):
+            mock_pane_exists.return_value = True
             mock_get_text.return_value = "Error: Task failed\n❌ 실패"
 
             state, done_info = await detect_worker_state(pane_id=1)
@@ -188,7 +203,10 @@ class TestDetectWorkerState:
     @pytest.mark.asyncio
     async def test_detect_error_failed(self) -> None:
         """error 상태 감지 (Failed 패턴)."""
-        with patch("orchay.worker.wezterm_get_text") as mock_get_text:
+        with (
+            patch("orchay.worker.pane_exists") as mock_pane_exists,
+            patch("orchay.worker.wezterm_get_text") as mock_get_text):
+            mock_pane_exists.return_value = True
             mock_get_text.return_value = "Failed: Build error"
 
             state, done_info = await detect_worker_state(pane_id=1)
@@ -198,7 +216,10 @@ class TestDetectWorkerState:
     @pytest.mark.asyncio
     async def test_detect_blocked(self) -> None:
         """UT-010: blocked 상태 감지."""
-        with patch("orchay.worker.wezterm_get_text") as mock_get_text:
+        with (
+            patch("orchay.worker.pane_exists") as mock_pane_exists,
+            patch("orchay.worker.wezterm_get_text") as mock_get_text):
+            mock_pane_exists.return_value = True
             mock_get_text.return_value = "계속하시겠습니까? (y/n)"
 
             state, done_info = await detect_worker_state(pane_id=1)
@@ -209,7 +230,10 @@ class TestDetectWorkerState:
     @pytest.mark.asyncio
     async def test_detect_blocked_question(self) -> None:
         """blocked 상태 감지 (질문 패턴)."""
-        with patch("orchay.worker.wezterm_get_text") as mock_get_text:
+        with (
+            patch("orchay.worker.pane_exists") as mock_pane_exists,
+            patch("orchay.worker.wezterm_get_text") as mock_get_text):
+            mock_pane_exists.return_value = True
             mock_get_text.return_value = "어떤 옵션을 선택하시겠습니까?"
 
             state, done_info = await detect_worker_state(pane_id=1)
@@ -236,9 +260,7 @@ class TestDetectWorkerState:
         """UT-013: 우선순위 테스트 - done이 idle보다 우선 (active pane에서)."""
         with (
             patch("orchay.worker.pane_exists", return_value=True),
-            patch("orchay.worker.is_pane_active", return_value=True),
-            patch("orchay.worker.wezterm_get_text") as mock_get_text,
-        ):
+            patch("orchay.worker.wezterm_get_text") as mock_get_text):
             # done 패턴과 idle 패턴(>) 동시 존재
             mock_get_text.return_value = "ORCHAY_DONE:TSK-01-04:build:success\n> "
 

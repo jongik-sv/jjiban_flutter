@@ -11,7 +11,6 @@ from pathlib import Path
 from typing import Any
 
 from orchay.models import Task, TaskPriority, TaskStatus, Worker, WorkerState
-from orchay.utils.active_tasks import register_active_task
 
 logger = logging.getLogger(__name__)
 
@@ -94,14 +93,12 @@ def _is_beyond_todo_status(status: TaskStatus) -> bool:
 async def filter_executable_tasks(
     tasks: list[Task],
     mode: ExecutionMode,
-    running_tasks: set[str] | None = None,
 ) -> list[Task]:
     """실행 가능한 Task를 필터링하고 우선순위순으로 정렬합니다.
 
     Args:
         tasks: 전체 Task 목록
         mode: 현재 실행 모드
-        running_tasks: 현재 실행 중인 Task ID 집합
 
     Returns:
         우선순위순 정렬된 실행 가능 Task 리스트
@@ -115,9 +112,6 @@ async def filter_executable_tasks(
         BR-06: force 모드: 의존성 무시
         BR-07: 우선순위 정렬: critical > high > medium > low
     """
-    if running_tasks is None:
-        running_tasks = set()
-
     # 전체 Task를 딕셔너리로 변환 (의존성 검사용)
     all_tasks_dict = {t.id: t for t in tasks}
 
@@ -132,8 +126,8 @@ async def filter_executable_tasks(
         if task.blocked_by is not None:
             continue
 
-        # BR-03: 실행 중 Task 제외 (TaskQueue 기반)
-        if task.id in running_tasks:
+        # BR-03: 이미 할당된 Task 제외
+        if task.assigned_worker is not None:
             continue
 
         # 모드별 필터링
@@ -264,7 +258,7 @@ async def dispatch_task(
         - worker.state = "busy"
         - worker.current_task = task.id
         - worker.dispatch_time = now()
-        - orchay-active.json에 작업 등록
+        - task.assigned_worker = worker.id
     """
     # Worker 상태 업데이트
     worker.state = WorkerState.BUSY
@@ -276,13 +270,5 @@ async def dispatch_task(
     first_step = steps[0] if steps else "start"
     worker.current_step = first_step
 
-    # Task의 is_running 플래그 설정
-    task.is_running = True
-
-    # 파일 기반 상태 관리: 작업 등록
-    register_active_task(
-        task_id=task.id,
-        worker_id=worker.id,
-        pane_id=worker.pane_id,
-        step=first_step,
-    )
+    # Task에 할당된 Worker 설정
+    task.assigned_worker = worker.id
