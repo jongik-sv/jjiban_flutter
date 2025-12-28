@@ -498,7 +498,7 @@
 ### TSK-06-02: Task Detail 패널 개선
 - category: development
 - domain: frontend
-- status: implement [im]
+- status: done [xx]
 - priority: high
 - assignee: -
 - schedule: 2026-01-09 ~ 2026-01-09
