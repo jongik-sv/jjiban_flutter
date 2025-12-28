@@ -123,7 +123,7 @@
 ### TSK-02-01: 트리 데이터 API
 - category: development
 - domain: backend
-- status: approved [ap]
+- status: implement [im]
 - priority: high
 - assignee: -
 - schedule: 2025-12-31 ~ 2025-12-31
