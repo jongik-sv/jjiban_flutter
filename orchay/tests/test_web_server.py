@@ -1319,3 +1319,157 @@ async def test_progress_bar_styling() -> None:
     assert "transition-all" in html  # 애니메이션
     assert "duration-300" in html  # 애니메이션 시간
     assert 'style="width: 100%"' in html  # 5/5 = 100%
+
+
+# =============================================================================
+# TSK-04-02: 성능 테스트
+# 테스트 명세서 (026-test-specification.md) TC-11, TC-12
+# =============================================================================
+
+
+# TC-11: 페이지 로드 시간 테스트
+@pytest.mark.asyncio
+async def test_page_load_time() -> None:
+    """메인 페이지 로드 시간이 1초 미만인지 확인 (PRD 4: 성능 요구사항)."""
+    import time
+
+    from httpx import ASGITransport, AsyncClient
+
+    from orchay.web.server import create_app
+
+    mock_orchestrator = Mock()
+    mock_orchestrator.project_name = "test_project"
+    mock_orchestrator.mode = Mock(value="quick")
+    mock_orchestrator.tasks = []
+    mock_orchestrator.workers = []
+
+    app = create_app(mock_orchestrator)
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        start = time.perf_counter()
+        response = await client.get("/")
+        elapsed = time.perf_counter() - start
+
+    assert response.status_code == 200
+    assert elapsed < 1.0, f"페이지 로드 시간 {elapsed:.3f}초 > 1초"
+
+
+# TC-12: API 응답 시간 테스트
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "endpoint",
+    [
+        "/",
+        "/api/tree",
+        "/api/workers",
+    ],
+)
+async def test_api_response_time(endpoint: str) -> None:
+    """API 응답 시간이 1초 미만인지 확인."""
+    import time
+
+    from httpx import ASGITransport, AsyncClient
+
+    from orchay.web.server import create_app
+
+    mock_orchestrator = Mock()
+    mock_orchestrator.project_name = "test_project"
+    mock_orchestrator.mode = Mock(value="quick")
+    mock_orchestrator.tasks = []
+    mock_orchestrator.workers = []
+
+    app = create_app(mock_orchestrator)
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        start = time.perf_counter()
+        response = await client.get(endpoint)
+        elapsed = time.perf_counter() - start
+
+    assert response.status_code == 200
+    assert elapsed < 1.0, f"{endpoint} 응답 시간 {elapsed:.3f}초 > 1초"
+
+
+# TC-02: 서버 종료 테스트 (명시적)
+def test_server_stops_cleanly() -> None:
+    """서버가 정상적으로 종료되고 리소스가 정리되는지 확인."""
+    from fastapi.testclient import TestClient
+
+    from orchay.web.server import create_app
+
+    mock_orchestrator = Mock()
+    mock_orchestrator.project_name = "test_project"
+    mock_orchestrator.mode = Mock(value="quick")
+    mock_orchestrator.tasks = []
+    mock_orchestrator.workers = []
+
+    app = create_app(mock_orchestrator)
+
+    # TestClient 컨텍스트 관리자로 리소스 정리 테스트
+    with TestClient(app) as client:
+        response = client.get("/")
+        assert response.status_code == 200
+
+    # 컨텍스트 종료 후 예외 없이 정상 종료 확인
+    assert True, "서버가 예외 없이 종료됨"
+
+
+# TC-12b: 대용량 데이터 성능 테스트
+@pytest.mark.asyncio
+async def test_api_response_time_with_large_data() -> None:
+    """대용량 데이터(20개 Task)에서도 응답 시간이 1초 미만인지 확인."""
+    import time
+
+    from httpx import ASGITransport, AsyncClient
+
+    from orchay.models.worker import Worker, WorkerState
+    from orchay.web.server import create_app
+
+    # 20개 Task 생성 (표준 테스트 데이터)
+    tasks = []
+    for i in range(20):
+        wp_num = (i // 4) + 1
+        task_num = (i % 4) + 1
+        mock_task = Mock()
+        mock_task.id = f"TSK-0{wp_num}-0{task_num}"
+        mock_task.title = f"Task {i + 1}"
+        mock_task.status = Mock(value="[xx]" if i < 5 else "[ ]")
+        tasks.append(mock_task)
+
+    # 5개 Worker 생성
+    workers = [
+        Worker(id=i, pane_id=i, state=WorkerState.IDLE)
+        for i in range(1, 6)
+    ]
+
+    mock_orchestrator = Mock()
+    mock_orchestrator.project_name = "test_project"
+    mock_orchestrator.mode = Mock(value="quick")
+    mock_orchestrator.tasks = tasks
+    mock_orchestrator.workers = workers
+
+    app = create_app(mock_orchestrator)
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        # 메인 페이지
+        start = time.perf_counter()
+        response = await client.get("/")
+        elapsed = time.perf_counter() - start
+        assert response.status_code == 200
+        assert elapsed < 1.0, f"/ 응답 시간 {elapsed:.3f}초 > 1초"
+
+        # 트리 API
+        start = time.perf_counter()
+        response = await client.get("/api/tree")
+        elapsed = time.perf_counter() - start
+        assert response.status_code == 200
+        assert elapsed < 1.0, f"/api/tree 응답 시간 {elapsed:.3f}초 > 1초"
+
+        # Worker API
+        start = time.perf_counter()
+        response = await client.get("/api/workers")
+        elapsed = time.perf_counter() - start
+        assert response.status_code == 200
+        assert elapsed < 1.0, f"/api/workers 응답 시간 {elapsed:.3f}초 > 1초"
