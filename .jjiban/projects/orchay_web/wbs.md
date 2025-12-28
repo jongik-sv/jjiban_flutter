@@ -326,7 +326,7 @@
 ### TSK-04-01: 의존성 및 pyproject.toml 업데이트
 - category: infrastructure
 - domain: infra
-- status: approved [ap]
+- status: implement [im]
 - priority: high
 - assignee: -
 - schedule: 2026-01-04 ~ 2026-01-04
