@@ -18,7 +18,7 @@
 ### TSK-01-01: FastAPI 앱 및 라우트 정의
 - category: development
 - domain: backend
-- status: approved [ap]
+- status: implement [im]
 - priority: critical
 - assignee: -
 - schedule: 2025-12-29 ~ 2025-12-29

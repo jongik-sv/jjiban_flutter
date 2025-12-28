@@ -1,0 +1,43 @@
+{% for wp_id, acts in tree.items() %}
+<div class="mb-4">
+    <!-- WP Node -->
+    <div class="flex items-center gap-2 py-1 cursor-pointer hover:bg-orchay-card rounded px-2">
+        <span class="text-orchay-accent font-medium">WP</span>
+        <span class="font-bold">{{ wp_id }}</span>
+    </div>
+
+    <!-- ACT Nodes -->
+    {% for act_id, tasks in acts.items() %}
+    <div class="ml-4 mb-2">
+        <div class="flex items-center gap-2 py-1 cursor-pointer hover:bg-orchay-card rounded px-2">
+            <span class="text-green-400 font-medium">A</span>
+            <span class="font-medium">{{ act_id }}</span>
+        </div>
+
+        <!-- Task Nodes -->
+        {% for task in tasks %}
+        <div class="ml-4 flex items-center gap-2 py-1 cursor-pointer hover:bg-orchay-card rounded px-2"
+             hx-get="/api/detail/{{ task.id }}"
+             hx-target="#task-detail"
+             hx-swap="innerHTML">
+            <span class="text-yellow-400 font-medium">T</span>
+            <span>{{ task.id }}</span>
+            <span class="ml-auto text-sm
+                {% if task.status.value == '[xx]' %}text-green-400
+                {% elif task.status.value == '[im]' %}text-blue-400
+                {% elif task.status.value == '[ap]' %}text-purple-400
+                {% elif task.status.value == '[dd]' %}text-yellow-400
+                {% elif task.status.value == '[bd]' %}text-orange-400
+                {% else %}text-orchay-muted{% endif %}">
+                {{ task.status.value }}
+            </span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endfor %}
+</div>
+{% endfor %}
+
+{% if not tree %}
+<div class="text-orchay-muted text-sm">Task가 없습니다</div>
+{% endif %}

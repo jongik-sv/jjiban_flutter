@@ -1,0 +1,70 @@
+<div class="bg-orchay-card rounded-lg p-4 border border-orchay-border">
+    <!-- Task Header -->
+    <div class="flex items-center gap-3 mb-4 pb-4 border-b border-orchay-border">
+        <h3 class="text-xl font-bold">{{ task.id }}</h3>
+        <span class="px-2 py-1 rounded text-sm
+            {% if task.status.value == '[xx]' %}bg-green-900 text-green-300
+            {% elif task.status.value == '[im]' %}bg-blue-900 text-blue-300
+            {% elif task.status.value == '[ap]' %}bg-purple-900 text-purple-300
+            {% elif task.status.value == '[dd]' %}bg-yellow-900 text-yellow-300
+            {% elif task.status.value == '[bd]' %}bg-orange-900 text-orange-300
+            {% else %}bg-gray-700 text-gray-300{% endif %}">
+            {{ task.status.value }}
+        </span>
+    </div>
+
+    <!-- Task Title -->
+    <div class="mb-4">
+        <span class="text-orchay-muted text-sm">Title</span>
+        <p class="font-medium">{{ task.title }}</p>
+    </div>
+
+    <!-- Task Properties -->
+    <div class="grid grid-cols-2 gap-4">
+        <div>
+            <span class="text-orchay-muted text-sm">Category</span>
+            <p>{{ task.category.value }}</p>
+        </div>
+        <div>
+            <span class="text-orchay-muted text-sm">Priority</span>
+            <p class="{% if task.priority.value == 'critical' %}text-red-400
+                      {% elif task.priority.value == 'high' %}text-orange-400
+                      {% elif task.priority.value == 'medium' %}text-yellow-400
+                      {% else %}text-gray-400{% endif %}">
+                {{ task.priority.value }}
+            </p>
+        </div>
+        <div>
+            <span class="text-orchay-muted text-sm">Domain</span>
+            <p>{{ task.domain or '-' }}</p>
+        </div>
+        <div>
+            <span class="text-orchay-muted text-sm">Assignee</span>
+            <p>{{ task.assignee or '-' }}</p>
+        </div>
+    </div>
+
+    <!-- Tags -->
+    {% if task.tags %}
+    <div class="mt-4">
+        <span class="text-orchay-muted text-sm">Tags</span>
+        <div class="flex flex-wrap gap-2 mt-1">
+            {% for tag in task.tags %}
+            <span class="px-2 py-1 bg-orchay-bg rounded text-sm">{{ tag }}</span>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Dependencies -->
+    {% if task.depends %}
+    <div class="mt-4">
+        <span class="text-orchay-muted text-sm">Dependencies</span>
+        <div class="flex flex-wrap gap-2 mt-1">
+            {% for dep in task.depends %}
+            <span class="px-2 py-1 bg-orchay-bg rounded text-sm text-orchay-accent">{{ dep }}</span>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>

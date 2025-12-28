@@ -1,0 +1,27 @@
+<div class="flex items-center gap-4">
+    <span class="text-orchay-muted text-sm">Workers:</span>
+    <div class="flex items-center gap-3">
+        {% for worker in workers %}
+        <div class="flex items-center gap-2 px-3 py-1 bg-orchay-bg rounded-md">
+            <span class="text-sm font-medium">W{{ worker.id }}</span>
+            <span class="w-2 h-2 rounded-full
+                {% if worker.state.value == 'idle' %}bg-green-400
+                {% elif worker.state.value == 'busy' %}bg-yellow-400
+                {% elif worker.state.value == 'paused' %}bg-purple-400
+                {% elif worker.state.value == 'error' %}bg-red-400
+                {% elif worker.state.value == 'blocked' %}bg-orange-400
+                {% elif worker.state.value == 'dead' %}bg-gray-600
+                {% else %}bg-blue-400{% endif %}">
+            </span>
+            <span class="text-sm text-orchay-muted">{{ worker.state.value }}</span>
+            {% if worker.current_task %}
+            <span class="text-sm text-orchay-accent">{{ worker.current_task }}</span>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if not workers %}
+    <span class="text-orchay-muted text-sm">Worker가 없습니다</span>
+    {% endif %}
+</div>
