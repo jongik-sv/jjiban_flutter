@@ -259,7 +259,7 @@
 ### TSK-03-02: Worker 상태 바 구현
 - category: development
 - domain: fullstack
-- status: approved [ap]
+- status: implement [im]
 - priority: high
 - assignee: -
 - schedule: 2026-01-02 ~ 2026-01-02
