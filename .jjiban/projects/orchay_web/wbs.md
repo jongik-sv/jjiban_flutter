@@ -155,7 +155,7 @@
 ### TSK-02-02: 트리 템플릿 구현
 - category: development
 - domain: frontend
-- status: implement [im]
+- status: done [xx]
 - priority: high
 - assignee: -
 - schedule: 2025-12-31 ~ 2025-12-31
@@ -188,7 +188,7 @@
 ### TSK-02-03: 트리 인터랙션 구현
 - category: development
 - domain: frontend
-- status: detail-design [dd]
+- status: approved [ap]
 - priority: medium
 - assignee: -
 - schedule: 2026-01-01 ~ 2026-01-01
@@ -291,7 +291,7 @@
 ### TSK-03-03: 실시간 자동 갱신
 - category: development
 - domain: frontend
-- status: detail-design [dd]
+- status: approved [ap]
 - priority: medium
 - assignee: -
 - schedule: 2026-01-03 ~ 2026-01-03
@@ -353,7 +353,7 @@
 ### TSK-04-02: 통합 테스트
 - category: development
 - domain: test
-- status: detail-design [dd]
+- status: approved [ap]
 - priority: medium
 - assignee: -
 - schedule: 2026-01-04 ~ 2026-01-05
@@ -380,7 +380,7 @@
 ### TSK-04-03: 문서화
 - category: development
 - domain: docs
-- status: detail-design [dd]
+- status: approved [ap]
 - priority: low
 - assignee: -
 - schedule: 2026-01-05 ~ 2026-01-05
