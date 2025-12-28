@@ -32,5 +32,9 @@ wezterm cli send-text --no-paste --pane-id 1 `r # 명령어를 submit 하기 위
 
    python C:\project\orchay_flutter\orchay\launcher.py orchay_web -w 3 --web --port 8080 --font-size 9
 
+PS C:\project\jjiban_flutter>  python C:\project\jjiban_flutter\orchay\launcher.py orchay_web -w 3
 
    http://localhost:3000/wbs
+
+
+orchay_web 과 프로젝트 합치고 orchay의 웹 기능은 삭제하자. 각자 잘하는것만 하자.
