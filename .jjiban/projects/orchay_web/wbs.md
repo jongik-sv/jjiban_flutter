@@ -155,7 +155,7 @@
 ### TSK-02-02: 트리 템플릿 구현
 - category: development
 - domain: frontend
-- status: [ ]
+- status: detail [dd]
 - priority: high
 - assignee: -
 - schedule: 2025-12-31 ~ 2025-12-31
@@ -227,7 +227,7 @@
 ### TSK-03-01: Task 상세 API 및 템플릿
 - category: development
 - domain: fullstack
-- status: [ ]
+- status: detail-design [dd]
 - priority: high
 - assignee: -
 - schedule: 2026-01-02 ~ 2026-01-02
