@@ -48,7 +48,7 @@ def create_app(orchestrator: Orchestrator) -> FastAPI:
             request,
             "index.html",
             {
-                "project": orchestrator.project_name,
+                "project_name": orchestrator.project_name,
                 "mode": orchestrator.mode.value,
             },
         )

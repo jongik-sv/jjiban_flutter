@@ -1,81 +1,45 @@
-<!DOCTYPE html>
-<html lang="ko" class="dark">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>orchay - {{ project }}</title>
-    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        orchay: {
-                            bg: '#0f172a',
-                            card: '#1e293b',
-                            border: '#334155',
-                            text: '#e2e8f0',
-                            muted: '#94a3b8',
-                            accent: '#3b82f6'
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        body {
-            background-color: #0f172a;
-            color: #e2e8f0;
-        }
-    </style>
-</head>
-<body class="h-screen flex flex-col">
-    <!-- Header -->
-    <header class="bg-orchay-card border-b border-orchay-border px-4 py-3 flex items-center justify-between">
-        <h1 class="text-xl font-bold">
-            <span class="text-orchay-accent">orchay</span>
-            <span class="text-orchay-muted mx-2">-</span>
-            <span>{{ project }}</span>
-        </h1>
-        <div class="flex items-center gap-4">
-            <span class="px-3 py-1 bg-orchay-bg rounded-md text-sm">
-                MODE: <span class="text-orchay-accent font-medium">{{ mode }}</span>
-            </span>
-        </div>
-    </header>
+{% extends "base.html" %}
 
-    <!-- Worker Bar -->
-    <div id="workers-bar"
-         class="bg-orchay-card border-b border-orchay-border px-4 py-2"
-         hx-get="/api/workers"
+{% block content %}
+<!-- Header -->
+<header class="bg-gray-800 border-b border-gray-700 px-4 py-3">
+    <div class="flex justify-between items-center">
+        <h1 class="text-xl font-bold">orchay - {{ project_name }}</h1>
+        <span class="bg-blue-600 px-3 py-1 rounded text-sm">MODE: {{ mode }}</span>
+    </div>
+</header>
+
+<!-- Worker Bar -->
+<div id="workers-bar"
+     class="bg-gray-800 border-b border-gray-700 px-4 py-2"
+     hx-get="/api/workers"
+     hx-trigger="load, every 5s"
+     hx-swap="innerHTML">
+    <div class="animate-pulse flex items-center gap-4">
+        <span class="text-gray-500">Workers: 로딩 중...</span>
+    </div>
+</div>
+
+<!-- Main Content: 2-Column Layout -->
+<main class="flex h-[calc(100vh-100px)]">
+    <!-- Left: WBS Tree -->
+    <div class="w-1/2 border-r border-gray-700 overflow-auto p-4"
+         id="tree-panel"
+         hx-get="/api/tree"
          hx-trigger="load, every 5s"
          hx-swap="innerHTML">
-        <div class="text-orchay-muted text-sm">불러오는 중...</div>
+        <div class="animate-pulse">
+            <div class="h-4 bg-gray-700 rounded w-3/4 mb-2"></div>
+            <div class="h-4 bg-gray-700 rounded w-1/2 mb-2 ml-4"></div>
+            <div class="h-4 bg-gray-700 rounded w-2/3 mb-2 ml-4"></div>
+        </div>
     </div>
 
-    <!-- Main Content -->
-    <main class="flex-1 flex overflow-hidden">
-        <!-- WBS Tree (Left Panel) -->
-        <div class="w-1/2 border-r border-orchay-border overflow-y-auto p-4">
-            <h2 class="text-lg font-semibold mb-4 text-orchay-muted">WBS Tree</h2>
-            <div id="wbs-tree"
-                 hx-get="/api/tree"
-                 hx-trigger="load, every 5s"
-                 hx-swap="innerHTML">
-                <div class="text-orchay-muted text-sm">불러오는 중...</div>
-            </div>
+    <!-- Right: Task Detail -->
+    <div class="w-1/2 overflow-auto p-4" id="detail-panel">
+        <div class="flex items-center justify-center h-full text-gray-500">
+            <p>Task를 선택하세요</p>
         </div>
-
-        <!-- Task Detail (Right Panel) -->
-        <div class="w-1/2 overflow-y-auto p-4">
-            <h2 class="text-lg font-semibold mb-4 text-orchay-muted">Task Detail</h2>
-            <div id="task-detail">
-                <div class="text-orchay-muted text-sm">Task를 선택하세요</div>
-            </div>
-        </div>
-    </main>
-</body>
-</html>
+    </div>
+</main>
+{% endblock %}
