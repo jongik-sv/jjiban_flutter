@@ -227,7 +227,7 @@
 ### TSK-03-01: Task 상세 API 및 템플릿
 - category: development
 - domain: fullstack
-- status: approved [ap]
+- status: implement [im]
 - priority: high
 - assignee: -
 - schedule: 2026-01-02 ~ 2026-01-02
