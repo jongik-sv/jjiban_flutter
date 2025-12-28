@@ -18,7 +18,7 @@
 ### TSK-01-01: FastAPI 앱 및 라우트 정의
 - category: development
 - domain: backend
-- status: [ ]
+- status: detail-design [dd]
 - priority: critical
 - assignee: -
 - schedule: 2025-12-29 ~ 2025-12-29
@@ -123,7 +123,7 @@
 ### TSK-02-01: 트리 데이터 API
 - category: development
 - domain: backend
-- status: [ ]
+- status: detail-design [dd]
 - priority: high
 - assignee: -
 - schedule: 2025-12-31 ~ 2025-12-31
