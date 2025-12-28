@@ -38,7 +38,6 @@ from orchay.ui.app import (
     WorkerPanel,
 )
 
-
 # ============================================================
 # TC-01: 헤더 위젯 테스트
 # ============================================================
@@ -48,7 +47,7 @@ from orchay.ui.app import (
 async def test_header_renders() -> None:
     """TC-01-01: Header 위젯이 올바르게 렌더링되는지 확인."""
     app = OrchayApp()
-    async with app.run_test() as pilot:
+    async with app.run_test():
         header = app.query_one(Header)
         assert header is not None
         # App title이 설정되어 있는지 확인
@@ -59,7 +58,7 @@ async def test_header_renders() -> None:
 async def test_header_shows_mode() -> None:
     """TC-01-02: 헤더에 현재 실행 모드가 표시되는지 확인."""
     app = OrchayApp(mode="quick")
-    async with app.run_test() as pilot:
+    async with app.run_test():
         mode_indicator = app.query_one("#mode-indicator", ModeIndicator)
         rendered = mode_indicator.render()
         assert "quick" in str(rendered)
@@ -78,8 +77,8 @@ async def test_header_shows_mode() -> None:
 async def test_mode_colors(mode: str, expected_color: str) -> None:
     """TC-06-01: 각 모드에 올바른 색상이 적용되는지 확인."""
     app = OrchayApp(mode=mode)
-    async with app.run_test() as pilot:
-        mode_indicator = app.query_one("#mode-indicator", ModeIndicator)
+    async with app.run_test():
+        app.query_one("#mode-indicator", ModeIndicator)
         assert ModeIndicator.MODE_COLORS.get(mode) == expected_color
 
 
@@ -92,7 +91,7 @@ async def test_mode_colors(mode: str, expected_color: str) -> None:
 async def test_queue_table_columns() -> None:
     """TC-02-01: DataTable이 올바른 컬럼으로 렌더링되는지 확인."""
     app = OrchayApp()
-    async with app.run_test() as pilot:
+    async with app.run_test():
         table = app.query_one("#queue-table", DataTable)
         columns = [col.label.plain for col in table.columns.values()]
         assert "#" in columns
@@ -130,7 +129,7 @@ async def test_queue_table_data() -> None:
         ),
     ]
     app = OrchayApp(tasks=tasks)
-    async with app.run_test() as pilot:
+    async with app.run_test():
         table = app.query_one("#queue-table", DataTable)
         assert table.row_count == 3
 
@@ -162,7 +161,7 @@ async def test_queue_priority_sorting() -> None:
         ),
     ]
     app = OrchayApp(tasks=tasks)
-    async with app.run_test() as pilot:
+    async with app.run_test():
         table = app.query_one("#queue-table", DataTable)
         # 첫 번째 행이 critical이어야 함
         first_row = table.get_row_at(0)
@@ -183,7 +182,7 @@ async def test_worker_panel_shows_all_workers() -> None:
         Worker(id=3, pane_id=3, state=WorkerState.PAUSED),
     ]
     app = OrchayApp(worker_list=worker_list)
-    async with app.run_test() as pilot:
+    async with app.run_test():
         panel = app.query_one("#workers-panel", WorkerPanel)
         content = str(panel.render())
         assert "Worker 1" in content
@@ -219,7 +218,7 @@ async def test_worker_current_task_display() -> None:
         ),
     ]
     app = OrchayApp(worker_list=worker_list)
-    async with app.run_test() as pilot:
+    async with app.run_test():
         panel = app.query_one("#workers-panel", WorkerPanel)
         content = str(panel.render())
         assert "TSK-01-01" in content
@@ -245,7 +244,7 @@ async def test_progress_panel_renders() -> None:
         for i in range(9)
     ]
     app = OrchayApp(tasks=tasks)
-    async with app.run_test() as pilot:
+    async with app.run_test():
         panel = app.query_one("#progress-panel", ProgressPanel)
         assert panel is not None
 
@@ -269,7 +268,7 @@ async def test_progress_calculation() -> None:
 async def test_footer_shows_keybindings() -> None:
     """TC-05-01: Footer에 F-key 바인딩이 표시되는지 확인."""
     app = OrchayApp()
-    async with app.run_test() as pilot:
+    async with app.run_test():
         footer = app.query_one(Footer)
         assert footer is not None
         # Footer에 바인딩이 설정되어 있는지 확인
@@ -310,7 +309,7 @@ async def test_mode_switch() -> None:
 async def test_header_info_update() -> None:
     """TC-07-01: 헤더 정보가 업데이트되는지 확인."""
     app = OrchayApp()
-    async with app.run_test() as pilot:
+    async with app.run_test():
         info = app.query_one("#header-info", HeaderInfo)
 
         # 정보 업데이트
@@ -475,7 +474,7 @@ async def test_config_ui_integration() -> None:
     """TC-INT-02: 설정 값이 UI에 올바르게 반영되는지 확인."""
     config = Config()  # 기본 설정 사용
     app = OrchayApp(config=config, mode="develop", project="test-project")
-    async with app.run_test() as pilot:
+    async with app.run_test():
         # 모드 확인
         mode_indicator = app.query_one("#mode-indicator", ModeIndicator)
         assert "develop" in str(mode_indicator.render())
@@ -489,7 +488,7 @@ async def test_config_ui_integration() -> None:
 async def test_empty_queue_display() -> None:
     """빈 큐 상태에서의 표시 확인."""
     app = OrchayApp(tasks=[])
-    async with app.run_test() as pilot:
+    async with app.run_test():
         table = app.query_one("#queue-table", DataTable)
         assert table.row_count == 0
 
@@ -498,7 +497,7 @@ async def test_empty_queue_display() -> None:
 async def test_no_workers_display() -> None:
     """Worker가 없는 상태에서의 표시 확인."""
     app = OrchayApp(worker_list=[])
-    async with app.run_test() as pilot:
+    async with app.run_test():
         panel = app.query_one("#workers-panel", WorkerPanel)
         content = str(panel.render())
         assert "No workers available" in content

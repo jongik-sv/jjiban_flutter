@@ -633,9 +633,7 @@ class OrchayApp(App[None]):
     def _count_queue(self) -> int:
         """대기 중인 Task 수."""
         return sum(
-            1
-            for t in self._tasks
-            if t.status not in (TaskStatus.DONE, TaskStatus.IMPLEMENT)
+            1 for t in self._tasks if t.status not in (TaskStatus.DONE, TaskStatus.IMPLEMENT)
         )
 
     def _count_completed(self) -> int:
@@ -1049,8 +1047,7 @@ class OrchayApp(App[None]):
             # Task의 할당 해제
             if current_task and self._real_orchestrator is not None:
                 task = next(
-                    (t for t in self._real_orchestrator.tasks if t.id == current_task),
-                    None
+                    (t for t in self._real_orchestrator.tasks if t.id == current_task), None
                 )
                 if task:
                     task.assigned_worker = None
@@ -1074,10 +1071,7 @@ class OrchayApp(App[None]):
 
     def _show_worker_info(self, worker_id: int) -> None:
         """특정 Worker 정보 표시."""
-        worker = next(
-            (w for w in self._worker_list if w.id == worker_id),
-            None
-        )
+        worker = next((w for w in self._worker_list if w.id == worker_id), None)
         if worker is None:
             self.notify(f"Worker {worker_id} not found", severity="error")
             return

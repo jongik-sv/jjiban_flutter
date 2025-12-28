@@ -219,7 +219,7 @@
 
 - 설계: `010-design.md`
 - 테스트 명세: `026-test-specification.md`
-- PRD: `.jjiban/projects/orchay/prd.md`
+- PRD: `.orchay/projects/orchay/prd.md`
 
 ---
 

@@ -196,8 +196,8 @@ WezTerm 터미널 멀티플렉서 환경에서 실행되는 Task 스케줄러입
 
 | 파일 유형 | 경로 패턴 | 설명 |
 |----------|----------|------|
-| wbs.md | `.jjiban/projects/{project}/wbs.md` | Task 상태 업데이트 |
-| 설계 문서 | `.jjiban/projects/{project}/design/{task-id}.md` | 상세 설계 |
+| wbs.md | `.orchay/projects/{project}/wbs.md` | Task 상태 업데이트 |
+| 설계 문서 | `.orchay/projects/{project}/design/{task-id}.md` | 상세 설계 |
 | 소스 코드 | `lib/`, `src/` | 구현 코드 |
 | 테스트 | `test/` | 단위/통합 테스트 |
 
@@ -501,7 +501,7 @@ Worker가 완료한 작업의 출력 내용을 저장하고 나중에 조회할 
 
 #### 저장 형식 (JSON Lines)
 
-`.jjiban/logs/orchay-history.jsonl` 파일에 한 줄씩 JSON 형태로 저장합니다.
+`.orchay/logs/orchay-history.jsonl` 파일에 한 줄씩 JSON 형태로 저장합니다.
 
 ```jsonl
 {"task_id": "TSK-01-01-01", "worker_id": 1, "started_at": "2025-12-27T10:00:00", "completed_at": "2025-12-27T10:15:30", "status": "completed", "output": "...pane 출력 내용..."}
@@ -713,7 +713,7 @@ mode force    # 강제 모드로 전환
 
 #### 저장 위치
 
-`.jjiban/logs/orchay-active.json`
+`.orchay/logs/orchay-active.json`
 
 #### 데이터 구조
 
@@ -845,6 +845,68 @@ WBS 기반 UI에서 `orchay-active.json` 파일을 모니터링하여:
 - `▶`: 현재 선택된 Worker
 - `🛑`: 수동 일시정지 상태
 
+### 3.11 문서 뷰어 (Markdown Rendering)
+
+웹 UI에서 Task 관련 Markdown 문서를 VS Code 수준으로 렌더링합니다.
+
+#### 렌더링 방식
+
+| 항목 | 설명 |
+|------|------|
+| 렌더링 위치 | 서버 사이드 (Python) |
+| 파서 | markdown-it-py (GFM 호환) |
+| 코드 하이라이팅 | Pygments (598개 언어, monokai 테마) |
+| 다이어그램 | Mermaid.js (클라이언트 사이드) |
+
+#### 지원 기능 (GFM)
+
+| 기능 | 문법 | 렌더링 |
+|------|------|--------|
+| 테이블 | `\| A \| B \|` | HTML `<table>` |
+| 체크리스트 | `- [x] Done` | 체크박스 |
+| 취소선 | `~~deleted~~` | `<del>` 태그 |
+| 각주 | `[^1]` | 하단 각주 |
+| 자동 링크 | `https://...` | 클릭 가능 링크 |
+
+#### 코드 블록 하이라이팅
+
+```markdown
+```python
+def hello():
+    print("world")
+```
+```
+
+- 언어 자동 감지 (lang 미지정 시)
+- Pygments monokai 테마 적용
+- 598개 프로그래밍 언어 지원
+
+#### Mermaid 다이어그램
+
+```markdown
+```mermaid
+graph TD
+  A-->B
+```
+```
+
+- 서버에서 `language-mermaid` 클래스로 패스스루
+- 클라이언트에서 mermaid.js로 렌더링
+- 다크 테마 자동 적용
+
+#### API 엔드포인트
+
+| 엔드포인트 | 응답 |
+|------------|------|
+| `GET /api/document/{task_id}/{doc_name}` | `.md`: HTMLResponse (렌더링됨) |
+| | 이미지: FileResponse |
+| `GET /api/pygments.css` | Pygments 테마 CSS |
+
+#### 스타일
+
+- `/static/markdown.css`: VS Code 다크 테마 기반 prose 스타일
+- `/api/pygments.css`: 코드 하이라이팅 CSS (monokai)
+
 ---
 
 ## 4. 상태 → 명령어 매핑
@@ -869,7 +931,7 @@ WBS 기반 UI에서 `orchay-active.json` 파일을 모니터링하여:
 
 ### 5.1 설정 파일
 
-`.jjiban/settings/orchay.json`
+`.orchay/settings/orchay.json`
 
 ```json
 {
@@ -907,7 +969,7 @@ WBS 기반 UI에서 `orchay-active.json` 파일을 모니터링하여:
   },
   "history": {
     "enabled": true,
-    "storagePath": ".jjiban/logs/orchay-history.jsonl",
+    "storagePath": ".orchay/logs/orchay-history.jsonl",
     "maxEntries": 1000,
     "captureLines": 500
   },
@@ -963,7 +1025,7 @@ WBS 기반 UI에서 `orchay-active.json` 파일을 모니터링하여:
 | 설정 | 타입 | 설명 | 기본값 |
 |------|------|------|--------|
 | `enabled` | boolean | 히스토리 저장 활성화 | true |
-| `storagePath` | string | 히스토리 파일 경로 | `.jjiban/logs/orchay-history.jsonl` |
+| `storagePath` | string | 히스토리 파일 경로 | `.orchay/logs/orchay-history.jsonl` |
 | `maxEntries` | number | 최대 저장 항목 수 | 1000 |
 | `captureLines` | number | pane 출력 캡처 줄 수 | 500 |
 
@@ -983,7 +1045,7 @@ WBS 기반 UI에서 `orchay-active.json` 파일을 모니터링하여:
 ### 6.1 파일 구성
 
 ```
-.jjiban/
+.orchay/
 └── bin/
     ├── orchay.py        # Python 크로스플랫폼 스크립트
     ├── orchay           # Unix wrapper
@@ -1016,7 +1078,7 @@ orchay [PROJECT] [OPTIONS]
 
 | 인자/옵션 | 설명 |
 |----------|------|
-| `PROJECT` | 프로젝트명 (`.jjiban/projects/{PROJECT}/` 사용, 기본: orchay) |
+| `PROJECT` | 프로젝트명 (`.orchay/projects/{PROJECT}/` 사용, 기본: orchay) |
 | `-w, --workers N` | workers 오버라이드 |
 | `-i, --interval S` | interval 오버라이드 |
 | `-m, --mode MODE` | 실행 모드 (design/quick/develop/force) |
@@ -1028,8 +1090,8 @@ orchay [PROJECT] [OPTIONS]
 # orchay 프로젝트 실행
 uv run python -m orchay orchay --dry-run
 
-# jjiban-flutter 프로젝트 실행
-uv run python -m orchay jjiban-flutter -m develop
+# orchay-flutter 프로젝트 실행
+uv run python -m orchay orchay-flutter -m develop
 
 # 기본값 (orchay 프로젝트)
 uv run python -m orchay --dry-run
@@ -1040,7 +1102,7 @@ uv run python -m orchay --dry-run
 ### 6.4 exec 서브커맨드 (실행 상태 관리)
 
 워크플로우(`/wf:*`) 명령어 실행 시 Task 실행 상태를 추적하기 위한 서브커맨드입니다.
-Claude Code Worker들이 어떤 Task를 실행 중인지 `.jjiban/logs/orchay-active.json`에 기록합니다.
+Claude Code Worker들이 어떤 Task를 실행 중인지 `.orchay/logs/orchay-active.json`에 기록합니다.
 
 ```bash
 # Task 실행 시작 등록
@@ -1073,7 +1135,7 @@ orchay exec clear
 | `-w, --worker N` | Worker ID (기본: 0) |
 | `-p, --pane N` | Pane ID (기본: 0) |
 
-**상태 파일 구조** (`.jjiban/logs/orchay-active.json`):
+**상태 파일 구조** (`.orchay/logs/orchay-active.json`):
 ```json
 {
   "activeTasks": {
@@ -1095,10 +1157,10 @@ orchay exec clear
 
 ```bash
 # PATH에 추가 (Unix)
-echo 'export PATH="$PATH:$HOME/.jjiban/bin"' >> ~/.bashrc
+echo 'export PATH="$PATH:$HOME/.orchay/bin"' >> ~/.bashrc
 
 # PowerShell 프로필에 추가 (Windows)
-[Environment]::SetEnvironmentVariable("Path", $env:Path + ";$HOME\.jjiban\bin", "User")
+[Environment]::SetEnvironmentVariable("Path", $env:Path + ";$HOME\.orchay\bin", "User")
 ```
 
 ---
@@ -1155,7 +1217,7 @@ echo 'export PATH="$PATH:$HOME/.jjiban/bin"' >> ~/.bashrc
 
 | 변수명 | 설명 | 기본값 |
 |--------|------|--------|
-| `JJIBAN_ROOT` | .jjiban 폴더 경로 | 자동 탐색 |
+| `ORCHAY_ROOT` | .orchay 폴더 경로 | 자동 탐색 |
 | `NUMBER_OF_WORKING_PANE` | Claude pane 개수 | 3 |
 
 ### 8.4 에러 처리 및 복구
@@ -1384,7 +1446,7 @@ $ ./orchay
 
 ╔═══════════════════════════════════════════════════════════════╗
 ║  orchay - Task Scheduler                                       ║
-║  Workers: 3 | Interval: 5s | Project: jjiban-flutter           ║
+║  Workers: 3 | Interval: 5s | Project: orchay-flutter           ║
 ╚═══════════════════════════════════════════════════════════════╝
 
 [12:00:00] 스케줄 큐 초기화 완료 (5건)
@@ -1465,7 +1527,7 @@ Workers: 3 | 초기 분배: TSK-01-01-01, TSK-01-01-02, TSK-02-01
 |     |            | - workflows.json에 executionModes 섹션 추가 |
 |     |            | - 기본 모드 변경: develop → quick |
 | 1.9 | 2025-12-28 | 작업 중 상태 관리 기능 추가 (3.9) |
-|     |            | - 별도 상태 파일: `.jjiban/logs/orchay-active.json` |
+|     |            | - 별도 상태 파일: `.orchay/logs/orchay-active.json` |
 |     |            | - 데이터 구조: worker, startedAt, currentStep |
 |     |            | - 생명주기: 등록(분배 시) → 갱신(단계 변경 시) → 해제(완료 시) → 초기화(재시작 시) |
 |     |            | - UI 연동: 스피너 표시, 현재 진행 단계 표시 |
@@ -1473,7 +1535,7 @@ Workers: 3 | 초기 분배: TSK-01-01-01, TSK-01-01-02, TSK-02-01
 |     |            | - `orchay exec start/stop/update/list/clear` 명령어 |
 |     |            | - 워크플로우 훅 연동: `/wf:*` 실행 시 상태 등록/해제 |
 |     |            | - `orchay/src/orchay/cli.py` 구현 |
-|     |            | - 기존 `npx jjiban exec` → `orchay exec`로 대체 |
+|     |            | - 기존 `npx orchay exec` → `orchay exec`로 대체 |
 | 2.1 | 2025-12-28 | 워커 단위 Pause/Resume 및 스케줄러 상태 표시 기능 추가 |
 |     |            | - 스케줄러 상태 표시: running/paused/stopped (SchedulerState 열거형) |
 |     |            | - TUI 헤더에 스케줄러 상태 아이콘(▶/⏸/⏹) 표시 |
@@ -1482,8 +1544,14 @@ Workers: 3 | 초기 분배: TSK-01-01-01, TSK-01-01-02, TSK-02-01
 |     |            | - 상태 파일 확장: `pausedWorkers`, `schedulerState` 필드 추가 |
 |     |            | - 워커 패널에 수동 일시정지 표시(🛑) 및 인터랙티브 선택 UI |
 | 2.2 | 2025-12-28 | transition.ts 독립 구현 및 Worker Reset 기능 추가 |
-|     |            | - `.jjiban/script/transition.ts` 외부 모듈 의존성 제거 |
+|     |            | - `.orchay/script/transition.ts` 외부 모듈 의존성 제거 |
 |     |            | - wbs.md 직접 파싱/수정 로직 구현 (taskService/wbsService 없이 동작) |
 |     |            | - dispatch 후 grace period 추가 (기본 20초, 상태 체크 지연) |
 |     |            | - TUI Worker Reset 기능: R 키로 error 상태 Worker를 idle로 복구 |
 |     |            | - Queue 테이블 컬럼 분리: Title과 Depends를 별도 컬럼으로 |
+| 2.3 | 2025-12-28 | 문서 뷰어 Markdown 렌더링 고도화 (3.11) |
+|     |            | - 서버 사이드 렌더링: markdown-it-py + Pygments |
+|     |            | - GFM 완전 지원: 테이블, 체크리스트, 취소선, 각주 |
+|     |            | - 코드 하이라이팅: Pygments monokai 테마 (598개 언어) |
+|     |            | - Mermaid 다이어그램: 클라이언트 사이드 렌더링 유지 |
+|     |            | - VS Code 수준 다크 테마 스타일 적용 |

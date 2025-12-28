@@ -95,7 +95,7 @@ parallel-processing: true
 ### 4단계: 상태 전환
 
 ```bash
-npx tsx .jjiban/script/transition.ts {Task-ID} done -p {project}
+npx tsx .orchay/script/transition.ts {Task-ID} done -p {project}
 ```
 - 성공: `{ "success": true, "newStatus": "xx" }`
 

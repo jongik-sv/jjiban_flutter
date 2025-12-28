@@ -160,7 +160,7 @@ parallel-processing: true
 ### 7. 상태 전환 (자동)
 
 ```bash
-npx tsx .jjiban/script/transition.ts {Task-ID} draft -p {project}
+npx tsx .orchay/script/transition.ts {Task-ID} draft -p {project}
 ```
 - 성공: `{ "success": true, "newStatus": "dd" }`
 

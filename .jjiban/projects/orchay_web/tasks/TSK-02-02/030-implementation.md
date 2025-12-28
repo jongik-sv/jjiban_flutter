@@ -17,7 +17,7 @@
 
 ### 문서 위치
 ```
-.jjiban/projects/orchay_web/tasks/TSK-02-02/
+.orchay/projects/orchay_web/tasks/TSK-02-02/
 ├── 010-design.md           ← 통합설계
 ├── 025-traceability-matrix.md ← 추적성 매트릭스
 ├── 026-test-specification.md  ← 테스트 명세
@@ -212,7 +212,7 @@ tests/test_tree.py::test_empty_tree_message PASSED
 - 통합설계서: `./010-design.md`
 - 추적성 매트릭스: `./025-traceability-matrix.md`
 - 테스트 명세서: `./026-test-specification.md`
-- PRD: `.jjiban/projects/orchay_web/prd.md`
+- PRD: `.orchay/projects/orchay_web/prd.md`
 
 ### 6.2 소스 코드 위치
 - 템플릿: `orchay/src/orchay/web/templates/partials/`

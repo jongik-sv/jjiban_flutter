@@ -165,10 +165,10 @@ Worker가 `busy` 상태일 때, 현재 처리 중인 Task ID가 괄호 안에 �
 
 | 문서 | 경로 |
 |------|------|
-| 설계 문서 | `.jjiban/projects/orchay_web/tasks/TSK-03-02/010-design.md` |
-| 추적 매트릭스 | `.jjiban/projects/orchay_web/tasks/TSK-03-02/025-traceability-matrix.md` |
-| 테스트 명세 | `.jjiban/projects/orchay_web/tasks/TSK-03-02/026-test-specification.md` |
-| 구현 보고서 | `.jjiban/projects/orchay_web/tasks/TSK-03-02/030-implementation.md` |
+| 설계 문서 | `.orchay/projects/orchay_web/tasks/TSK-03-02/010-design.md` |
+| 추적 매트릭스 | `.orchay/projects/orchay_web/tasks/TSK-03-02/025-traceability-matrix.md` |
+| 테스트 명세 | `.orchay/projects/orchay_web/tasks/TSK-03-02/026-test-specification.md` |
+| 구현 보고서 | `.orchay/projects/orchay_web/tasks/TSK-03-02/030-implementation.md` |
 
 ### 6.2 API 엔드포인트
 

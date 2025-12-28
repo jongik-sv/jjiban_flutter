@@ -517,7 +517,7 @@ PRD 파일이 있나요?
 | 보안/테스트 방향성 | 상세 설계 문서 |
 
 <!--
-jjiban 프로젝트 - Command Documentation
+orchay 프로젝트 - Command Documentation
 author: 장종익 
 Command: tech-stack
 Category: planning

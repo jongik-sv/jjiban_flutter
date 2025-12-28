@@ -399,8 +399,8 @@ pytest tests/test_worker.py::TestDetectWorkerState::test_detect_idle
 
 - 설계: `010-design.md`
 - 추적성 매트릭스: `025-traceability-matrix.md`
-- PRD: `.jjiban/projects/orchay/prd.md`
-- TRD: `.jjiban/projects/orchay/trd.md`
+- PRD: `.orchay/projects/orchay/prd.md`
+- TRD: `.orchay/projects/orchay/trd.md`
 
 ---
 

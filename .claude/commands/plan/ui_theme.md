@@ -49,7 +49,7 @@ allowed-tools: [WebFetch, Read, Write, Glob, Grep, TodoWrite, Bash]
 
 ### TRD 탐색 순서
 ```
-1. .jjiban/{project}/jjiban-trd.md
+1. .orchay/{project}/orchay-trd.md
 2. docs/trd.md
 3. docs/technical-requirements.md
 4. README.md의 기술 스택 섹션
@@ -186,8 +186,8 @@ svelte_tailwind:
 
 ```yaml
 # TRD 위치에 따른 산출물 경로
-trd_path: ".jjiban/{project}/jjiban-trd.md"
-output_dir: ".jjiban/{project}/"
+trd_path: ".orchay/{project}/orchay-trd.md"
+output_dir: ".orchay/{project}/"
 
 trd_path: "docs/trd.md"
 output_dir: "docs/"
@@ -346,8 +346,8 @@ export const customTheme = {
 **위치**: `{trd-folder}/ui-theme-{theme-type}.md`
 
 **예시**:
-- TRD가 `.jjiban/myproject/jjiban-trd.md`에 있고 `--theme dark` 옵션 사용 시
-- 가이드 문서: `.jjiban/myproject/ui-theme-dark.md`
+- TRD가 `.orchay/myproject/orchay-trd.md`에 있고 `--theme dark` 옵션 사용 시
+- 가이드 문서: `.orchay/myproject/ui-theme-dark.md`
 
 **문서 구성**:
 - 디자인 시스템 개요

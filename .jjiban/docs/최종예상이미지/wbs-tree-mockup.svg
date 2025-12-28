@@ -50,7 +50,7 @@
 
   <!-- Header -->
   <rect class="header" width="1400" height="56"/>
-  <text class="logo" x="24" y="36">jjiban</text>
+  <text class="logo" x="24" y="36">orchay</text>
 
   <!-- Navigation -->
   <text class="nav-item" x="120" y="36">대시보드</text>
@@ -60,7 +60,7 @@
   <text class="nav-item" x="310" y="36">Gantt</text>
 
   <!-- Project Title -->
-  <text class="header-text" x="400" y="36">jjiban - AI 기반 프로젝트 관리 도구</text>
+  <text class="header-text" x="400" y="36">orchay - AI 기반 프로젝트 관리 도구</text>
 
   <!-- Tree Panel (Left) -->
   <rect class="sidebar" x="0" y="56" width="820" height="844"/>
@@ -103,7 +103,7 @@
     <text class="expand-icon" x="16" y="26">▼</text>
     <rect class="icon-project" x="36" y="12" width="16" height="16" rx="3"/>
     <text fill="white" x="40" y="24" font-size="10">P</text>
-    <text class="node-text" x="60" y="26" font-weight="bold">jjiban - AI 기반 프로젝트 관리 도구</text>
+    <text class="node-text" x="60" y="26" font-weight="bold">orchay - AI 기반 프로젝트 관리 도구</text>
     <rect class="progress-bg" x="420" y="16" width="100" height="8"/>
     <text class="progress-text" x="530" y="24">0%</text>
     <text class="node-id" x="580" y="24">50 Tasks</text>
@@ -321,7 +321,7 @@
     <text class="detail-label" x="0" y="220">요구사항</text>
     <line class="divider" x1="0" y1="230" x2="520" y2="230"/>
 
-    <text class="detail-value" x="0" y="256">• .jjiban/ 폴더 구조 생성</text>
+    <text class="detail-value" x="0" y="256">• .orchay/ 폴더 구조 생성</text>
     <text class="detail-value" x="0" y="278">• project.json, team.json 초기화</text>
     <text class="detail-value" x="0" y="300">• Backend: InitService 구현</text>
     <text class="node-id" x="0" y="324">참조: PRD 5.1</text>

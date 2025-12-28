@@ -56,7 +56,8 @@ class DispatchConfig(BaseModel):
     clear_wait_time: int = Field(default=2, description="/clear 후 대기 시간 (초)")
     grace_period: int = Field(default=20, description="dispatch 후 상태 체크 무시 시간 (초)")
     min_task_duration: int = Field(
-        default=30, description="Task 최소 실행 시간 (초) - 이보다 빨리 끝나면 잘못된 idle 판정 의심"
+        default=30,
+        description="Task 최소 실행 시간 (초) - 이보다 빨리 끝나면 잘못된 idle 판정 의심",
     )
 
 
@@ -65,7 +66,7 @@ class HistoryConfig(BaseModel):
 
     enabled: bool = Field(default=True, description="히스토리 저장 활성화")
     storage_path: str = Field(
-        default=".jjiban/logs/orchay-history.jsonl",
+        default=".orchay/logs/orchay-history.jsonl",
         description="히스토리 파일 경로",
     )
     max_entries: int = Field(default=1000, description="최대 저장 항목 수")

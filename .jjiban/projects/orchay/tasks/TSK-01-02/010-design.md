@@ -54,9 +54,9 @@
 
 | 문서 | 경로 | 관련 섹션 |
 |------|------|----------|
-| PRD | `.jjiban/projects/orchay/prd.md` | 3.1 wbs.md 모니터링, 3.2 스케줄 큐 관리 |
-| TRD | `.jjiban/projects/orchay/trd.md` | 배포 구조, 의존성 목록 |
-| workflows.json | `.jjiban/settings/workflows.json` | states, categories |
+| PRD | `.orchay/projects/orchay/prd.md` | 3.1 wbs.md 모니터링, 3.2 스케줄 큐 관리 |
+| TRD | `.orchay/projects/orchay/trd.md` | 배포 구조, 의존성 목록 |
+| workflows.json | `.orchay/settings/workflows.json` | states, categories |
 
 ---
 
@@ -283,7 +283,7 @@ async def parse_wbs(path: str | Path) -> list[Task]:
         WbsParseError: 파싱 실패 시 (이전 캐시 반환)
 
     Example:
-        tasks = await parse_wbs(".jjiban/projects/orchay/wbs.md")
+        tasks = await parse_wbs(".orchay/projects/orchay/wbs.md")
         for task in tasks:
             print(f"{task.id}: {task.status}")
     """

@@ -63,7 +63,7 @@ parallel-processing: true
 
 **Task 폴더 구조**:
 ```
-.jjiban/projects/{project}/tasks/{TSK-ID}/
+.orchay/projects/{project}/tasks/{TSK-ID}/
 ├── task.json
 ├── 010-basic-design.md     ← 입력 (필수)
 ├── 011-ui-design.md        ← 출력 (화면설계 문서)
@@ -395,7 +395,7 @@ stateDiagram-v2
 
 ## 관련 문서
 - 기본설계: `010-basic-design.md`
-- PRD: `.jjiban/{project}/prd.md`
+- PRD: `.orchay/{project}/prd.md`
 ```
 
 ---
@@ -549,7 +549,7 @@ Category: development
 ---
 
 <!--
-jjiban 프로젝트 - Workflow Command
+orchay 프로젝트 - Workflow Command
 author: 장종익
 Command: wf:ui
 Version: 1.0

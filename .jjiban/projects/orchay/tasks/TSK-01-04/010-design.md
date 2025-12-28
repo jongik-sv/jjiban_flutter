@@ -58,8 +58,8 @@
 
 | 문서 | 경로 | 관련 섹션 |
 |------|------|----------|
-| PRD | `.jjiban/projects/orchay/prd.md` | 3.3 Worker 상태 감지, 3.4 작업 분배, 2.4 워커 상태 |
-| TRD | `.jjiban/projects/orchay/trd.md` | 배포 구조, AI 코딩 가이드라인 |
+| PRD | `.orchay/projects/orchay/prd.md` | 3.3 Worker 상태 감지, 3.4 작업 분배, 2.4 워커 상태 |
+| TRD | `.orchay/projects/orchay/trd.md` | 배포 구조, AI 코딩 가이드라인 |
 | TSK-01-03 | 스케줄러 코어 | 의존성 |
 
 ---

@@ -12,7 +12,7 @@
 | 예시 | 설명 |
 |------|------|
 | `/wf:review TSK-01-01` | 자동 검색 |
-| `/wf:review jjiban/TSK-01-01` | 프로젝트 명시 |
+| `/wf:review orchay/TSK-01-01` | 프로젝트 명시 |
 
 ---
 

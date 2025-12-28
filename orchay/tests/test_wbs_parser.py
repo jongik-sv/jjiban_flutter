@@ -147,9 +147,11 @@ class TestWatchWbs:
         try:
             # 빠른 연속 수정 (5회)
             for i in range(5):
-                wbs_file.write_text(
-                    f"## WP-01: Test\n### TSK-01-01: Test {i}\n- category: development\n- status: [ ]"
+                wbs_content = (
+                    f"## WP-01: Test\n### TSK-01-01: Test {i}\n"
+                    "- category: development\n- status: [ ]"
                 )
+                wbs_file.write_text(wbs_content)
                 await asyncio.sleep(0.1)
 
             # 디바운스 대기

@@ -9,7 +9,7 @@ PRD에서 참조하는 구현 코드 예시 모음입니다.
 ```python
 """작업 중 상태 파일 관리 모듈.
 
-`.jjiban/logs/orchay-active.json` 파일로 Worker 작업 상태를 추적합니다.
+`.orchay/logs/orchay-active.json` 파일로 Worker 작업 상태를 추적합니다.
 """
 
 from pathlib import Path
@@ -18,7 +18,7 @@ from datetime import datetime
 
 def get_active_tasks_path() -> Path:
     """상태 파일 경로 반환."""
-    return Path.cwd() / ".jjiban" / "logs" / "orchay-active.json"
+    return Path.cwd() / ".orchay" / "logs" / "orchay-active.json"
 
 def load_active_tasks() -> dict:
     """상태 파일 로드."""
@@ -208,7 +208,7 @@ async def dispatch_task(worker: Worker, task: Task, mode: ExecutionMode) -> None
 
 ## 상태 파일 구조
 
-### `.jjiban/logs/orchay-active.json`
+### `.orchay/logs/orchay-active.json`
 
 ```json
 {

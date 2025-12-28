@@ -27,8 +27,8 @@ personas: [architect, analyzer, scribe]
 /plan:wbs [PRD 파일 경로] --scale [large|medium|small]
 
 # 예시
-/plan:wbs .jjiban/projects/jjiban/prd.md
-/plan:wbs .jjiban/projects/jjiban/prd.md --scale large
+/plan:wbs .orchay/projects/orchay/prd.md
+/plan:wbs .orchay/projects/orchay/prd.md --scale large
 ```
 
 ## 핵심 특징
@@ -151,10 +151,10 @@ Project (프로젝트) - 6~24개월
 
 ### 0단계: 프로젝트 존재 확인 및 초기화
 
-1. `.jjiban/projects/{project}/` 폴더 존재 확인
+1. `.orchay/projects/{project}/` 폴더 존재 확인
 2. **존재하지 않으면**:
    - WBS에 `WP-00: 프로젝트 초기화` Work Package 자동 추가
-   - jjiban-init 스킬 실행하여 프로젝트 구조 생성
+   - orchay-init 스킬 실행하여 프로젝트 구조 생성
 3. **존재하면**: 기존 프로젝트 메타데이터 로드
 4. **project-root 확인**:
    - 사용자에게 개발 폴더 경로 질문 (프로젝트 루트 기준 상대 경로)
@@ -240,7 +240,7 @@ Project (프로젝트) - 6~24개월
 
 ### 6단계: WBS 문서 생성
 
-**생성 파일**: `.jjiban/projects/{project}/wbs.md`
+**생성 파일**: `.orchay/projects/{project}/wbs.md`
 
 ---
 
@@ -265,7 +265,7 @@ Project (프로젝트) - 6~24개월
 - progress: 0%
 - note: 프로젝트 폴더가 존재하지 않아 자동 추가됨
 
-### TSK-00-01: jjiban 프로젝트 구조 초기화
+### TSK-00-01: orchay 프로젝트 구조 초기화
 - category: infrastructure
 - domain: infra
 - status: [ ]
@@ -274,7 +274,7 @@ Project (프로젝트) - 6~24개월
 - schedule: {시작일} ~ {시작일}
 - tags: setup, init
 - depends: -
-- note: jjiban-init 스킬 실행 필요
+- note: orchay-init 스킬 실행 필요
 
 ---
 
@@ -397,7 +397,7 @@ Project (프로젝트) - 6~24개월
 
 ### Task 속성
 
-→ [wbs-task-spec.md](../../../.jjiban/docs/wbs-task-spec.md) 참조
+→ [wbs-task-spec.md](../../../.orchay/docs/wbs-task-spec.md) 참조
 
 **요약:**
 - **기본 속성**: category, domain, status, priority, assignee, schedule, tags, depends, blocked-by, note
@@ -411,17 +411,17 @@ Project (프로젝트) - 6~24개월
 
 ```bash
 # 규모 강제 지정
-/plan:wbs --scale large .jjiban/projects/jjiban/prd.md
-/plan:wbs --scale medium .jjiban/projects/myapp/prd.md
+/plan:wbs --scale large .orchay/projects/orchay/prd.md
+/plan:wbs --scale medium .orchay/projects/myapp/prd.md
 
 # 시작일 지정
-/plan:wbs --start-date 2026-01-15 .jjiban/projects/jjiban/prd.md
+/plan:wbs --start-date 2026-01-15 .orchay/projects/orchay/prd.md
 
 # 개발 폴더 경로 지정 (project-root)
-/plan:wbs --project-root orchay .jjiban/projects/orchay/prd.md
+/plan:wbs --project-root orchay .orchay/projects/orchay/prd.md
 
 # 규모 산정만 실행 (WBS 생성 없이)
-/plan:wbs --estimate-only .jjiban/projects/jjiban/prd.md
+/plan:wbs --estimate-only .orchay/projects/orchay/prd.md
 ```
 
 | 옵션 | 설명 | 기본값 |
@@ -437,7 +437,7 @@ Project (프로젝트) - 6~24개월
 
 | 산출물 | 경로 |
 |--------|------|
-| WBS 문서 | `.jjiban/projects/{project}/wbs.md` |
+| WBS 문서 | `.orchay/projects/{project}/wbs.md` |
 
 ---
 
@@ -465,14 +465,14 @@ Project (프로젝트) - 6~24개월
 
 ## 참조 문서
 
-- `jjiban-prd.md`: 프로젝트 요구사항 문서
+- `orchay-prd.md`: 프로젝트 요구사항 문서
 - `/wf:start`: 설계 시작 (Todo → Design)
 - `/wf:approve`: 설계 승인 (Design → Approve)
 - `/wf:build`: TDD 기반 구현 (Approve → Implement)
 - `/wf:done`: 작업 완료 (Implement → Done)
 
 <!--
-jjiban 프로젝트 - Command Documentation
+orchay 프로젝트 - Command Documentation
 Command: plan:wbs
 Category: planning
 Version: 2.0

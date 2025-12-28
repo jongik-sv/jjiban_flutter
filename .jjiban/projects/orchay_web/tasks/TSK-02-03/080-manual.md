@@ -110,7 +110,7 @@ orchay 웹 모니터링 UI의 WBS 트리 인터랙션 기능입니다. HTMX를 �
 ### 6.1 관련 문서
 - 설계 문서: `010-design.md`
 - 구현 보고서: `030-implementation.md`
-- PRD: `.jjiban/projects/orchay_web/prd.md`
+- PRD: `.orchay/projects/orchay_web/prd.md`
 
 ### 6.2 기술 스택
 - HTMX 2.0: 동적 HTML 교체

@@ -56,8 +56,8 @@
 
 | 문서 | 경로 | 관련 섹션 |
 |------|------|----------|
-| PRD | `.jjiban/projects/orchay/prd.md` | 섹션 5 (설정), 섹션 6 (CLI) |
-| TRD | `.jjiban/projects/orchay/trd.md` | 배포 구조, 의존성 목록 |
+| PRD | `.orchay/projects/orchay/prd.md` | 섹션 5 (설정), 섹션 6 (CLI) |
+| TRD | `.orchay/projects/orchay/trd.md` | 배포 구조, 의존성 목록 |
 
 ---
 
@@ -112,7 +112,7 @@ flowchart LR
 | 트리거 | orchay 명령어 실행 |
 
 **기본 흐름:**
-1. 시스템이 `.jjiban/settings/orchay.json` 파일 경로를 결정한다
+1. 시스템이 `.orchay/settings/orchay.json` 파일 경로를 결정한다
 2. 파일이 존재하면 JSON을 파싱한다
 3. Pydantic 모델로 스키마 검증을 수행한다
 4. 검증 통과 시 Config 객체를 반환한다
@@ -561,7 +561,7 @@ class DispatchConfig(BaseModel):
 
 class HistoryConfig(BaseModel):
     enabled: bool = True
-    storagePath: str = ".jjiban/logs/orchay-history.jsonl"
+    storagePath: str = ".orchay/logs/orchay-history.jsonl"
     maxEntries: int = 1000
     captureLines: int = 500
 
@@ -588,20 +588,20 @@ import json
 from pathlib import Path
 from .models.config import Config
 
-def find_jjiban_root() -> Path:
-    """프로젝트 루트에서 .jjiban 폴더를 찾는다."""
+def find_orchay_root() -> Path:
+    """프로젝트 루트에서 .orchay 폴더를 찾는다."""
     current = Path.cwd()
     while current != current.parent:
-        if (current / ".jjiban").is_dir():
-            return current / ".jjiban"
+        if (current / ".orchay").is_dir():
+            return current / ".orchay"
         current = current.parent
-    raise FileNotFoundError(".jjiban 폴더를 찾을 수 없습니다")
+    raise FileNotFoundError(".orchay 폴더를 찾을 수 없습니다")
 
 def load_config() -> Config:
     """설정 파일을 로드하여 Config 객체를 반환한다."""
     try:
-        jjiban_root = find_jjiban_root()
-        config_path = jjiban_root / "settings" / "orchay.json"
+        orchay_root = find_orchay_root()
+        config_path = orchay_root / "settings" / "orchay.json"
 
         if config_path.exists():
             with open(config_path, "r", encoding="utf-8") as f:

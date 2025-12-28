@@ -13,7 +13,7 @@ orchay 프로젝트의 기반 구조를 설정하고, 핵심 데이터 모델(Ta
 ## 3. 목표 상태
 
 ```
-jjiban_flutter/
+orchay_flutter/
 └── orchay/                        # 프로젝트 루트
     ├── pyproject.toml             # 패키지 설정 (uv 기반)
     ├── README.md                  # 프로젝트 문서
@@ -164,7 +164,7 @@ class DispatchConfig(BaseModel):
 
 class HistoryConfig(BaseModel):
     enabled: bool = True
-    storage_path: str = ".jjiban/logs/orchay-history.jsonl"
+    storage_path: str = ".orchay/logs/orchay-history.jsonl"
     max_entries: int = 1000
 
 class ExecutionConfig(BaseModel):

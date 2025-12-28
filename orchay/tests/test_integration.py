@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import pytest
@@ -11,16 +10,15 @@ import pytest
 class TestCliOverrideConfig:
     """TC-14: CLI 옵션 오버라이드 동작 테스트."""
 
-    def test_cli_override_config(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_cli_override_config(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """CLI 옵션이 설정 파일 값을 오버라이드."""
         import sys
-        from orchay.utils.config import load_config
+
         from orchay.main import parse_args
+        from orchay.utils.config import load_config
 
         # 설정 파일 생성
-        settings_dir = tmp_path / ".jjiban" / "settings"
+        settings_dir = tmp_path / ".orchay" / "settings"
         settings_dir.mkdir(parents=True)
         (settings_dir / "orchay.json").write_text('{"workers": 3}', encoding="utf-8")
 
@@ -43,18 +41,21 @@ class TestCliOverrideConfig:
     ) -> None:
         """CLI 옵션 없을 때 설정 파일 값 사용."""
         import sys
-        from orchay.utils.config import load_config
-        from orchay.main import parse_args
 
-        settings_dir = tmp_path / ".jjiban" / "settings"
+        from orchay.main import parse_args
+        from orchay.utils.config import load_config
+
+        settings_dir = tmp_path / ".orchay" / "settings"
         settings_dir.mkdir(parents=True)
-        (settings_dir / "orchay.json").write_text('{"workers": 5, "interval": 15}', encoding="utf-8")
+        (settings_dir / "orchay.json").write_text(
+            '{"workers": 5, "interval": 15}', encoding="utf-8"
+        )
 
         monkeypatch.chdir(tmp_path)
         monkeypatch.setattr(sys, "argv", ["orchay"])
 
         config = load_config()
-        args = parse_args()
+        parse_args()
 
         # CLI에서 workers를 지정하지 않음 (기본값 3)
         # 하지만 파일에서 로드한 값은 5
@@ -69,20 +70,20 @@ class TestDryRunMode:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
     ) -> None:
         """dry-run 모드 실행."""
-        from orchay.utils.config import load_config
-        from orchay.models.config import Config
         from rich.console import Console
 
+        from orchay.models.config import Config
+
         # 환경 설정
-        jjiban_dir = tmp_path / ".jjiban"
-        jjiban_dir.mkdir()
+        orchay_dir = tmp_path / ".orchay"
+        orchay_dir.mkdir()
 
         monkeypatch.chdir(tmp_path)
 
         # handle_dry_run 함수 테스트 (실제 구현 후)
         # 여기서는 Config 기반 동작만 확인
         config = Config()
-        console = Console(force_terminal=True)
+        Console(force_terminal=True)
 
         # dry-run은 분배 없이 상태만 표시
         # 실제 TUI는 시작하지 않아야 함
@@ -93,14 +94,12 @@ class TestDryRunMode:
 class TestHistoryCommandFlow:
     """TC-16: history 명령 전체 흐름 테스트."""
 
-    def test_history_command_flow(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_history_command_flow(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """history 명령 전체 흐름."""
         from orchay.utils.history import HistoryEntry, HistoryManager
 
         # 히스토리 파일 생성
-        logs_dir = tmp_path / ".jjiban" / "logs"
+        logs_dir = tmp_path / ".orchay" / "logs"
         logs_dir.mkdir(parents=True)
         history_file = logs_dir / "orchay-history.jsonl"
 
@@ -125,13 +124,11 @@ class TestHistoryCommandFlow:
         assert detail is not None
         assert detail["output"] == "Build completed successfully"
 
-    def test_history_command_empty(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_history_command_empty(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """빈 히스토리 상태."""
         from orchay.utils.history import HistoryManager
 
-        logs_dir = tmp_path / ".jjiban" / "logs"
+        logs_dir = tmp_path / ".orchay" / "logs"
         logs_dir.mkdir(parents=True)
         history_file = logs_dir / "orchay-history.jsonl"
 

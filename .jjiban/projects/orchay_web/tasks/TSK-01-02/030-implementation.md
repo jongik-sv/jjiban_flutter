@@ -13,7 +13,7 @@
 
 ### 문서 위치
 ```
-.jjiban/projects/orchay_web/tasks/TSK-01-02/
+.orchay/projects/orchay_web/tasks/TSK-01-02/
 ├── 010-design.md              ← 통합설계
 ├── 025-traceability-matrix.md ← 추적성 매트릭스
 ├── 026-test-specification.md  ← 테스트 명세

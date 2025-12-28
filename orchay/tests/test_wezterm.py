@@ -1,14 +1,11 @@
 """WezTerm CLI 래퍼 테스트."""
 
-import asyncio
 import json
-import shlex
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from orchay.utils.wezterm import (
-    PaneInfo,
     WezTermNotFoundError,
     wezterm_get_text,
     wezterm_list_panes,
@@ -22,10 +19,12 @@ class TestWeztermListPanes:
     @pytest.mark.asyncio
     async def test_list_panes_success(self) -> None:
         """UT-001: 정상 pane 목록 조회."""
-        mock_json = json.dumps([
-            {"pane_id": 1, "workspace": "default", "cwd": "/home", "title": "bash"},
-            {"pane_id": 2, "workspace": "default", "cwd": "/home", "title": "python"},
-        ])
+        mock_json = json.dumps(
+            [
+                {"pane_id": 1, "workspace": "default", "cwd": "/home", "title": "bash"},
+                {"pane_id": 2, "workspace": "default", "cwd": "/home", "title": "python"},
+            ]
+        )
 
         mock_process = AsyncMock()
         mock_process.communicate = AsyncMock(return_value=(mock_json.encode(), b""))
@@ -55,12 +54,14 @@ class TestWeztermListPanes:
     @pytest.mark.asyncio
     async def test_list_panes_wezterm_not_found(self) -> None:
         """WezTerm CLI 미설치 에러."""
-        with patch(
-            "asyncio.create_subprocess_exec",
-            side_effect=FileNotFoundError("wezterm not found"),
+        with (
+            patch(
+                "asyncio.create_subprocess_exec",
+                side_effect=FileNotFoundError("wezterm not found"),
+            ),
+            pytest.raises(WezTermNotFoundError),
         ):
-            with pytest.raises(WezTermNotFoundError):
-                await wezterm_list_panes()
+            await wezterm_list_panes()
 
 
 class TestWeztermGetText:
@@ -137,7 +138,7 @@ class TestWeztermSendText:
             # 호출된 인자 확인
             call_args = mock_exec.call_args
             assert call_args is not None
-            args = call_args[0]
+            call_args[0]
             # 텍스트가 안전하게 전달되었는지 확인 (인젝션 불가)
             # wezterm cli send-text는 -- 뒤에 텍스트를 받으므로 안전
 
@@ -158,6 +159,8 @@ class TestWeztermSendText:
         mock_process.communicate = AsyncMock(return_value=(b"", b"error"))
         mock_process.returncode = 1
 
-        with patch("asyncio.create_subprocess_exec", return_value=mock_process):
-            with pytest.raises(RuntimeError):
-                await wezterm_send_text(pane_id=1, text="test")
+        with (
+            patch("asyncio.create_subprocess_exec", return_value=mock_process),
+            pytest.raises(RuntimeError),
+        ):
+            await wezterm_send_text(pane_id=1, text="test")

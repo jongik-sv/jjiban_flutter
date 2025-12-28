@@ -5,13 +5,14 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, ClassVar, Generator
+from collections.abc import Generator
+from typing import TYPE_CHECKING, ClassVar
 
 from rich.text import Text
+from textual.containers import VerticalScroll
 from textual.message import Message
 from textual.widgets import OptionList, Static
 from textual.widgets.option_list import Option
-from textual.containers import VerticalScroll
 
 if TYPE_CHECKING:
     from orchay.models import Task
@@ -242,6 +243,6 @@ class HelpModal(VerticalScroll):
     def __init__(self) -> None:
         super().__init__(id="help-modal")
 
-    def compose(self) -> "Generator[Static, None, None]":
+    def compose(self) -> Generator[Static, None, None]:
         """내부 Static 위젯 생성."""
         yield Static(self.HELP_TEXT)

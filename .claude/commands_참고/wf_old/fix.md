@@ -66,7 +66,7 @@ parallel-processing: true
 
 @.claude/includes/wf-conflict-resolution.md
 
-**Task 폴더**: `.jjiban/projects/{project}/tasks/{TSK-ID}/`
+**Task 폴더**: `.orchay/projects/{project}/tasks/{TSK-ID}/`
 
 ---
 
@@ -91,7 +91,7 @@ parallel-processing: true
 **자동 실행 단계**:
 
 1. **Task 정보 추출 및 파싱**:
-   - Task JSON (`.jjiban/projects/{project}/tasks/{TSK-ID}/task.json`)에서 Task 정보 조회
+   - Task JSON (`.orchay/projects/{project}/tasks/{TSK-ID}/task.json`)에서 Task 정보 조회
    - category가 `defect`인지 확인
    - 현재 상태가 `[an]` 분석인지 확인
 
@@ -151,7 +151,7 @@ parallel-processing: true
 
 5. **TDD 테스트 결과 저장**:
    ```
-   .jjiban/projects/{project}/tasks/{TSK-ID}/test-results/
+   .orchay/projects/{project}/tasks/{TSK-ID}/test-results/
    ├── tdd/
    │   ├── coverage/
    │   ├── test-results.json
@@ -211,7 +211,7 @@ parallel-processing: true
 
 4. **테스트 결과 저장**:
    ```
-   .jjiban/projects/{project}/tasks/{TSK-ID}/test-results/
+   .orchay/projects/{project}/tasks/{TSK-ID}/test-results/
    ├── e2e/
    │   ├── e2e-test-report.html
    │   ├── e2e-test-results.md
@@ -557,7 +557,7 @@ Category: defect
 ---
 
 <!--
-jjiban 프로젝트 - Workflow Command
+orchay 프로젝트 - Workflow Command
 author: 장종익
 Command: wf:fix
 Version: 1.0

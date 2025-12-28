@@ -52,8 +52,8 @@
 
 | 문서 | 경로 | 관련 섹션 |
 |------|------|----------|
-| PRD | `.jjiban/projects/orchay_web/prd.md` | 3.6.4 관련 문서 섹션 |
-| TRD | `.jjiban/projects/orchay_web/trd.md` | UI 스타일링, 트리 UI 구현 |
+| PRD | `.orchay/projects/orchay_web/prd.md` | 3.6.4 관련 문서 섹션 |
+| TRD | `.orchay/projects/orchay_web/trd.md` | UI 스타일링, 트리 UI 구현 |
 
 ---
 

@@ -35,7 +35,7 @@
 
   <!-- Header -->
   <rect class="header" width="1400" height="56"/>
-  <text class="logo" x="24" y="36">jjiban</text>
+  <text class="logo" x="24" y="36">orchay</text>
 
   <!-- Navigation -->
   <text class="nav-item" x="120" y="36">대시보드</text>
@@ -45,7 +45,7 @@
   <text class="nav-item" x="300" y="36">Gantt</text>
 
   <!-- Project Title -->
-  <text class="header-text" x="400" y="36">jjiban - AI 기반 프로젝트 관리 도구</text>
+  <text class="header-text" x="400" y="36">orchay - AI 기반 프로젝트 관리 도구</text>
 
   <!-- Filter Bar -->
   <rect class="filter-bg" x="24" y="72" width="120" height="28"/>

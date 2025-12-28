@@ -26,7 +26,7 @@
 - schedule: {{START_DATE}} ~ {{END_DATE}}
 - tags: setup, init
 - depends: -
-- note: .jjiban/ 폴더 구조 생성, settings/templates 초기화
+- note: .orchay/ 폴더 구조 생성, settings/templates 초기화
 
 #### TSK-01-01-02: JSON 파일 CRUD 서비스
 - category: development

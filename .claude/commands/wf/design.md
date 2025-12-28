@@ -24,7 +24,7 @@ parallel-processing: true
 | `/wf:design TSK-01-01` | Task 단위 처리 |
 | `/wf:design ACT-01-01` | ACT 내 모든 Todo Task 병렬 |
 | `/wf:design WP-01` | WP 내 모든 Todo Task 병렬 |
-| `/wf:design jjiban/TSK-01-01` | 프로젝트 명시 |
+| `/wf:design orchay/TSK-01-01` | 프로젝트 명시 |
 
 ---
 
@@ -64,8 +64,8 @@ parallel-processing: true
 - 구현 범위 (WBS Task 설명 기준)
 
 **참조 문서 읽기**:
-1. **PRD**: `.jjiban/projects/{project}/prd.md`
-2. **TRD**: `.jjiban/projects/{project}/trd.md`
+1. **PRD**: `.orchay/projects/{project}/prd.md`
+2. **TRD**: `.orchay/projects/{project}/trd.md`
 
 ### Phase 3: 범위 검증
 
@@ -77,7 +77,7 @@ parallel-processing: true
 
 ### Phase 4: 문서 생성
 
-**생성 위치**: `.jjiban/projects/{project}/tasks/{TSK-ID}/`
+**생성 위치**: `.orchay/projects/{project}/tasks/{TSK-ID}/`
 
 | 문서 | 용도 |
 |------|------|
@@ -85,7 +85,7 @@ parallel-processing: true
 | `025-traceability-matrix.md` | 요구사항 추적성 |
 | `026-test-specification.md` | 테스트 명세 |
 
-**010-design.md 주요 섹션** (템플릿 참조: `.jjiban/templates/010-design.md`):
+**010-design.md 주요 섹션** (템플릿 참조: `.orchay/templates/010-design.md`):
 
 | 섹션 | 내용 |
 |------|------|
@@ -105,7 +105,7 @@ parallel-processing: true
 ### Phase 5: 상태 전환
 
 ```bash
-npx tsx .jjiban/script/transition.ts {Task-ID} design -p {project}
+npx tsx .orchay/script/transition.ts {Task-ID} design -p {project}
 ```
 
 - 성공: `{ "success": true, "oldStatus": "[ ]", "newStatus": "[dd]" }`

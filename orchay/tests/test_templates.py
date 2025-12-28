@@ -7,6 +7,7 @@ TSK-01-02: Jinja2 템플릿 기본 구조 테스트
 from unittest.mock import Mock
 
 import pytest
+from httpx import AsyncClient
 
 
 # 공통 fixture
@@ -22,7 +23,7 @@ def mock_orchestrator() -> Mock:
 
 
 @pytest.fixture
-def client(mock_orchestrator: Mock):
+def client(mock_orchestrator: Mock) -> AsyncClient:
     """테스트 클라이언트 fixture."""
     from httpx import ASGITransport, AsyncClient
 

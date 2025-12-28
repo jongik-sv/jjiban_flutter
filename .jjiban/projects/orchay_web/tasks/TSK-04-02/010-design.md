@@ -56,9 +56,9 @@
 
 | 문서 | 경로 | 관련 섹션 |
 |------|------|----------|
-| PRD | `.jjiban/projects/orchay_web/prd.md` | 4. 비기능 요구사항 |
-| TRD | `.jjiban/projects/orchay_web/trd.md` | API 설계, 아키텍처 |
-| WBS | `.jjiban/projects/orchay_web/wbs.md` | TSK-04-02 |
+| PRD | `.orchay/projects/orchay_web/prd.md` | 4. 비기능 요구사항 |
+| TRD | `.orchay/projects/orchay_web/trd.md` | API 설계, 아키텍처 |
+| WBS | `.orchay/projects/orchay_web/wbs.md` | TSK-04-02 |
 
 ---
 

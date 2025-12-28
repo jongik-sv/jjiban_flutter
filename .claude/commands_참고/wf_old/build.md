@@ -69,7 +69,7 @@ parallel-processing: true
 
 @.claude/includes/wf-conflict-resolution.md
 
-**Task 폴더**: `.jjiban/projects/{project}/tasks/{TSK-ID}/`
+**Task 폴더**: `.orchay/projects/{project}/tasks/{TSK-ID}/`
 
 ---
 
@@ -95,7 +95,7 @@ parallel-processing: true
 **자동 실행 단계**:
 
 1. **Task 정보 추출 및 파싱**:
-   - Task JSON (`.jjiban/projects/{project}/tasks/{TSK-ID}/task.json`)에서 Task 정보 조회
+   - Task JSON (`.orchay/projects/{project}/tasks/{TSK-ID}/task.json`)에서 Task 정보 조회
    - category가 `development` 또는 `infrastructure`인지 확인
    - 현재 상태 확인:
      - development: `[dd]` 상세설계
@@ -120,7 +120,7 @@ parallel-processing: true
      - 레이아웃 구조, 컴포넌트 배치, 색상/폰트 추출
      - 이미지 없을 경우 `011-ui-design.md` 문서 참조
    - **UI 테마 가이드** (Frontend 포함 Task인 경우):
-     - `.jjiban/{project}/ui-theme-*.md` 로드 (glob 패턴으로 모든 테마 파일 탐색)
+     - `.orchay/{project}/ui-theme-*.md` 로드 (glob 패턴으로 모든 테마 파일 탐색)
      - 색상 시스템, 타이포그래피, 컴포넌트 스타일 가이드 참조
      - TRD문서의 디자인 시스템 적용 지침 확인 ⭐
 
@@ -209,7 +209,7 @@ parallel-processing: true
      - 색상/폰트: 이미지에서 추출 또는 테마 가이드 참조
      - 아이콘/이미지: 디자인 시안과 동일하게 적용
      - **구현 우선순위**: ui-assets 이미지 > 011-ui-design.md > 테마 가이드
-   - **UI 테마 적용** (`.jjiban/{project}/ui-theme-*.md` 참조):
+   - **UI 테마 적용** (`.orchay/{project}/ui-theme-*.md` 참조):
      - 색상 시스템: Primary, Secondary, Surface, Text 색상 코드 사용
      - 컴포넌트 스타일: 버튼, 카드, 입력필드, 태그 등 가이드 준수
      - 그라디언트/글로우 효과: 정의된 CSS 클래스 활용
@@ -274,7 +274,7 @@ parallel-processing: true
 
 ## 구현 보고서 템플릿
 
-> **템플릿 파일**: `@.jjiban/templates/030-implementation.md`
+> **템플릿 파일**: `@.orchay/templates/030-implementation.md`
 >
 > 구현 보고서는 위 템플릿을 기반으로 `030-implementation.md`를 생성합니다.
 
@@ -563,7 +563,7 @@ Category: infrastructure
 ---
 
 <!--
-jjiban 프로젝트 - Workflow Command
+orchay 프로젝트 - Workflow Command
 author: 장종익
 Command: wf:build
 Version: 1.0

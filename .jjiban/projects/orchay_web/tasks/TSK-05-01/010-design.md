@@ -56,8 +56,8 @@
 
 | 문서 | 경로 | 관련 섹션 |
 |------|------|----------|
-| PRD | `.jjiban/projects/orchay_web/prd.md` | 3.5 Document Viewer |
-| TRD | `.jjiban/projects/orchay_web/trd.md` | 기술 스택 |
+| PRD | `.orchay/projects/orchay_web/prd.md` | 3.5 Document Viewer |
+| TRD | `.orchay/projects/orchay_web/trd.md` | 기술 스택 |
 | 기존 서버 | `orchay/src/orchay/web/server.py` | get_task_documents() |
 
 ---
@@ -318,7 +318,7 @@ erDiagram
 
 **관계 설명:**
 - Task는 여러 Document를 가질 수 있음
-- Document 경로: `.jjiban/projects/{project}/tasks/{task_id}/{doc_name}`
+- Document 경로: `.orchay/projects/{project}/tasks/{task_id}/{doc_name}`
 
 ### 7.3 데이터 유효성 규칙
 
@@ -478,7 +478,7 @@ ALLOWED_EXTENSIONS = {".md", ".png", ".jpg", ".jpeg", ".gif", ".webp"}
 
 @app.get("/api/document/{task_id}/{doc_name}")
 async def get_document(task_id: str, doc_name: str):
-    base_path = Path(".jjiban/projects") / orchestrator.project_name / "tasks"
+    base_path = Path(".orchay/projects") / orchestrator.project_name / "tasks"
     file_path = (base_path / task_id / doc_name).resolve()
 
     # Path traversal 검증

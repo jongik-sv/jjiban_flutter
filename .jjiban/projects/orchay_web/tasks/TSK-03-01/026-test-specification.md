@@ -346,9 +346,9 @@ async def test_task_detail_not_found_error(client):
 
 | 파일 ID | 파일명 | 경로 | 용도 |
 |---------|--------|------|------|
-| DOC-001 | 010-design.md | .jjiban/projects/.../tasks/TSK-03-01/ | 문서 목록 테스트 |
-| DOC-002 | 025-traceability-matrix.md | .jjiban/projects/.../tasks/TSK-03-01/ | 문서 목록 테스트 |
-| DOC-003 | 026-test-specification.md | .jjiban/projects/.../tasks/TSK-03-01/ | 문서 목록 테스트 |
+| DOC-001 | 010-design.md | .orchay/projects/.../tasks/TSK-03-01/ | 문서 목록 테스트 |
+| DOC-002 | 025-traceability-matrix.md | .orchay/projects/.../tasks/TSK-03-01/ | 문서 목록 테스트 |
+| DOC-003 | 026-test-specification.md | .orchay/projects/.../tasks/TSK-03-01/ | 문서 목록 테스트 |
 
 ---
 
@@ -400,7 +400,7 @@ async def test_task_detail_not_found_error(client):
 
 - 설계: `010-design.md`
 - 추적성 매트릭스: `025-traceability-matrix.md`
-- PRD: `.jjiban/projects/orchay_web/prd.md`
+- PRD: `.orchay/projects/orchay_web/prd.md`
 
 ---
 

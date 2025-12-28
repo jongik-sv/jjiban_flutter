@@ -1,6 +1,6 @@
 """작업 중 상태 파일 관리 모듈.
 
-`.jjiban/logs/orchay-active.json` 파일로 Worker 일시정지 및 스케줄러 상태를 관리합니다.
+`.orchay/logs/orchay-active.json` 파일로 Worker 일시정지 및 스케줄러 상태를 관리합니다.
 """
 
 from __future__ import annotations
@@ -19,7 +19,7 @@ class ActiveTasksData(TypedDict):
 
 def get_active_tasks_path() -> Path:
     """상태 파일 경로 반환."""
-    return Path.cwd() / ".jjiban" / "logs" / "orchay-active.json"
+    return Path.cwd() / ".orchay" / "logs" / "orchay-active.json"
 
 
 def _get_default_data() -> ActiveTasksData:

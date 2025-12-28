@@ -58,8 +58,8 @@
 
 | 문서 | 경로 | 관련 섹션 |
 |------|------|----------|
-| TRD | `.jjiban/projects/orchay/trd.md` | 테스트 전략, AI 코딩 가이드라인 |
-| PRD | `.jjiban/projects/orchay/prd.md` | 전체 기능 명세 |
+| TRD | `.orchay/projects/orchay/trd.md` | 테스트 전략, AI 코딩 가이드라인 |
+| PRD | `.orchay/projects/orchay/prd.md` | 전체 기능 명세 |
 
 ---
 

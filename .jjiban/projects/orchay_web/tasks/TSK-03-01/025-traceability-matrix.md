@@ -170,8 +170,8 @@
 
 - 설계: `010-design.md`
 - 테스트 명세: `026-test-specification.md`
-- PRD: `.jjiban/projects/orchay_web/prd.md`
-- TRD: `.jjiban/projects/orchay_web/trd.md`
+- PRD: `.orchay/projects/orchay_web/prd.md`
+- TRD: `.orchay/projects/orchay_web/trd.md`
 
 ---
 

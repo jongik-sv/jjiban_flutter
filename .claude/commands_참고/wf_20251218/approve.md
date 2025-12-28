@@ -12,7 +12,7 @@
 | 예시 | 설명 |
 |------|------|
 | `/wf:approve TSK-01-01` | 자동 검색 |
-| `/wf:approve jjiban/TSK-01-01` | 프로젝트 명시 |
+| `/wf:approve orchay/TSK-01-01` | 프로젝트 명시 |
 
 ---
 

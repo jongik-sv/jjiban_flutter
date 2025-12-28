@@ -78,7 +78,7 @@ WBS 업데이트:
 ### 5단계: 상태 전환
 
 ```bash
-npx tsx .jjiban/script/transition.ts {Task-ID} verify -p {project}
+npx tsx .orchay/script/transition.ts {Task-ID} verify -p {project}
 ```
 - 성공: `{ "success": true, "newStatus": "vf" }`
 

@@ -126,7 +126,7 @@ async def test_get_wp_children() -> None:
 # ============================================================================
 def test_build_tree_structure() -> None:
     """Task 목록이 WP/ACT/TSK 계층으로 변환됨."""
-    from orchay.web.tree import TreeNode, build_tree
+    from orchay.web.tree import build_tree
 
     tasks = [
         Task(

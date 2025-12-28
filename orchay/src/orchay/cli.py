@@ -15,13 +15,10 @@ from __future__ import annotations
 
 import argparse
 import sys
-from datetime import datetime
 from typing import Any
 
 from rich.console import Console
 from rich.table import Table
-
-from orchay.utils.active_tasks import load_active_tasks
 
 console = Console()
 
@@ -43,8 +40,8 @@ def create_parser() -> argparse.ArgumentParser:
     run_parser.add_argument(
         "wbs",
         nargs="?",
-        default=".jjiban/projects/orchay/wbs.md",
-        help="WBS 파일 경로 (기본: .jjiban/projects/orchay/wbs.md)",
+        default=".orchay/projects/orchay/wbs.md",
+        help="WBS 파일 경로 (기본: .orchay/projects/orchay/wbs.md)",
     )
     run_parser.add_argument(
         "-w",
@@ -233,7 +230,7 @@ def handle_history(args: argparse.Namespace) -> int:
         config = load_config()
     except Exception:
         # 설정 파일 오류 시 기본 경로 사용
-        storage_path = ".jjiban/logs/orchay-history.jsonl"
+        storage_path = ".orchay/logs/orchay-history.jsonl"
         max_entries = 1000
     else:
         storage_path = config.history.storage_path

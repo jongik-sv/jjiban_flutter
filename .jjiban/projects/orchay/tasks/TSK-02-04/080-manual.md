@@ -11,7 +11,7 @@ orchay는 WezTerm 기반 Task 스케줄러로, CLI 옵션과 설정 파일을 �
 
 ### 1.2 주요 기능
 
-- **설정 파일**: `.jjiban/settings/orchay.json`을 통한 설정 관리
+- **설정 파일**: `.orchay/settings/orchay.json`을 통한 설정 관리
 - **CLI 옵션**: 런타임에 설정값 오버라이드
 - **히스토리**: 완료된 작업 기록 저장 및 조회
 - **Dry-run**: 실제 분배 없이 스케줄 큐 미리보기
@@ -122,7 +122,7 @@ orchay exec clear
 
 ### 4.1 위치
 
-`.jjiban/settings/orchay.json`
+`.orchay/settings/orchay.json`
 
 ### 4.2 구조
 
@@ -152,7 +152,7 @@ orchay exec clear
   },
   "history": {
     "enabled": true,
-    "storagePath": ".jjiban/logs/orchay-history.jsonl",
+    "storagePath": ".orchay/logs/orchay-history.jsonl",
     "maxEntries": 1000,
     "captureLines": 500
   },

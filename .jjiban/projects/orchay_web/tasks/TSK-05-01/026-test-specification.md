@@ -21,7 +21,7 @@
 | 목적 | 마크다운 파일 요청 시 PlainTextResponse 반환 확인 |
 
 **사전 조건:**
-- `.jjiban/projects/{project}/tasks/TSK-TEST/test.md` 파일 존재
+- `.orchay/projects/{project}/tasks/TSK-TEST/test.md` 파일 존재
 
 **테스트 단계:**
 1. `GET /api/document/TSK-TEST/test.md` 요청
@@ -119,7 +119,7 @@ async def test_block_path_traversal(client: AsyncClient, malicious_path: str):
 | 목적 | 이미지 파일 요청 시 FileResponse 반환 확인 |
 
 **사전 조건:**
-- `.jjiban/projects/{project}/tasks/TSK-TEST/image.png` 파일 존재
+- `.orchay/projects/{project}/tasks/TSK-TEST/image.png` 파일 존재
 
 **테스트 단계:**
 1. `GET /api/document/TSK-TEST/image.png` 요청

@@ -57,8 +57,8 @@
 
 | 문서 | 경로 | 관련 섹션 |
 |------|------|----------|
-| PRD | `.jjiban/projects/orchay_web/prd.md` | 2.1 레이아웃, 2.2 주요 컴포넌트 |
-| TRD | `.jjiban/projects/orchay_web/trd.md` | 아키텍처, UI 스타일링 |
+| PRD | `.orchay/projects/orchay_web/prd.md` | 2.1 레이아웃, 2.2 주요 컴포넌트 |
+| TRD | `.orchay/projects/orchay_web/trd.md` | 아키텍처, UI 스타일링 |
 
 ---
 

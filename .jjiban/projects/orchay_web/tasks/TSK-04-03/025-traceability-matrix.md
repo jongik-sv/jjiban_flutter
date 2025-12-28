@@ -115,7 +115,7 @@
 
 - 설계 문서: `010-design.md`
 - 테스트 명세: `026-test-specification.md`
-- PRD: `.jjiban/projects/orchay_web/prd.md`
-- WBS: `.jjiban/projects/orchay_web/wbs.md`
+- PRD: `.orchay/projects/orchay_web/prd.md`
+- WBS: `.orchay/projects/orchay_web/wbs.md`
 
 ---

@@ -13,7 +13,7 @@
 
 ### 문서 위치
 ```
-.jjiban/projects/orchay/tasks/TSK-02-02/
+.orchay/projects/orchay/tasks/TSK-02-02/
 ├── 010-design.md              ← 통합 설계
 ├── 025-traceability-matrix.md ← 요구사항 추적
 ├── 026-test-specification.md  ← 테스트 명세
@@ -337,10 +337,10 @@ All checks passed!
 ## 9. 참고 자료
 
 ### 9.1 관련 문서
-- 설계서: `.jjiban/projects/orchay/tasks/TSK-02-02/010-design.md`
-- 요구사항 추적: `.jjiban/projects/orchay/tasks/TSK-02-02/025-traceability-matrix.md`
-- 테스트 명세: `.jjiban/projects/orchay/tasks/TSK-02-02/026-test-specification.md`
-- PRD: `.jjiban/projects/orchay/prd.md`
+- 설계서: `.orchay/projects/orchay/tasks/TSK-02-02/010-design.md`
+- 요구사항 추적: `.orchay/projects/orchay/tasks/TSK-02-02/025-traceability-matrix.md`
+- 테스트 명세: `.orchay/projects/orchay/tasks/TSK-02-02/026-test-specification.md`
+- PRD: `.orchay/projects/orchay/prd.md`
 
 ### 9.2 소스 코드 위치
 - UI 모듈: `orchay/src/orchay/ui/`
@@ -372,7 +372,7 @@ All checks passed!
 ---
 
 <!--
-jjiban 프로젝트 - Implementation Report
+orchay 프로젝트 - Implementation Report
 Task: TSK-02-02 TUI 메인 화면
 Version: 1.0.0
 -->

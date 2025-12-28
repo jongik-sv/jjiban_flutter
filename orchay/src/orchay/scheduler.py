@@ -141,9 +141,8 @@ async def filter_executable_tasks(
         else:
             # BR-05: quick/develop 모드 의존성 검사
             # [ ] 상태는 의존성 무시, [dd] 이상 상태에서는 의존성 검사
-            if (
-                _is_beyond_todo_status(task.status)
-                and not check_dependencies_implemented(task, all_tasks_dict)
+            if _is_beyond_todo_status(task.status) and not check_dependencies_implemented(
+                task, all_tasks_dict
             ):
                 continue
 
@@ -181,10 +180,10 @@ def _load_workflows() -> dict[str, Any]:
     if _workflows_cache is not None:
         return _workflows_cache
 
-    # .jjiban/settings/workflows.json 찾기
+    # .orchay/settings/workflows.json 찾기
     cwd = Path.cwd()
     for parent in [cwd, *cwd.parents]:
-        workflows_path = parent / ".jjiban" / "settings" / "workflows.json"
+        workflows_path = parent / ".orchay" / "settings" / "workflows.json"
         if workflows_path.exists():
             try:
                 _workflows_cache = json.loads(workflows_path.read_text(encoding="utf-8"))

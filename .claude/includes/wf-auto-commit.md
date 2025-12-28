@@ -67,8 +67,8 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 3. **파일 스테이징**:
    ```bash
-   git add .jjiban/projects/{project}/tasks/{TSK-ID}/
-   git add .jjiban/projects/{project}/wbs.md
+   git add .orchay/projects/{project}/tasks/{TSK-ID}/
+   git add .orchay/projects/{project}/wbs.md
    # 소스 코드 변경 시 (wf:build, wf:patch, wf:fix)
    git add app/ server/ tests/
    ```
@@ -112,8 +112,8 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 ├── 커밋 해시: abc1234
 ├── 메시지: [wf:build] TSK-01-01-01: 구현 완료
 ├── 변경 파일: 5개
-│   ├── .jjiban/projects/jjiban/tasks/TSK-01-01-01/030-implementation.md
-│   ├── .jjiban/projects/jjiban/wbs.md
+│   ├── .orchay/projects/orchay/tasks/TSK-01-01-01/030-implementation.md
+│   ├── .orchay/projects/orchay/wbs.md
 │   ├── app/pages/project.vue
 │   ├── server/api/projects/index.ts
 │   └── tests/api/projects.test.ts
@@ -136,7 +136,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 ---
 
 <!--
-jjiban 프로젝트 - Workflow Auto Commit Module
+orchay 프로젝트 - Workflow Auto Commit Module
 Version: 1.0
 author: Claude
 

@@ -7,10 +7,9 @@ from __future__ import annotations
 
 import pytest
 
-from orchay.command import CommandHandler, CommandResult, COMMANDS, FUNCTION_KEYS
+from orchay.command import FUNCTION_KEYS, CommandHandler, CommandResult
 from orchay.models import Task, TaskCategory, TaskStatus, Worker, WorkerState
 from orchay.scheduler import ExecutionMode
-
 
 # ============================================================================
 # Fixtures
@@ -48,8 +47,7 @@ class MockOrchestrator:
             ),
         ]
         self.workers = [
-            Worker(id=i + 1, pane_id=i + 1, state=WorkerState.IDLE)
-            for i in range(workers)
+            Worker(id=i + 1, pane_id=i + 1, state=WorkerState.IDLE) for i in range(workers)
         ]
         self.running_tasks = running_tasks or set()
         self.mode = mode

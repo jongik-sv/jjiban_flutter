@@ -13,7 +13,7 @@
 
 ### 문서 위치
 ```
-.jjiban/projects/orchay_web/tasks/TSK-04-02/
+.orchay/projects/orchay_web/tasks/TSK-04-02/
 ├── 010-design.md               ← 통합 설계 문서
 ├── 025-traceability-matrix.md  ← 요구사항 추적 매트릭스
 ├── 026-test-specification.md   ← 테스트 명세서

@@ -16,7 +16,7 @@ cd orchay
 uv venv
 uv pip install -e ".[dev]"
 
-# Run scheduler from project root (where .jjiban exists)
+# Run scheduler from project root (where .orchay exists)
 cd ..  # back to project root
 uv run --project orchay python -m orchay [PROJECT] [OPTIONS]
 
@@ -70,7 +70,7 @@ orchay/src/orchay/
 ### Core Flow
 
 1. **Orchestrator** (`main.py:34`) initializes Workers from WezTerm panes
-2. **WbsParser** (`wbs_parser.py:106`) parses `.jjiban/projects/{project}/wbs.md`
+2. **WbsParser** (`wbs_parser.py:106`) parses `.orchay/projects/{project}/wbs.md`
 3. **Scheduler** (`scheduler.py:88`) filters executable Tasks by mode and dependencies
 4. **Worker detection** (`worker.py:89`) monitors pane output for state patterns
 5. **Dispatch** sends `/wf:run {task-id}` to idle Worker panes
@@ -100,7 +100,7 @@ orchay/src/orchay/
 | idle | `>` or `❯` prompt at end of output |
 | busy | default when active |
 
-### File-Based State (`.jjiban/logs/orchay-active.json`)
+### File-Based State (`.orchay/logs/orchay-active.json`)
 
 ```json
 {
@@ -146,7 +146,7 @@ await wezterm_send_text(pane_id=1, text="/wf:build TSK-01-01\n")
 ```python
 from orchay.wbs_parser import parse_wbs, watch_wbs
 
-tasks = await parse_wbs(".jjiban/projects/orchay/wbs.md")
+tasks = await parse_wbs(".orchay/projects/orchay/wbs.md")
 
 async def on_change(tasks): ...
 watcher = watch_wbs("wbs.md", on_change, debounce=0.5)

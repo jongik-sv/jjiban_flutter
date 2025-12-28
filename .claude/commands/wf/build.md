@@ -60,7 +60,7 @@ parallel-processing: true
 ├── 화면 자료 (Frontend 포함 시):
 │   ├── ui-assets/*.png|jpg|svg ⭐ (최우선 참조)
 │   ├── 011-ui-design.md (Fallback)
-│   └── .jjiban/{project}/ui-theme-*.md (테마 가이드)
+│   └── .orchay/{project}/ui-theme-*.md (테마 가이드)
 └── infrastructure: 010-tech-design.md
 ```
 
@@ -134,7 +134,7 @@ parallel-processing: true
 ### 5단계: 구현 보고서 생성
 
 - `030-implementation.md` 생성
-- 템플릿: `.jjiban/templates/030-implementation.md`
+- 템플릿: `.orchay/templates/030-implementation.md`
 
 **필수 포함 항목** (분할 문서 연계):
 - 상세설계 테스트 시나리오 ↔ 실제 테스트 매핑
@@ -143,7 +143,7 @@ parallel-processing: true
 ### 6단계: 상태 전환 (자동)
 
 ```bash
-npx tsx .jjiban/script/transition.ts {Task-ID} build -p {project}
+npx tsx .orchay/script/transition.ts {Task-ID} build -p {project}
 ```
 - 성공: `{ "success": true, "newStatus": "im" }`
 

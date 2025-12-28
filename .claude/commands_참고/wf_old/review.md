@@ -45,7 +45,7 @@ allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Task, mcp__sequential-think
 
 @.claude/includes/wf-common.md
 
-**Task 폴더**: `.jjiban/projects/{project}/tasks/{TSK-ID}/`
+**Task 폴더**: `.orchay/projects/{project}/tasks/{TSK-ID}/`
 
 ---
 
@@ -65,17 +65,17 @@ allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Task, mcp__sequential-think
 - **기본설계서**: `[Task폴더]/010-basic-design.md`
 
 **참조 문서**:
-- **PRD**: `.jjiban/{project}/prd.md`
-- **TRD**: `.jjiban/{project}/trd.md`
-- **프로젝트 메타**: `.jjiban/{project}/project.json`
+- **PRD**: `.orchay/{project}/prd.md`
+- **TRD**: `.orchay/{project}/trd.md`
+- **프로젝트 메타**: `.orchay/{project}/project.json`
 
 ### 3단계: 다층 품질 검증 수행
 
 #### 3.1 문서 구조 및 완전성 검증
 1. **상세설계서 구조 분석** (분할된 3개 문서 검증):
-   - `020-detail-design.md`: 상세설계 템플릿(`@.jjiban/templates/020-detail-design.md`) 준수 여부
-   - `025-traceability-matrix.md`: 추적성 매트릭스 템플릿(`@.jjiban/templates/025-traceability-matrix.md`) 준수 여부
-   - `026-test-specification.md`: 테스트 명세 템플릿(`@.jjiban/templates/026-test-specification.md`) 준수 여부
+   - `020-detail-design.md`: 상세설계 템플릿(`@.orchay/templates/020-detail-design.md`) 준수 여부
+   - `025-traceability-matrix.md`: 추적성 매트릭스 템플릿(`@.orchay/templates/025-traceability-matrix.md`) 준수 여부
+   - `026-test-specification.md`: 테스트 명세 템플릿(`@.orchay/templates/026-test-specification.md`) 준수 여부
    - 각 문서의 필수 섹션 포함 여부
    - 문서 간 상호 참조 일관성
 
@@ -152,7 +152,7 @@ allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Task, mcp__sequential-think
 
 ### 5단계: 리뷰 문서 생성
 
-템플릿 참조: `@.jjiban/templates/021-design-review.md`
+템플릿 참조: `@.orchay/templates/021-design-review.md`
 
 ---
 
@@ -194,8 +194,8 @@ Category: development
 ├── 025-traceability-matrix.md (추적성 매트릭스)
 ├── 026-test-specification.md (테스트 명세)
 ├── 010-basic-design.md
-├── .jjiban/jjiban/prd.md
-└── .jjiban/jjiban/trd.md
+├── .orchay/orchay/prd.md
+└── .orchay/orchay/trd.md
 
 생성된 문서:
 └── 021-design-review-claude-1.md
@@ -320,7 +320,7 @@ WP 또는 ACT 단위 입력 시, 해당 범위 내 `[dd]` 상태 Task들을 병�
 ---
 
 <!--
-jjiban 프로젝트 - Workflow Command
+orchay 프로젝트 - Workflow Command
 author: 장종익
 Command: wf:review
 Version: 1.0

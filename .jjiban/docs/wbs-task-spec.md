@@ -155,12 +155,12 @@ Task의 복잡도와 중요도에 따라 포함할 속성 범위를 결정합니
 ### 5.1 minimal 레벨 (인프라 작업)
 
 ```markdown
-### TSK-00-01: jjiban 프로젝트 구조 초기화
+### TSK-00-01: orchay 프로젝트 구조 초기화
 - category: infrastructure
 - domain: infra
 - status: [ ]
 - priority: critical
-- note: jjiban-init 스킬 실행 필요
+- note: orchay-init 스킬 실행 필요
 ```
 
 ### 5.2 standard 레벨 (일반 개발)

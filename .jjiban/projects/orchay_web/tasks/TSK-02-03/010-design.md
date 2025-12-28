@@ -55,8 +55,8 @@
 
 | 문서 | 경로 | 관련 섹션 |
 |------|------|----------|
-| PRD | `.jjiban/projects/orchay_web/prd.md` | PRD 3.1 WBS 트리 |
-| TRD | `.jjiban/projects/orchay_web/trd.md` | HTMX 패턴, 트리 UI 구현 |
+| PRD | `.orchay/projects/orchay_web/prd.md` | PRD 3.1 WBS 트리 |
+| TRD | `.orchay/projects/orchay_web/trd.md` | HTMX 패턴, 트리 UI 구현 |
 | 트리 템플릿 | TSK-02-02 | 트리 HTML 구조 |
 
 ---

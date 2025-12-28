@@ -55,7 +55,7 @@
 
   <!-- Header -->
   <rect class="header" width="1600" height="56"/>
-  <text class="logo" x="24" y="36">jjiban</text>
+  <text class="logo" x="24" y="36">orchay</text>
 
   <!-- Navigation -->
   <text class="nav-item" x="120" y="36">대시보드</text>
@@ -65,7 +65,7 @@
   <rect x="300" y="48" width="30" height="3" fill="#3b82f6" rx="1"/>
 
   <!-- Project Title -->
-  <text class="header-text" x="400" y="36">jjiban - AI 기반 프로젝트 관리 도구</text>
+  <text class="header-text" x="400" y="36">orchay - AI 기반 프로젝트 관리 도구</text>
 
   <!-- View Mode Buttons -->
   <g transform="translate(24, 68)">

@@ -16,8 +16,8 @@
     [xx] → bg-emerald-500 (완료)
 #}
 
-{# 상태 배지 색상 매크로 #}
-{% macro status_badge(status) %}
+{# 상태 배지 색상 매크로 (OOB 업데이트용 ID 포함) #}
+{% macro status_badge(status, task_id='') %}
 {% set color_map = {
     '[ ]': 'bg-gray-500',
     '[bd]': 'bg-blue-500',
@@ -31,7 +31,8 @@
     '[xx]': 'bg-emerald-500'
 } %}
 {% set color = color_map.get(status, 'bg-gray-500') %}
-<span class="status-badge px-1.5 py-0.5 text-xs rounded {{ color }} text-white min-w-[32px] text-center"
+<span {% if task_id %}id="status-{{ task_id }}"{% endif %}
+      class="status-badge px-1.5 py-0.5 text-xs rounded {{ color }} text-white min-w-[32px] text-center"
       data-testid="status-badge">{{ status }}</span>
 {% endmacro %}
 
@@ -53,9 +54,9 @@
     <div class="flex-1"></div>
     <div class="progress-badge flex items-center gap-2" data-testid="progress-bar">
         <div class="w-24 h-2 bg-gray-700 rounded-full overflow-hidden">
-            <div class="h-full bg-emerald-500 transition-all duration-300" style="width: {{ stats.percentage }}%"></div>
+            <div id="stats-progress-bar" class="h-full bg-emerald-500 transition-all duration-300" style="width: {{ stats.percentage }}%"></div>
         </div>
-        <span class="text-sm text-gray-400 min-w-[40px]">{{ stats.percentage }}%</span>
+        <span id="stats-progress-text" class="text-sm text-gray-400 min-w-[40px]">{{ stats.percentage }}%</span>
     </div>
 </div>
 {% endif %}
@@ -88,7 +89,7 @@
      onclick="selectTask(this)">
     <span class="text-yellow-400 font-medium text-sm">T</span>
     <span class="text-gray-300 truncate flex-1">{{ task.id }}: {{ task.title }}</span>
-    {{ status_badge(task.status) }}
+    {{ status_badge(task.status, task.id) }}
 </div>
 {% endmacro %}
 

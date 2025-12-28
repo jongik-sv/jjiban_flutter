@@ -373,7 +373,7 @@
 
 - 설계 문서: `010-design.md`
 - 추적성 매트릭스: `025-traceability-matrix.md`
-- PRD: `.jjiban/projects/orchay_web/prd.md`
+- PRD: `.orchay/projects/orchay_web/prd.md`
 
 ---
 

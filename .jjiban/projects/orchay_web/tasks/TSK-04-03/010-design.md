@@ -54,8 +54,8 @@
 
 | 문서 | 경로 | 관련 섹션 |
 |------|------|----------|
-| PRD | `.jjiban/projects/orchay_web/prd.md` | 3.4 CLI 옵션 |
-| TRD | `.jjiban/projects/orchay_web/trd.md` | 전체 |
+| PRD | `.orchay/projects/orchay_web/prd.md` | 3.4 CLI 옵션 |
+| TRD | `.orchay/projects/orchay_web/trd.md` | 전체 |
 | 기존 README | `orchay/README.md` | CLI Usage |
 
 ---
@@ -129,7 +129,7 @@ flowchart LR
 |------|-----------|------------|------------|
 | 1 | README.md 열기 | 문서 표시 | Web UI 섹션 존재 |
 | 2 | Web UI 섹션 확인 | CLI 옵션 설명 표시 | 명확한 사용법 |
-| 3 | `orchay jjiban --web` 실행 | 서버 시작 메시지 | 포트 번호 표시 |
+| 3 | `orchay orchay --web` 실행 | 서버 시작 메시지 | 포트 번호 표시 |
 | 4 | 브라우저에서 접속 | 웹 UI 화면 | WBS 트리 표시 |
 
 **성공 조건:**
@@ -166,13 +166,13 @@ orchay에 내장된 웹서버를 통해 브라우저에서 WBS 진행 상황을 
 
 \`\`\`bash
 # 스케줄러 + 웹서버 동시 실행
-orchay jjiban --web
+orchay orchay --web
 
 # 웹서버만 실행 (스케줄링 없음)
-orchay jjiban --web-only
+orchay orchay --web-only
 
 # 포트 지정
-orchay jjiban --web --port 3000
+orchay orchay --web --port 3000
 \`\`\`
 
 → http://localhost:8080 접속

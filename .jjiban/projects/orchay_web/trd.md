@@ -101,11 +101,12 @@ orchay/src/orchay/
 <!-- HTMX morph 확장 활성화 (body에 선언) -->
 <body hx-ext="morph">
 
-<!-- 5초마다 자동 갱신 (깜빡임 없는 morph swap) -->
-<div id="workers"
-     hx-get="/api/workers"
-     hx-trigger="every 5s"
-     hx-swap="morph:innerHTML">
+<!-- 5초마다 자동 갱신 (ETag 조건부 폴링) -->
+<div id="tree-panel"
+     hx-get="/api/tree"
+     hx-trigger="load, every 5s"
+     hx-swap="morph:innerHTML"
+     hx-headers='js:{"If-None-Match": window.treeVersion || ""}'>
   ...
 </div>
 
@@ -126,6 +127,47 @@ orchay/src/orchay/
      hx-target="#detail-panel">
   TSK-08-01
 </div>
+```
+
+### ETag 조건부 폴링 (Tree 상태 유지)
+
+변경 없으면 304 응답으로 DOM을 건드리지 않아 UI 상태 유지:
+
+```python
+# server.py
+def calculate_tree_version(tasks: list[Task]) -> str:
+    """Task 상태 기반 버전 해시 생성."""
+    status_str = "|".join(
+        f"{t.id}:{t.status.value}" for t in sorted(tasks, key=lambda t: t.id)
+    )
+    return hashlib.md5(status_str.encode()).hexdigest()[:8]
+
+@app.get("/api/tree")
+async def _get_tree(request: Request) -> HTMLResponse | Response:
+    tasks = orchestrator.tasks
+    version = calculate_tree_version(tasks)
+
+    # 변경 없으면 304 반환 (DOM 건드리지 않음)
+    if request.headers.get("If-None-Match") == version:
+        return Response(status_code=304)
+
+    # 변경 있으면 새 HTML 반환
+    response = templates.TemplateResponse(...)
+    response.headers["ETag"] = version
+    return response
+```
+
+```javascript
+// index.html
+window.treeVersion = null;
+
+// 응답 후 ETag 저장
+document.body.addEventListener('htmx:afterRequest', function(evt) {
+    if (evt.detail.target.id === 'tree-panel') {
+        const etag = evt.detail.xhr.getResponseHeader('ETag');
+        if (etag) window.treeVersion = etag;
+    }
+});
 ```
 
 ---
@@ -264,3 +306,4 @@ if args.web or args.web_only:
 |------|------|-----------|
 | 1.0 | 2025-12-28 | 초기 TRD 작성 |
 | 1.1 | 2025-12-28 | htmx-ext-morph 2.0 CDN 추가, morph swap 패턴 명시 |
+| 1.2 | 2025-12-28 | ETag 조건부 폴링 기술 스펙 추가 (Tree 상태 유지) |

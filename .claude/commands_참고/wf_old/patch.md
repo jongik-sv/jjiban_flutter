@@ -74,7 +74,7 @@ personas: [refactoring-expert, backend-architect, quality-engineer]
 
 @.claude/includes/wf-conflict-resolution.md
 
-**Task 폴더**: `.jjiban/projects/{project}/tasks/{TSK-ID}/`
+**Task 폴더**: `.orchay/projects/{project}/tasks/{TSK-ID}/`
 
 ---
 
@@ -95,13 +95,13 @@ personas: [refactoring-expert, backend-architect, quality-engineer]
    ```
 
 2. **WBS에서 Task 정보 조회**:
-   - `.jjiban/projects/{project}/tasks/{TSK-ID}/task.json` 에서 Task 정보 조회
+   - `.orchay/projects/{project}/tasks/{TSK-ID}/task.json` 에서 Task 정보 조회
    - category 확인 (development | defect | infrastructure)
    - 현재 상태 확인: `[im]` 또는 `[fx]`
 
 3. **Task 디렉토리 구조 확인**:
    ```
-   .jjiban/projects/{project}/tasks/{TSK-ID}/
+   .orchay/projects/{project}/tasks/{TSK-ID}/
    ├── 010-basic-design.md (development만)
    ├── 020-detail-design.md
    ├── 030-implementation.md
@@ -389,7 +389,7 @@ WP 또는 ACT 단위 입력 시, 해당 범위 내 `[im]`/`[fx]` 상태 Task들�
 ---
 
 <!--
-jjiban 프로젝트 - Workflow Command
+orchay 프로젝트 - Workflow Command
 author: 장종익
 Command: wf:patch
 Version: 1.0

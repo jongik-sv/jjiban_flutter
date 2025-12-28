@@ -12,7 +12,7 @@
 | 예시 | 설명 |
 |------|------|
 | `/wf:test TSK-01-01` | 자동 검색 |
-| `/wf:test jjiban/TSK-01-01 --type e2e` | 프로젝트 명시 + 옵션 |
+| `/wf:test orchay/TSK-01-01 --type e2e` | 프로젝트 명시 + 옵션 |
 
 ---
 

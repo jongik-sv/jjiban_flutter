@@ -60,7 +60,7 @@ pip install -e ".[dev]"
 ### 2.3 빠른 시작
 
 ```bash
-# 프로젝트 루트로 이동 (.jjiban 폴더가 있는 위치)
+# 프로젝트 루트로 이동 (.orchay 폴더가 있는 위치)
 cd ..
 
 # 스케줄러 실행
@@ -82,7 +82,7 @@ python -m orchay [PROJECT] [OPTIONS]
 
 # 예시
 python -m orchay orchay           # orchay 프로젝트 스케줄링
-python -m orchay jjiban-flutter   # jjiban-flutter 프로젝트 스케줄링
+python -m orchay orchay-flutter   # orchay-flutter 프로젝트 스케줄링
 ```
 
 ### 3.2 CLI 옵션
@@ -257,7 +257,7 @@ python -m orchay orchay --dry-run -v
 
 실행 로그는 다음 위치에 저장됩니다:
 ```
-.jjiban/logs/orchay-active.json    # 활성 Task 상태
+.orchay/logs/orchay-active.json    # 활성 Task 상태
 ```
 
 ---
@@ -269,8 +269,8 @@ python -m orchay orchay --dry-run -v
 | 문서 | 경로 | 설명 |
 |------|------|------|
 | README | `orchay/README.md` | 기술 문서 |
-| PRD | `.jjiban/projects/orchay/prd.md` | 제품 요구사항 |
-| WBS | `.jjiban/projects/orchay/wbs.md` | 작업 분류 체계 |
+| PRD | `.orchay/projects/orchay/prd.md` | 제품 요구사항 |
+| WBS | `.orchay/projects/orchay/wbs.md` | 작업 분류 체계 |
 
 ### 7.2 API 참조
 

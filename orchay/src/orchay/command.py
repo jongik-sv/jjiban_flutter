@@ -392,7 +392,8 @@ class CommandHandler:
     async def _cmd_queue(self) -> CommandResult:
         """큐 정보 표시."""
         queue_count = sum(
-            1 for t in self.orchestrator.tasks
+            1
+            for t in self.orchestrator.tasks
             if t.status != TaskStatus.DONE and t.blocked_by is None
         )
         return CommandResult.ok(f"Queue: {queue_count} tasks 대기 중")
@@ -414,10 +415,7 @@ class CommandHandler:
         except ValueError:
             return CommandResult.error(f"유효하지 않은 Worker 번호: {arg}")
 
-        worker = next(
-            (w for w in self.orchestrator.workers if w.id == worker_id),
-            None
-        )
+        worker = next((w for w in self.orchestrator.workers if w.id == worker_id), None)
         if worker is None:
             return CommandResult.error(f"Worker {worker_id}가 존재하지 않습니다")
 

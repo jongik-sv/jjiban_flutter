@@ -1105,8 +1105,8 @@ async def test_status_badge_color_mapping() -> None:
 
     for i, status in enumerate(status_list):
         task = Mock()
-        task.id = f"TSK-01-0{i+1}"
-        task.title = f"Task {i+1}"
+        task.id = f"TSK-01-0{i + 1}"
+        task.title = f"Task {i + 1}"
         task.status = Mock(value=status)
         tasks.append(task)
 
@@ -1265,7 +1265,7 @@ async def test_task_detail_auto_refresh_function() -> None:
     assert "detailRefreshInterval" in html
     assert "setInterval" in html
     # 선택된 Task 저장 속성 확인
-    assert 'data-selected-task' in html
+    assert "data-selected-task" in html
 
 
 # TC-E04: UI 깜빡임 방지 (settle 시간 확인)
@@ -1476,14 +1476,15 @@ async def test_get_markdown_document(tmp_path: pytest.TempPathFactory) -> None:
     mock_orchestrator.workers = []
 
     import os
+
     original_cwd = os.getcwd()
     os.chdir(tmp_path)
 
     try:
-        # .jjiban 경로 구조 생성
-        jjiban_tasks = tmp_path / ".jjiban" / "projects" / "orchay_web" / "tasks" / "TSK-TEST"
-        jjiban_tasks.mkdir(parents=True)
-        (jjiban_tasks / "test.md").write_text("# Test Document\n\nHello World!", encoding="utf-8")
+        # .orchay 경로 구조 생성
+        orchay_tasks = tmp_path / ".orchay" / "projects" / "orchay_web" / "tasks" / "TSK-TEST"
+        orchay_tasks.mkdir(parents=True)
+        (orchay_tasks / "test.md").write_text("# Test Document\n\nHello World!", encoding="utf-8")
 
         app = create_app(mock_orchestrator)
         transport = ASGITransport(app=app)
@@ -1525,11 +1526,14 @@ async def test_reject_disallowed_extensions(ext: str) -> None:
 
 # UT-03: Path Traversal 차단
 @pytest.mark.asyncio
-@pytest.mark.parametrize("malicious_path", [
-    "../../../etc/passwd.md",
-    "..%2F..%2F..%2Fetc%2Fpasswd.md",
-    "test/../../../etc/passwd.md",
-])
+@pytest.mark.parametrize(
+    "malicious_path",
+    [
+        "../../../etc/passwd.md",
+        "..%2F..%2F..%2Fetc%2Fpasswd.md",
+        "test/../../../etc/passwd.md",
+    ],
+)
 async def test_block_path_traversal(malicious_path: str) -> None:
     """Path traversal 시도 시 403 또는 404 반환 (경로 탈출 불가)."""
     from httpx import ASGITransport, AsyncClient
@@ -1567,15 +1571,22 @@ async def test_get_image_document(tmp_path: pytest.TempPathFactory) -> None:
     mock_orchestrator.workers = []
 
     import os
+
     original_cwd = os.getcwd()
     os.chdir(tmp_path)
 
     try:
         # 이미지 파일 생성 (1x1 PNG 바이트)
-        jjiban_tasks = tmp_path / ".jjiban" / "projects" / "test_project" / "tasks" / "TSK-TEST"
-        jjiban_tasks.mkdir(parents=True)
-        png_bytes = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x02\x00\x00\x00\x90wS\xde\x00\x00\x00\x0cIDATx\x9cc\xf8\x0f\x00\x00\x01\x01\x00\x05\x18\xd8N\x00\x00\x00\x00IEND\xaeB`\x82'
-        (jjiban_tasks / "image.png").write_bytes(png_bytes)
+        orchay_tasks = tmp_path / ".orchay" / "projects" / "test_project" / "tasks" / "TSK-TEST"
+        orchay_tasks.mkdir(parents=True)
+        # 1x1 PNG 바이트
+        png_bytes = (
+            b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01"
+            b"\x00\x00\x00\x01\x08\x02\x00\x00\x00\x90wS\xde\x00\x00"
+            b"\x00\x0cIDATx\x9cc\xf8\x0f\x00\x00\x01\x01\x00\x05"
+            b"\x18\xd8N\x00\x00\x00\x00IEND\xaeB`\x82"
+        )
+        (orchay_tasks / "image.png").write_bytes(png_bytes)
 
         app = create_app(mock_orchestrator)
         transport = ASGITransport(app=app)
@@ -1671,7 +1682,7 @@ async def test_document_viewer_javascript_functions() -> None:
     assert "marked.parse" in html
     assert "mermaid.run" in html
     # ESC 키 핸들러
-    assert 'e.key === \'Escape\'' in html or "Escape" in html
+    assert "e.key === 'Escape'" in html or "Escape" in html
 
 
 # get_task_documents 이미지 지원 확인
@@ -1732,10 +1743,7 @@ async def test_api_response_time_with_large_data() -> None:
         tasks.append(mock_task)
 
     # 5개 Worker 생성
-    workers = [
-        Worker(id=i, pane_id=i, state=WorkerState.IDLE)
-        for i in range(1, 6)
-    ]
+    workers = [Worker(id=i, pane_id=i, state=WorkerState.IDLE) for i in range(1, 6)]
 
     mock_orchestrator = Mock()
     mock_orchestrator.project_name = "test_project"

@@ -57,8 +57,8 @@
 
 | 문서 | 경로 | 관련 섹션 |
 |------|------|----------|
-| PRD | `.jjiban/projects/orchay_web/prd.md` | 3.4 CLI 옵션, 1.3 사용 시나리오 |
-| TRD | `.jjiban/projects/orchay_web/trd.md` | API 설계, 아키텍처 |
+| PRD | `.orchay/projects/orchay_web/prd.md` | 3.4 CLI 옵션, 1.3 사용 시나리오 |
+| TRD | `.orchay/projects/orchay_web/trd.md` | API 설계, 아키텍처 |
 
 ---
 

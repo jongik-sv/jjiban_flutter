@@ -55,26 +55,26 @@ BLOCKED_PATTERNS = [
 # idle 프롬프트 패턴 (명령어 입력이 아닌 대기 상태)
 # Claude Code가 프롬프트 대기 중일 때 나타나는 패턴
 PROMPT_PATTERNS = [
-    re.compile(r'^>\s*$', re.MULTILINE),  # ">" 만 있는 경우 (입력 대기)
-    re.compile(r'^>\s+Try\s', re.MULTILINE),  # "> Try ..." 힌트 (idle 상태)
-    re.compile(r'↵\s*send', re.IGNORECASE),  # 추천 프롬프트 표시 (idle 상태)
-    re.compile(r'⏵⏵\s*bypass\s*permissions', re.IGNORECASE),  # bypass 표시 (idle 상태)
+    re.compile(r"^>\s*$", re.MULTILINE),  # ">" 만 있는 경우 (입력 대기)
+    re.compile(r"^>\s+Try\s", re.MULTILINE),  # "> Try ..." 힌트 (idle 상태)
+    re.compile(r"↵\s*send", re.IGNORECASE),  # 추천 프롬프트 표시 (idle 상태)
+    re.compile(r"⏵⏵\s*bypass\s*permissions", re.IGNORECASE),  # bypass 표시 (idle 상태)
 ]
 
 # 작업 중 패턴 (busy 상태 강제)
 # Claude Code가 작업 중일 때 나타나는 패턴
 BUSY_PATTERNS = [
-    re.compile(r'\*\s+.+\s+중\.\.\.', re.MULTILINE),  # "* ... 중..." (Claude Code 작업 표시)
-    re.compile(r'구현\s*중', re.IGNORECASE),
-    re.compile(r'분석\s*중', re.IGNORECASE),
-    re.compile(r'작업\s*중', re.IGNORECASE),
-    re.compile(r'처리\s*중', re.IGNORECASE),
-    re.compile(r'생성\s*중', re.IGNORECASE),
-    re.compile(r'실행\s*중', re.IGNORECASE),
-    re.compile(r'검색\s*중', re.IGNORECASE),
-    re.compile(r'로딩\s*중', re.IGNORECASE),
-    re.compile(r'esc to interrupt', re.IGNORECASE),  # Claude Code 작업 진행 표시
-    re.compile(r'ctrl\+t to hide', re.IGNORECASE),  # Claude Code 작업 진행 표시
+    re.compile(r"\*\s+.+\s+중\.\.\.", re.MULTILINE),  # "* ... 중..." (Claude Code 작업 표시)
+    re.compile(r"구현\s*중", re.IGNORECASE),
+    re.compile(r"분석\s*중", re.IGNORECASE),
+    re.compile(r"작업\s*중", re.IGNORECASE),
+    re.compile(r"처리\s*중", re.IGNORECASE),
+    re.compile(r"생성\s*중", re.IGNORECASE),
+    re.compile(r"실행\s*중", re.IGNORECASE),
+    re.compile(r"검색\s*중", re.IGNORECASE),
+    re.compile(r"로딩\s*중", re.IGNORECASE),
+    re.compile(r"esc to interrupt", re.IGNORECASE),  # Claude Code 작업 진행 표시
+    re.compile(r"ctrl\+t to hide", re.IGNORECASE),  # Claude Code 작업 진행 표시
 ]
 
 

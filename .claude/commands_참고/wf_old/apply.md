@@ -55,7 +55,7 @@ allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Task, mcp__sequential-think
 
 @.claude/includes/wf-conflict-resolution.md
 
-**Task 폴더**: `.jjiban/projects/{project}/tasks/{TSK-ID}/`
+**Task 폴더**: `.orchay/projects/{project}/tasks/{TSK-ID}/`
 
 ---
 
@@ -73,8 +73,8 @@ allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Task, mcp__sequential-think
    - **추적성 매트릭스**: `[Task폴더]/025-traceability-matrix.md` (필수)
    - **테스트 명세**: `[Task폴더]/026-test-specification.md` (필수)
    - **기본설계서**: `[Task폴더]/010-basic-design.md` (참조)
-   - **PRD**: `.jjiban/{project}/prd.md` (참조)
-   - **TRD**: `.jjiban/{project}/trd.md` (참조)
+   - **PRD**: `.orchay/{project}/prd.md` (참조)
+   - **TRD**: `.orchay/{project}/trd.md` (참조)
 
 3. **리뷰 문서 탐색**:
    ```
@@ -466,7 +466,7 @@ WP 또는 ACT 단위 입력 시, 해당 범위 내 `[dd]` 상태 Task들에 리�
 ---
 
 <!--
-jjiban 프로젝트 - Workflow Command
+orchay 프로젝트 - Workflow Command
 author: 장종익
 Command: wf:apply
 Version: 1.0

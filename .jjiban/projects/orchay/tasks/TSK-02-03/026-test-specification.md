@@ -414,7 +414,7 @@ class MockOrchestrator:
 
 - 설계: `010-design.md`
 - 추적성 매트릭스: `025-traceability-matrix.md`
-- PRD: `.jjiban/projects/orchay/prd.md`
+- PRD: `.orchay/projects/orchay/prd.md`
 
 ---
 

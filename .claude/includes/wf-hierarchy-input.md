@@ -55,7 +55,7 @@ function parseInputId(input) {
 > **PRD 5.1 구조**: Task 메타데이터는 `wbs.md`에서 관리, 문서는 `tasks/` 폴더에 저장
 
 ```
-.jjiban/
+.orchay/
 ├── settings/                          # 전역 설정
 ├── templates/                         # 문서 템플릿
 └── projects/
@@ -74,7 +74,7 @@ function parseInputId(input) {
 
 ### 3.2 wbs.md 구조
 
-**경로**: `.jjiban/projects/{project}/wbs.md`
+**경로**: `.orchay/projects/{project}/wbs.md`
 
 ```markdown
 # WBS - {Project Name}
@@ -129,7 +129,7 @@ function parseInputId(input) {
 
 ```javascript
 function getTasksInWP(project, wpId) {
-    const wbsPath = `.jjiban/projects/${project}/wbs.md`;
+    const wbsPath = `.orchay/projects/${project}/wbs.md`;
     const wbsContent = readFile(wbsPath);
 
     // WP 섹션에서 모든 TSK-* 찾기
@@ -150,7 +150,7 @@ function getTasksInWP(project, wpId) {
 
 ```javascript
 function getTasksInACT(project, actId) {
-    const wbsPath = `.jjiban/projects/${project}/wbs.md`;
+    const wbsPath = `.orchay/projects/${project}/wbs.md`;
     const wbsContent = readFile(wbsPath);
 
     // ACT 섹션에서 모든 TSK-* 찾기
@@ -165,18 +165,18 @@ function getTasksInACT(project, actId) {
 
 **TSK 입력 시 (예: `TSK-01-01-01`)**:
 1. wbs.md에서 Task 메타데이터 조회
-2. Task 문서 폴더 경로: `.jjiban/projects/{project}/tasks/TSK-01-01-01/`
+2. Task 문서 폴더 경로: `.orchay/projects/{project}/tasks/TSK-01-01-01/`
 3. 결과: `[TSK-01-01-01]`
 
 ```javascript
 // Task 문서 폴더 경로
 function getTaskFolderPath(project, taskId) {
-    return `.jjiban/projects/${project}/tasks/${taskId}/`;
+    return `.orchay/projects/${project}/tasks/${taskId}/`;
 }
 
 // Task 문서 경로
 function getTaskDocPath(project, taskId, docName) {
-    return `.jjiban/projects/${project}/tasks/${taskId}/${docName}`;
+    return `.orchay/projects/${project}/tasks/${taskId}/${docName}`;
 }
 ```
 
@@ -188,7 +188,7 @@ function getTaskDocPath(project, taskId, docName) {
 
 ```javascript
 function getTaskStatus(project, taskId) {
-    const wbsPath = `.jjiban/projects/${project}/wbs.md`;
+    const wbsPath = `.orchay/projects/${project}/wbs.md`;
     const wbsContent = readFile(wbsPath);
 
     // Task 섹션 찾기
@@ -208,7 +208,7 @@ function getTaskStatus(project, taskId) {
 
 ```javascript
 function updateTaskStatus(project, taskId, newStatusText, newStatusCode) {
-    const wbsPath = `.jjiban/projects/${project}/wbs.md`;
+    const wbsPath = `.orchay/projects/${project}/wbs.md`;
     let wbsContent = readFile(wbsPath);
 
     // Task 섹션에서 status 필드 찾아 변경
@@ -337,7 +337,7 @@ Category: development
 
 입력: WP-01 (Work Package)
 범위: Core - Issue Management
-데이터 경로: .jjiban/projects/{project}/wbs.md
+데이터 경로: .orchay/projects/{project}/wbs.md
 대상 Task: 12개 (상태 필터 적용: 8개)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -398,25 +398,25 @@ Category: development
 | 에러 | 메시지 |
 |------|--------|
 | 잘못된 ID 형식 | `[ERROR] 잘못된 ID 형식입니다. WP-XX, ACT-XX-XX, TSK-XX-XX-XX 형식을 사용하세요` |
-| wbs.md 없음 | `[ERROR] WBS 파일을 찾을 수 없습니다: .jjiban/projects/{project}/wbs.md` |
+| wbs.md 없음 | `[ERROR] WBS 파일을 찾을 수 없습니다: .orchay/projects/{project}/wbs.md` |
 | WP 섹션 없음 | `[ERROR] WBS에서 Work Package를 찾을 수 없습니다: WP-XX` |
 | ACT 섹션 없음 | `[ERROR] WBS에서 Activity를 찾을 수 없습니다: ACT-XX-XX` |
 | Task 없음 | `[ERROR] WBS에서 Task를 찾을 수 없습니다: TSK-XX-XX-XX` |
-| Task 폴더 없음 | `[ERROR] Task 문서 폴더를 찾을 수 없습니다: .jjiban/projects/{project}/tasks/{TSK-ID}/` |
+| Task 폴더 없음 | `[ERROR] Task 문서 폴더를 찾을 수 없습니다: .orchay/projects/{project}/tasks/{TSK-ID}/` |
 | 대상 Task 없음 | `[WARN] 처리 대상 Task가 없습니다. (상태 필터: [상태])` |
 | 모두 스킵 | `[WARN] 모든 Task가 스킵되었습니다. (이미 처리됨 또는 조건 미충족)` |
 
 ---
 
 <!--
-jjiban 프로젝트 - Workflow Common Module
+orchay 프로젝트 - Workflow Common Module
 Module: wf-hierarchy-input
 Version: 4.0
 author: 장종익
 
 Changes (v4.0):
 - PRD 5.1 디렉토리 구조에 맞게 전면 개편
-- .jjiban/projects/{project}/ 경로로 변경
+- .orchay/projects/{project}/ 경로로 변경
 - wbs.md 기반 Task 메타데이터 조회로 변경
 - task.json 제거 → wbs.md에서 상태 관리
 - tasks/ 폴더에는 문서만 저장
@@ -424,6 +424,6 @@ Changes (v4.0):
 - 상태 조회/업데이트 함수 추가
 
 Previous (v3.0):
-- .jjiban/{project}/ 구조
+- .orchay/{project}/ 구조
 - task.json 개별 파일 사용
 -->

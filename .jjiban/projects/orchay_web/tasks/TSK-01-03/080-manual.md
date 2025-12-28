@@ -65,7 +65,7 @@ orchay <project> --web-only --port 9000
 
 ```bash
 # 오류 발생
-orchay jjiban --web --web-only
+orchay orchay --web --web-only
 # error: argument --web-only: not allowed with argument --web
 ```
 
@@ -74,11 +74,11 @@ orchay jjiban --web --web-only
 
 ```bash
 # 범위 초과
-orchay jjiban --web --port 70000
+orchay orchay --web --port 70000
 # error: Port must be between 1 and 65535
 
 # 숫자 아님
-orchay jjiban --web --port abc
+orchay orchay --web --port abc
 # error: invalid _validate_port value: 'abc'
 ```
 
@@ -90,12 +90,12 @@ orchay jjiban --web --port abc
 
 | 명령어 | 동작 |
 |--------|------|
-| `orchay jjiban` | 기존 TUI 모드 |
-| `orchay jjiban --web` | TUI + 웹서버 (포트 8080) |
-| `orchay jjiban --web --port 3000` | TUI + 웹서버 (포트 3000) |
-| `orchay jjiban --web-only` | 웹서버만 (포트 8080) |
-| `orchay jjiban --web-only --port 9000` | 웹서버만 (포트 9000) |
-| `orchay jjiban --dry-run --web` | 드라이런 + 웹서버 |
+| `orchay orchay` | 기존 TUI 모드 |
+| `orchay orchay --web` | TUI + 웹서버 (포트 8080) |
+| `orchay orchay --web --port 3000` | TUI + 웹서버 (포트 3000) |
+| `orchay orchay --web-only` | 웹서버만 (포트 8080) |
+| `orchay orchay --web-only --port 9000` | 웹서버만 (포트 9000) |
+| `orchay orchay --dry-run --web` | 드라이런 + 웹서버 |
 
 ---
 

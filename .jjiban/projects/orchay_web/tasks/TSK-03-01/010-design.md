@@ -54,8 +54,8 @@
 
 | 문서 | 경로 | 관련 섹션 |
 |------|------|----------|
-| PRD | `.jjiban/projects/orchay_web/prd.md` | 3.2 Task 상세 패널 |
-| TRD | `.jjiban/projects/orchay_web/trd.md` | API 설계, UI 스타일링 |
+| PRD | `.orchay/projects/orchay_web/prd.md` | 3.2 Task 상세 패널 |
+| TRD | `.orchay/projects/orchay_web/trd.md` | API 설계, UI 스타일링 |
 
 ---
 
@@ -331,7 +331,7 @@ erDiagram
 
 **BR-02: 문서 존재 확인**
 
-설명: Documents 섹션에는 `.jjiban/projects/{project}/tasks/{task_id}/` 경로에 실제 존재하는 파일만 표시
+설명: Documents 섹션에는 `.orchay/projects/{project}/tasks/{task_id}/` 경로에 실제 존재하는 파일만 표시
 
 ---
 

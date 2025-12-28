@@ -46,14 +46,14 @@ mcp-servers: [playwright]
 
 @.claude/includes/wf-common.md
 
-**Task 폴더**: `.jjiban/projects/{project}/tasks/{TSK-ID}/`
+**Task 폴더**: `.orchay/projects/{project}/tasks/{TSK-ID}/`
 
 ---
 
 ## 실행 과정
 
 ### 1단계: Task 검증
-1. Task JSON에서 Task 찾기 (`.jjiban/projects/{project}/tasks/{TSK-ID}/task.json`)
+1. Task JSON에서 Task 찾기 (`.orchay/projects/{project}/tasks/{TSK-ID}/task.json`)
 2. category가 `development` 또는 `defect`인지 확인
 3. 현재 상태 확인:
    - development: `[im]` 구현
@@ -374,7 +374,7 @@ WP 또는 ACT 단위 입력 시, 해당 범위 내 `[im]`/`[fx]` 상태 Task들�
 ---
 
 <!--
-jjiban 프로젝트 - Workflow Command
+orchay 프로젝트 - Workflow Command
 author: 장종익
 Command: wf:verify
 Version: 1.0

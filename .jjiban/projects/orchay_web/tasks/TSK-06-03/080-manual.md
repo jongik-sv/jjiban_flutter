@@ -96,7 +96,7 @@
 
 ### Q1: 문서가 표시되지 않아요
 
-**A**: Task 문서 폴더(`.jjiban/projects/{project}/tasks/{task-id}/`)에 파일이 있는지 확인하세요. 폴더가 없거나 비어있으면 "문서 없음"으로 표시됩니다.
+**A**: Task 문서 폴더(`.orchay/projects/{project}/tasks/{task-id}/`)에 파일이 있는지 확인하세요. 폴더가 없거나 비어있으면 "문서 없음"으로 표시됩니다.
 
 ### Q2: 수정일이 잘못 표시되는 것 같아요
 
@@ -135,8 +135,8 @@
 |------|------|------|
 | 설계 문서 | `010-design.md` | 기능 상세 설계 |
 | 구현 문서 | `030-implementation.md` | 구현 상세 |
-| PRD | `.jjiban/projects/orchay_web/prd.md` | 요구사항 |
-| TRD | `.jjiban/projects/orchay_web/trd.md` | 기술 스펙 |
+| PRD | `.orchay/projects/orchay_web/prd.md` | 요구사항 |
+| TRD | `.orchay/projects/orchay_web/trd.md` | 기술 스펙 |
 
 ---
 

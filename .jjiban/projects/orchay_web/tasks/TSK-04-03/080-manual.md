@@ -39,12 +39,12 @@ uv pip install -e ".[dev]"
 
 **방법 1: 스케줄러 + 웹서버 동시 실행**
 ```bash
-uv run python -m orchay jjiban --web
+uv run python -m orchay orchay --web
 ```
 
 **방법 2: 웹서버만 실행 (스케줄링 없음)**
 ```bash
-uv run python -m orchay jjiban --web-only
+uv run python -m orchay orchay --web-only
 ```
 
 **방법 3: launcher.py와 함께 사용**
@@ -140,7 +140,7 @@ uv pip install fastapi uvicorn jinja2
 
 **A:** `--port` 옵션으로 다른 포트를 지정하세요.
 ```bash
-uv run python -m orchay jjiban --web --port 3000
+uv run python -m orchay orchay --web --port 3000
 ```
 
 ### Q3: 화면이 자동으로 갱신되지 않습니다
@@ -169,7 +169,7 @@ uv run python -m orchay jjiban --web --port 3000
 
 상세 로그를 보려면 `-v` 옵션 사용:
 ```bash
-uv run python -m orchay jjiban --web -v
+uv run python -m orchay orchay --web -v
 ```
 
 ---

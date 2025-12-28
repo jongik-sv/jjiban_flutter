@@ -24,7 +24,7 @@ EPIC PRD 문서를 분석하여 **Chain 단위 (1-3개월 배포 가능 Feature)
 
 | 레벨 | 크기 | 목적 | 예시 |
 |------|------|------|------|
-| **EPIC-Level** | 3-6개월 | 전략적 비즈니스 역량 | "jjiban - AI-Assisted Kanban Tool" |
+| **EPIC-Level** | 3-6개월 | 전략적 비즈니스 역량 | "orchay - AI-Assisted Kanban Tool" |
 | **Chain-Level** | 1-3개월 | 실행 가능한 Feature | "Core Project Management System" |
 | **Module-Level** | 1-4주 | User Story | "칸반 보드 UI" |
 | **Task-Level** | 1-5일 | 구현 작업 | "드래그 앤 드롭 구현" |
@@ -233,8 +233,8 @@ CHAIN-04: Document Management
 ## 사전 요구사항
 
 사용자에게 다음 정보를 요청하세요:
-1. **EPIC PRD 파일 경로** (예: `projects/jjiban/jjiban-prd.md`)
-2. **EPIC 폴더명** (예: `projects/jjiban/`)
+1. **EPIC PRD 파일 경로** (예: `projects/orchay/orchay-prd.md`)
+2. **EPIC 폴더명** (예: `projects/orchay/`)
 3. **Chain 분류 방식** (자동 추론 또는 수동 지정)
 
 ---
@@ -266,7 +266,7 @@ CHAIN-04: Document Management
 
 PRD 섹션을 분석하여 Chain 후보 생성:
 
-**예시 (jjiban PRD 기준)**:
+**예시 (orchay PRD 기준)**:
 ```
 Section 2.1-2.3: 핵심 개념
 → CHAIN-01: Platform Foundation
@@ -398,9 +398,9 @@ PRD 분석 시 다음을 자동으로 체크하고 누락 시 CHAIN-01에 추가
 - **ID 형식**: `CHAIN-{epic-id}-{01-99}`
 - **폴더명**: `CHAIN-{epic-id}-{number}-{kebab-case-name}`
 - **예시**:
-  - `CHAIN-jjiban-01-platform-foundation`
-  - `CHAIN-jjiban-02-core-project-management`
-  - `CHAIN-jjiban-03-llm-integration`
+  - `CHAIN-orchay-01-platform-foundation`
+  - `CHAIN-orchay-02-core-project-management`
+  - `CHAIN-orchay-03-llm-integration`
 
 ---
 
@@ -410,22 +410,22 @@ PRD 분석 시 다음을 자동으로 체크하고 누락 시 CHAIN-01에 추가
 
 ```
 projects/
-└── jjiban/                                          # EPIC 폴더
-    ├── jjiban-prd.md                                # EPIC PRD
+└── orchay/                                          # EPIC 폴더
+    ├── orchay-prd.md                                # EPIC PRD
     │
-    ├── CHAIN-jjiban-01-platform-foundation/         # Chain 폴더
+    ├── CHAIN-orchay-01-platform-foundation/         # Chain 폴더
     │   ├── chain-prd.md                             # Chain PRD
     │   └── chain-basic-design.md                    # Chain 기본설계
     │
-    ├── CHAIN-jjiban-02-core-project-management/
+    ├── CHAIN-orchay-02-core-project-management/
     │   ├── chain-prd.md
     │   └── chain-basic-design.md
     │
-    ├── CHAIN-jjiban-03-llm-integration/
+    ├── CHAIN-orchay-03-llm-integration/
     │   ├── chain-prd.md
     │   └── chain-basic-design.md
     │
-    └── CHAIN-jjiban-04-deployment-cli/
+    └── CHAIN-orchay-04-deployment-cli/
         ├── chain-prd.md
         └── chain-basic-design.md
 ```

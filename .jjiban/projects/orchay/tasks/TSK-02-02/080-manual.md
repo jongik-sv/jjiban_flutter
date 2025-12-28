@@ -208,7 +208,7 @@ F7 키를 눌러 모드를 순환 전환할 수 있습니다:
 uv run --project orchay python -m orchay orchay --debug
 
 # 로그 파일 확인
-cat .jjiban/logs/orchay.log
+cat .orchay/logs/orchay.log
 ```
 
 ---
@@ -219,9 +219,9 @@ cat .jjiban/logs/orchay.log
 
 | 문서 | 경로 | 설명 |
 |------|------|------|
-| PRD | `.jjiban/projects/orchay/prd.md` | 프로젝트 요구사항 정의 |
-| 설계서 | `.jjiban/projects/orchay/tasks/TSK-02-02/010-design.md` | TUI 설계 상세 |
-| WBS | `.jjiban/projects/orchay/wbs.md` | 작업 분해 구조 |
+| PRD | `.orchay/projects/orchay/prd.md` | 프로젝트 요구사항 정의 |
+| 설계서 | `.orchay/projects/orchay/tasks/TSK-02-02/010-design.md` | TUI 설계 상세 |
+| WBS | `.orchay/projects/orchay/wbs.md` | 작업 분해 구조 |
 | README | `orchay/README.md` | 프로젝트 개요 및 CLI 사용법 |
 
 ### 6.2 관련 Task
@@ -249,7 +249,7 @@ cat .jjiban/logs/orchay.log
 ---
 
 <!--
-jjiban 프로젝트 - User Manual
+orchay 프로젝트 - User Manual
 Task: TSK-02-02 TUI 메인 화면
 Version: 1.0
 -->

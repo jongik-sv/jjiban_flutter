@@ -12,7 +12,7 @@
 | 예시 | 설명 |
 |------|------|
 | `/wf:done TSK-01-01` | 자동 검색 |
-| `/wf:done jjiban/TSK-01-01` | 프로젝트 명시 |
+| `/wf:done orchay/TSK-01-01` | 프로젝트 명시 |
 
 ---
 
@@ -44,7 +44,7 @@
 2. **매뉴얼 생성**
    - 기능 사용법 문서화
    - 화면 캡처/설명
-   - 템플릿: `.jjiban/templates/080-manual.md`
+   - 템플릿: `.orchay/templates/080-manual.md`
 
 3. **상태 업데이트**
    - `[ts]`/`[im]` → `[xx]`

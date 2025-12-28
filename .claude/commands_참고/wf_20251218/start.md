@@ -11,7 +11,7 @@
 | 예시 | 설명 |
 |------|------|
 | `/wf:start TSK-01-01` | 자동 검색 (1개면 자동, 여러 개면 선택) |
-| `/wf:start jjiban/TSK-01-01` | 프로젝트 명시 (바로 실행) |
+| `/wf:start orchay/TSK-01-01` | 프로젝트 명시 (바로 실행) |
 
 ---
 
@@ -30,7 +30,7 @@
 1. **프로젝트 해결** (wf-common-lite 참조)
    - 입력 파싱: `/` 포함 여부 확인
    - 프로젝트 수 확인 및 ID 추출
-   - 경로 결정: `.jjiban/projects/{project}/`
+   - 경로 결정: `.orchay/projects/{project}/`
 
 2. **Task 정보 수집**
    - wbs.md에서 Task 찾기
@@ -45,8 +45,8 @@
    - 누락/초과 항목 확인
 
 5. **문서 생성**
-   - Task 폴더 생성: `.jjiban/projects/{project}/tasks/{TSK-ID}/`
-   - 템플릿 참조: `.jjiban/templates/010-*.md`
+   - Task 폴더 생성: `.orchay/projects/{project}/tasks/{TSK-ID}/`
+   - 템플릿 참조: `.orchay/templates/010-*.md`
 
 6. **wbs.md 상태 업데이트**
    - status 필드 변경

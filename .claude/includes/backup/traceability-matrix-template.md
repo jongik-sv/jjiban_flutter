@@ -141,7 +141,7 @@
 - 상세설계: `020-detail-design.md`
 - 테스트 명세: `026-test-specification.md`
 - 기본설계: `010-basic-design.md`
-- PRD: `.jjiban/{project}/prd.md`
+- PRD: `.orchay/{project}/prd.md`
 
 ---
 

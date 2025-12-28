@@ -55,8 +55,8 @@
 
 | 문서 | 경로 | 관련 섹션 |
 |------|------|----------|
-| PRD | `.jjiban/projects/orchay_web/prd.md` | 3.4 CLI 옵션 |
-| TRD | `.jjiban/projects/orchay_web/trd.md` | 통합 방법 |
+| PRD | `.orchay/projects/orchay_web/prd.md` | 3.4 CLI 옵션 |
+| TRD | `.orchay/projects/orchay_web/trd.md` | 통합 방법 |
 
 ---
 
@@ -75,13 +75,13 @@
 - 역할: orchay 사용자
 - 목표: TUI와 웹 UI를 함께 사용하며 작업 진행 모니터링
 - 불만: 별도 명령어로 웹서버를 따로 실행하기 번거로움
-- 시나리오: `orchay jjiban --web` 한 줄로 모든 것 시작
+- 시나리오: `orchay orchay --web` 한 줄로 모든 것 시작
 
 **페르소나 2: 모니터링 전용 사용자**
 - 역할: 팀원, 매니저
 - 목표: 브라우저에서 진행 상황만 확인
 - 불만: 터미널 접근 없이 상태 확인 원함
-- 시나리오: `orchay jjiban --web-only`로 웹서버만 실행
+- 시나리오: `orchay orchay --web-only`로 웹서버만 실행
 
 ---
 
@@ -115,7 +115,7 @@ flowchart LR
 | 트리거 | `orchay PROJECT --web` 명령 실행 |
 
 **기본 흐름:**
-1. 사용자가 `orchay jjiban --web` 명령을 실행한다
+1. 사용자가 `orchay orchay --web` 명령을 실행한다
 2. 시스템이 Orchestrator를 초기화한다
 3. 시스템이 FastAPI 앱을 생성하고 Orchestrator 참조를 주입한다
 4. 시스템이 uvicorn.Server를 생성한다 (포트 8080)
@@ -138,7 +138,7 @@ flowchart LR
 | 트리거 | `orchay PROJECT --web-only` 명령 실행 |
 
 **기본 흐름:**
-1. 사용자가 `orchay jjiban --web-only` 명령을 실행한다
+1. 사용자가 `orchay orchay --web-only` 명령을 실행한다
 2. 시스템이 Orchestrator를 초기화한다 (스케줄링 비활성화)
 3. 시스템이 FastAPI 앱을 생성한다
 4. 시스템이 uvicorn.Server.serve()만 실행한다
@@ -155,7 +155,7 @@ flowchart LR
 | 트리거 | `--port PORT` 옵션 사용 |
 
 **기본 흐름:**
-1. 사용자가 `orchay jjiban --web --port 3000` 명령을 실행한다
+1. 사용자가 `orchay orchay --web --port 3000` 명령을 실행한다
 2. 시스템이 포트 3000으로 uvicorn.Server를 생성한다
 3. http://localhost:3000으로 접근 가능
 
@@ -172,7 +172,7 @@ flowchart LR
 
 | 단계 | 사용자 행동 | 시스템 반응 | 사용자 기대 |
 |------|-----------|------------|------------|
-| 1 | `orchay jjiban --web` 입력 | CLI 파싱 시작 | 명령어 실행 |
+| 1 | `orchay orchay --web` 입력 | CLI 파싱 시작 | 명령어 실행 |
 | 2 | 엔터 키 입력 | TUI 화면 표시 + "Web server started at http://localhost:8080" 로그 | 서버 시작 확인 |
 | 3 | 브라우저에서 localhost:8080 접속 | WBS 트리 + Worker 상태 표시 | 웹 UI 확인 |
 
@@ -190,8 +190,8 @@ flowchart LR
 
 | 단계 | 사용자 행동 | 시스템 반응 | 복구 방법 |
 |------|-----------|------------|----------|
-| 1 | `orchay jjiban --web` 실행 | "Port 8080 already in use" 에러 | 다른 포트 사용 |
-| 2 | `orchay jjiban --web --port 3000` 실행 | 포트 3000으로 서버 시작 | 정상 접속 |
+| 1 | `orchay orchay --web` 실행 | "Port 8080 already in use" 에러 | 다른 포트 사용 |
+| 2 | `orchay orchay --web --port 3000` 실행 | 포트 3000으로 서버 시작 | 정상 접속 |
 
 ### 4.3 시나리오 3: 웹서버 전용 모드
 
@@ -202,7 +202,7 @@ flowchart LR
 
 | 단계 | 사용자 행동 | 시스템 반응 | 사용자 기대 |
 |------|-----------|------------|------------|
-| 1 | `orchay jjiban --web-only` 입력 | 웹서버만 시작, TUI 없음 | 터미널 점유 없음 |
+| 1 | `orchay orchay --web-only` 입력 | 웹서버만 시작, TUI 없음 | 터미널 점유 없음 |
 | 2 | 브라우저 접속 | WBS 상태 표시 (읽기 전용) | 상태 확인 |
 
 ---
@@ -213,19 +213,19 @@ flowchart LR
 
 **`--web` 옵션 사용 시:**
 ```
-$ orchay jjiban --web
+$ orchay orchay --web
 [INFO] Initializing Orchestrator...
 [INFO] Starting web server at http://127.0.0.1:8080
 [INFO] Press Ctrl+C to stop
 
-┌─ orchay - jjiban ─────────────────────────┐
+┌─ orchay - orchay ─────────────────────────┐
 │  TUI 화면...                              │
 └───────────────────────────────────────────┘
 ```
 
 **`--web-only` 옵션 사용 시:**
 ```
-$ orchay jjiban --web-only
+$ orchay orchay --web-only
 [INFO] Initializing Orchestrator (scheduling disabled)...
 [INFO] Starting web server at http://127.0.0.1:8080
 [INFO] Press Ctrl+C to stop
@@ -312,9 +312,9 @@ class WebConfig:
 설명: `--web`은 TUI + 웹서버, `--web-only`는 웹서버만 실행한다. 두 옵션을 동시에 사용하면 의미가 모호하므로 에러로 처리한다.
 
 예시:
-- `orchay jjiban --web` → 유효
-- `orchay jjiban --web-only` → 유효
-- `orchay jjiban --web --web-only` → 에러: "Cannot use --web and --web-only together"
+- `orchay orchay --web` → 유효
+- `orchay orchay --web-only` → 유효
+- `orchay orchay --web --web-only` → 에러: "Cannot use --web and --web-only together"
 
 **BR-02: --port 의존성**
 

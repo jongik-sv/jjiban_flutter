@@ -58,7 +58,7 @@
 - **파일**: `orchay/src/orchay/web/server.py:26-52`
 - **함수**: `get_task_documents(task_id, base_path, project_name)`
   - Task 관련 문서 목록 조회
-  - `.jjiban/projects/{project}/tasks/{task_id}/` 경로에서 .md 파일 검색
+  - `.orchay/projects/{project}/tasks/{task_id}/` 경로에서 .md 파일 검색
   - 존재하는 파일만 정렬하여 반환
 
 ### 2.2 TDD 테스트 결과

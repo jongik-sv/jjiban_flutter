@@ -37,7 +37,7 @@ pip install -e ".[dev]"
 - Worker panes (우측, Claude Code 인스턴스들)
 
 ```bash
-cd {프로젝트 루트}  # .jjiban 폴더가 있는 위치
+cd {프로젝트 루트}  # .orchay 폴더가 있는 위치
 python orchay/launcher.py [ORCHAY_OPTIONS] [LAUNCHER_OPTIONS]
 ```
 
@@ -103,7 +103,7 @@ WezTerm pane을 직접 구성한 경우:
 
 ```bash
 # uv 사용 (권장)
-cd {프로젝트 루트}  # .jjiban 폴더가 있는 위치
+cd {프로젝트 루트}  # .orchay 폴더가 있는 위치
 uv run --project orchay python -m orchay [PROJECT] [OPTIONS]
 
 # 또는 venv 활성화 후
@@ -123,7 +123,7 @@ usage: orchay [-h] [-w WORKERS] [-i INTERVAL]
               [project]
 
 positional arguments:
-  project               프로젝트명 (.jjiban/projects/{project}/ 사용, 기본: orchay)
+  project               프로젝트명 (.orchay/projects/{project}/ 사용, 기본: orchay)
 
 options:
   -w, --workers N       Worker 수 (기본: 3)
@@ -153,8 +153,8 @@ uv run python -m orchay orchay --dry-run
 # CLI 모드로 실행 (TUI 없이)
 uv run python -m orchay orchay --no-tui
 
-# jjiban-flutter 프로젝트 실행
-uv run python -m orchay jjiban-flutter
+# orchay-flutter 프로젝트 실행
+uv run python -m orchay orchay-flutter
 
 # develop 모드로 실행
 uv run python -m orchay orchay -m develop
@@ -200,13 +200,13 @@ orchay에 내장된 웹서버를 통해 브라우저에서 WBS 진행 상황을 
 
 ```bash
 # 스케줄러 + 웹서버 동시 실행
-uv run python -m orchay jjiban --web
+uv run python -m orchay orchay --web
 
 # 웹서버만 실행 (스케줄링 없음, WezTerm 불필요)
-uv run python -m orchay jjiban --web-only
+uv run python -m orchay orchay --web-only
 
 # 포트 지정 (기본: 8080)
-uv run python -m orchay jjiban --web --port 3000
+uv run python -m orchay orchay --web --port 3000
 
 # launcher.py와 함께 사용
 python orchay/launcher.py my_project --web --port 9000
@@ -236,7 +236,7 @@ python orchay/launcher.py my_project --web --port 9000
 **시나리오 1: 원격 모니터링**
 ```bash
 # 서버에서 웹서버만 실행
-uv run python -m orchay jjiban --web-only --port 8080
+uv run python -m orchay orchay --web-only --port 8080
 
 # 브라우저에서 http://server-ip:8080 접속
 ```
@@ -244,7 +244,7 @@ uv run python -m orchay jjiban --web-only --port 8080
 **시나리오 2: 로컬 개발 + 웹 모니터링**
 ```bash
 # TUI + 웹서버 동시 실행
-python orchay/launcher.py jjiban --web
+python orchay/launcher.py orchay --web
 
 # 터미널에서는 TUI로, 브라우저에서는 웹 UI로 모니터링
 ```
@@ -289,7 +289,7 @@ wbs.md 파일을 파싱하여 Task 객체 리스트로 변환합니다.
 from orchay.wbs_parser import parse_wbs, watch_wbs
 
 # 단일 파싱
-tasks = await parse_wbs(".jjiban/projects/orchay/wbs.md")
+tasks = await parse_wbs(".orchay/projects/orchay/wbs.md")
 for task in tasks:
     print(f"{task.id}: {task.status}")
 

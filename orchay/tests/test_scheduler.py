@@ -1,19 +1,15 @@
 """스케줄러 코어 테스트 (TSK-01-03)."""
 
 import pytest
-from datetime import datetime
 
 from orchay.models import Task, TaskCategory, TaskPriority, TaskStatus, Worker, WorkerState
 from orchay.scheduler import (
     ExecutionMode,
-    PRIORITY_ORDER,
-    WORKFLOW_STEPS,
+    check_dependencies_implemented,
+    dispatch_task,
     filter_executable_tasks,
     get_workflow_steps,
-    dispatch_task,
-    check_dependencies_implemented,
 )
-
 
 # =============================================================================
 # 2.1 filter_executable_tasks 테스트

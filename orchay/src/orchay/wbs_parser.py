@@ -344,7 +344,7 @@ async def parse_wbs(path: str | Path) -> list[Task]:
         Task 객체 리스트
 
     Example:
-        tasks = await parse_wbs(".jjiban/projects/orchay/wbs.md")
+        tasks = await parse_wbs(".orchay/projects/orchay/wbs.md")
         for task in tasks:
             print(f"{task.id}: {task.status}")
     """

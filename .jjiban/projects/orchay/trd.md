@@ -22,6 +22,8 @@
 | 터미널 포맷팅 | Rich | ^14.0 | Textual 의존성, 테이블/진행바/마크다운 렌더링 | - |
 | 파일 모니터링 | watchdog | ^4.0 | 크로스플랫폼 파일 시스템 이벤트 감지 | polling (비효율적) |
 | 데이터 검증 | Pydantic | ^2.0 | 설정 파일 스키마 검증, 타입 안전성 | dataclasses (기능 제한) |
+| Markdown 파서 | markdown-it-py | ^3.0 | GFM 호환, 플러그인 확장성, VS Code와 동일 파서 | Python-Markdown (확장성 제한) |
+| 코드 하이라이팅 | Pygments | ^2.17 | 598개 언어 지원, 다양한 테마 | highlight.js (클라이언트 전용) |
 
 ### UI/스타일링 스택
 
@@ -62,7 +64,7 @@
 ### 배포 구조
 
 ```
-jjiban_flutter/                    # 프로젝트 루트
+orchay_flutter/                    # 프로젝트 루트
 ├── orchay/                        # orchay 개발 폴더
 │   ├── pyproject.toml             # 패키지 설정
 │   ├── README.md                  # 프로젝트 문서
@@ -79,6 +81,13 @@ jjiban_flutter/                    # 프로젝트 루트
 │   │       │   ├── app.py         # Textual App
 │   │       │   ├── widgets.py     # 커스텀 위젯
 │   │       │   └── styles.tcss    # Textual CSS
+│   │       ├── web/               # 웹 서버 컴포넌트
+│   │       │   ├── __init__.py
+│   │       │   ├── server.py      # FastAPI 앱
+│   │       │   ├── markdown_renderer.py  # MD→HTML 렌더링
+│   │       │   ├── static/        # 정적 파일
+│   │       │   │   └── markdown.css  # Markdown 스타일
+│   │       │   └── templates/     # Jinja2 템플릿
 │   │       ├── models/            # Pydantic 모델
 │   │       │   ├── __init__.py
 │   │       │   ├── config.py      # 설정 모델
@@ -93,7 +102,7 @@ jjiban_flutter/                    # 프로젝트 루트
 │       ├── conftest.py
 │       ├── test_scheduler.py
 │       └── test_wbs_parser.py
-└── .jjiban/
+└── .orchay/
     ├── settings/
     │   └── orchay.json            # 설정 파일
     └── logs/
@@ -233,6 +242,11 @@ dependencies = [
     "rich>=14.0",
     "watchdog>=4.0",
     "pydantic>=2.0",
+    "fastapi>=0.115",
+    "uvicorn[standard]",
+    "jinja2>=3.0",
+    "markdown-it-py[plugins,linkify]>=3.0",
+    "pygments>=2.17",
 ]
 
 [project.optional-dependencies]
@@ -335,3 +349,7 @@ class ExecutionMode(BaseModel):
 |------|------|-----------|
 | 1.0 | 2025-12-28 | 초기 TRD 작성 |
 | 1.1 | 2025-12-28 | 배포 구조 수정: 프로젝트 루트에 `orchay/` 폴더 생성, src 레이아웃 적용 |
+| 1.2 | 2025-12-28 | Markdown 렌더링 고도화 |
+|     |            | - 기술 스택 추가: markdown-it-py (GFM 파서), Pygments (코드 하이라이팅) |
+|     |            | - 배포 구조: web/markdown_renderer.py, static/markdown.css 추가 |
+|     |            | - 의존성: markdown-it-py[plugins,linkify]>=3.0, pygments>=2.17 추가 |

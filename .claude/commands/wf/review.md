@@ -46,8 +46,8 @@ parallel-processing: true
 └── 026-test-specification.md (테스트 명세)
 
 참조 문서:
-├── .jjiban/{project}/prd.md
-└── .jjiban/{project}/trd.md
+├── .orchay/{project}/prd.md
+└── .orchay/{project}/trd.md
 ```
 
 ### 2. 다층 품질 검증 수행

@@ -25,7 +25,7 @@ parallel-processing: true
 | `/wf:start TSK-01-01` | Task 단위 처리 |
 | `/wf:start ACT-01-01` | ACT 내 모든 Todo Task 병렬 |
 | `/wf:start WP-01` | WP 내 모든 Todo Task 병렬 |
-| `/wf:start jjiban/TSK-01-01` | 프로젝트 명시 |
+| `/wf:start orchay/TSK-01-01` | 프로젝트 명시 |
 
 ---
 
@@ -64,11 +64,11 @@ parallel-processing: true
 
 ### 3. PRD/TRD 내용 추출
 
-1. **PRD 읽기**: `.jjiban/projects/{project}/prd.md`
+1. **PRD 읽기**: `.orchay/projects/{project}/prd.md`
    - WBS PRD 참조 섹션 번호로 해당 내용 추출
    - 비즈니스 규칙, 사용자 시나리오, UI 요구사항
 
-2. **TRD 참고**: `.jjiban/projects/{project}/trd.md`
+2. **TRD 참고**: `.orchay/projects/{project}/trd.md`
    - 기술 요구사항 (상세설계 단계 활용)
 
 ### 4. 범위 검증 (Scope Validation)
@@ -88,8 +88,8 @@ parallel-processing: true
 
 ### 5. 문서 생성
 
-- Task 폴더: `.jjiban/projects/{project}/tasks/{TSK-ID}/`
-- 템플릿 참조: `.jjiban/templates/010-*.md`
+- Task 폴더: `.orchay/projects/{project}/tasks/{TSK-ID}/`
+- 템플릿 참조: `.orchay/templates/010-*.md`
 
 **category별 문서 구조**:
 
@@ -102,7 +102,7 @@ parallel-processing: true
 ### 6. 상태 전환 (자동)
 
 ```bash
-npx tsx .jjiban/script/transition.ts {Task-ID} start -p {project}
+npx tsx .orchay/script/transition.ts {Task-ID} start -p {project}
 ```
 - 성공: `{ "success": true, "newStatus": "bd|an|dd" }`
 

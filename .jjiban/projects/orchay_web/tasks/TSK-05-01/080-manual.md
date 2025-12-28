@@ -82,7 +82,7 @@ flowchart LR
 ### Q1. 문서가 표시되지 않습니다.
 
 **A:** 다음을 확인하세요:
-- 파일이 `.jjiban/projects/{project}/tasks/{task-id}/` 경로에 존재하는지 확인
+- 파일이 `.orchay/projects/{project}/tasks/{task-id}/` 경로에 존재하는지 확인
 - 허용된 확장자인지 확인 (.md, .png, .jpg, .jpeg, .gif, .webp)
 
 ### Q2. Mermaid 다이어그램이 렌더링되지 않습니다.

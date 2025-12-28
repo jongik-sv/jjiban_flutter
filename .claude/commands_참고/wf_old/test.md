@@ -67,7 +67,7 @@ personas: [backend-architect, frontend-architect, quality-engineer]
 
 @.claude/includes/wf-common.md
 
-**Task 폴더**: `.jjiban/projects/{project}/tasks/{TSK-ID}/`
+**Task 폴더**: `.orchay/projects/{project}/tasks/{TSK-ID}/`
 
 ---
 
@@ -226,7 +226,7 @@ personas: [backend-architect, frontend-architect, quality-engineer]
 4. **테스트 결과 저장**:
    ```
    # 폴더명 형식: test-results/[YYYYMMDDHHmm] (예: test-results/202512081430)
-   .jjiban/projects/{project}/tasks/{TSK-ID}/test-results/[timestamp]/
+   .orchay/projects/{project}/tasks/{TSK-ID}/test-results/[timestamp]/
    ├── tdd/
    │   ├── coverage/
    │   │   ├── lcov-report/
@@ -337,7 +337,7 @@ personas: [backend-architect, frontend-architect, quality-engineer]
 4. **테스트 결과 저장**:
    ```
    # 폴더명 형식: test-results/[YYYYMMDDHHmm] (예: test-results/202512081430)
-   .jjiban/projects/{project}/tasks/{TSK-ID}/test-results/[timestamp]/
+   .orchay/projects/{project}/tasks/{TSK-ID}/test-results/[timestamp]/
    ├── e2e/
    │   ├── e2e-test-report.html    ← HTML 시각화 보고서 (스크린샷 포함)
    │   ├── e2e-test-results.md     ← 마크다운 결과서
@@ -351,7 +351,7 @@ personas: [backend-architect, frontend-architect, quality-engineer]
    ```
 
 5. **HTML 보고서 생성** ⭐:
-   - **템플릿**: `@.jjiban/templates/e2e-html-report.html` 사용
+   - **템플릿**: `@.orchay/templates/e2e-html-report.html` 사용
    - **출력 파일**: `e2e-test-report.html`
    - **포함 내용**:
      - 테스트 요약 (총 테스트 수, 통과/실패/스킵)
@@ -385,8 +385,8 @@ personas: [backend-architect, frontend-architect, quality-engineer]
    - 커버리지 데이터
 
 2. **테스트 결과서 작성** (Task 폴더에 저장):
-   - **TDD 실행 시**: `@.jjiban/templates/070-tdd-test-results.md` 기반으로 `070-tdd-test-results.md` 생성
-   - **E2E 실행 시**: `@.jjiban/templates/070-e2e-test-results.md` 기반으로 `070-e2e-test-results.md` 생성
+   - **TDD 실행 시**: `@.orchay/templates/070-tdd-test-results.md` 기반으로 `070-tdd-test-results.md` 생성
+   - **E2E 실행 시**: `@.orchay/templates/070-e2e-test-results.md` 기반으로 `070-e2e-test-results.md` 생성
    - 결과서 파일은 **Task 폴더 루트**에 저장 (예: `TSK-01-01-02/070-e2e-test-results.md`)
 
 3. **테스트 아티팩트 수집 및 저장** ⭐:
@@ -398,7 +398,7 @@ personas: [backend-architect, frontend-architect, quality-engineer]
      cp .playwright-mcp/e2e-*.png [Task-ID]/test-results/[timestamp]/e2e/screenshots/
      ```
    - **HTML 보고서 생성**:
-     - 템플릿: `@.jjiban/templates/e2e-html-report.html`
+     - 템플릿: `@.orchay/templates/e2e-html-report.html`
      - 출력: `test-results/[timestamp]/e2e/e2e-test-report.html`
      - 스크린샷 상대 경로: `./screenshots/e2e-001-*.png`
    - **TDD 커버리지 복사** (실행 시):
@@ -728,7 +728,7 @@ WP/ACT 내 Task 필터링:
 ---
 
 <!--
-jjiban 프로젝트 - Workflow Command
+orchay 프로젝트 - Workflow Command
 author: 장종익
 Command: wf:test
 Version: 1.1

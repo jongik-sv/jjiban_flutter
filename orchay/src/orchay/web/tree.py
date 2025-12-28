@@ -79,7 +79,11 @@ def build_tree(tasks: list[Task]) -> list[TreeNode]:
                             id=task.id,
                             type="task",
                             title=task.title,
-                            status=task.status.value if hasattr(task.status, "value") else str(task.status),
+                            status=(
+                                task.status.value
+                                if hasattr(task.status, "value")
+                                else str(task.status)
+                            ),
                             level=1,
                         )
                     )
@@ -92,7 +96,11 @@ def build_tree(tasks: list[Task]) -> list[TreeNode]:
                             id=task.id,
                             type="task",
                             title=task.title,
-                            status=task.status.value if hasattr(task.status, "value") else str(task.status),
+                            status=(
+                                task.status.value
+                                if hasattr(task.status, "value")
+                                else str(task.status)
+                            ),
                             level=2,
                         )
                     )

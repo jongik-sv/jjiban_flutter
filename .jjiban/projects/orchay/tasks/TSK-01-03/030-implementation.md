@@ -15,7 +15,7 @@
 
 ### 문서 위치
 ```
-.jjiban/projects/orchay/tasks/TSK-01-03/
+.orchay/projects/orchay/tasks/TSK-01-03/
 ├── 010-design.md           ← 통합 설계
 ├── 025-traceability-matrix.md ← 추적성 매트릭스
 ├── 026-test-specification.md  ← 테스트 명세
@@ -154,7 +154,7 @@ class ExecutionMode(str, Enum):
 ```
 ============================= test session starts =============================
 platform win32 -- Python 3.12.11, pytest-9.0.2, pluggy-1.6.0
-rootdir: C:\project\jjiban_flutter\orchay
+rootdir: C:\project\orchay_flutter\orchay
 configfile: pyproject.toml
 plugins: asyncio-1.3.0
 

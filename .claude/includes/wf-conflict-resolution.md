@@ -125,7 +125,7 @@
 ---
 
 <!--
-jjiban 프로젝트 - Workflow Common Module
+orchay 프로젝트 - Workflow Common Module
 Module: wf-conflict-resolution
 Version: 1.0
 author: 장종익

@@ -12,7 +12,7 @@
 | 예시 | 설명 |
 |------|------|
 | `/wf:ui TSK-01-01` | 자동 검색 |
-| `/wf:ui jjiban/TSK-01-01` | 프로젝트 명시 |
+| `/wf:ui orchay/TSK-01-01` | 프로젝트 명시 |
 
 ---
 
@@ -30,7 +30,7 @@
 1. **입력 문서 분석**
    - `010-basic-design.md` 읽기
    - PRD/TRD 화면 요구사항 추출
-   - UI 테마 가이드 참조 (`.jjiban/{project}/ui-theme-*.md`)
+   - UI 테마 가이드 참조 (`.orchay/{project}/ui-theme-*.md`)
 
 2. **화면 흐름 설계**
    - 화면 목록 정의 (SCR-XX)

@@ -60,8 +60,8 @@
 
 | 문서 | 경로 | 관련 섹션 |
 |------|------|----------|
-| PRD | `.jjiban/projects/orchay/prd.md` | 3.7 인터랙티브 명령어 시스템 |
-| TRD | `.jjiban/projects/orchay/trd.md` | Textual 위젯 매핑, 키 바인딩 |
+| PRD | `.orchay/projects/orchay/prd.md` | 3.7 인터랙티브 명령어 시스템 |
+| TRD | `.orchay/projects/orchay/trd.md` | Textual 위젯 매핑, 키 바인딩 |
 
 ---
 

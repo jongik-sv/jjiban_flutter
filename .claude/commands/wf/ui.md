@@ -47,7 +47,7 @@ parallel-processing: true
 
 - `010-design.md` 읽기
 - PRD/TRD 화면 요구사항 추출
-- UI 테마 가이드 참조 (`.jjiban/{project}/ui-theme-*.md`)
+- UI 테마 가이드 참조 (`.orchay/{project}/ui-theme-*.md`)
 
 ### 2. 화면 흐름 설계
 

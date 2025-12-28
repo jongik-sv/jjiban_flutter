@@ -13,7 +13,7 @@
 | 예시 | 설명 |
 |------|------|
 | `/wf:build TSK-01-01` | 자동 검색 |
-| `/wf:build jjiban/TSK-01-01` | 프로젝트 명시 |
+| `/wf:build orchay/TSK-01-01` | 프로젝트 명시 |
 
 ---
 
@@ -49,7 +49,7 @@
 
 ### 4단계: 구현 보고서
 - `030-implementation.md` 생성
-- 템플릿: `.jjiban/templates/030-implementation.md`
+- 템플릿: `.orchay/templates/030-implementation.md`
 
 ### 5단계: 상태 업데이트
 - `[ap]` → `[im]` (development)

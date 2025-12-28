@@ -66,7 +66,7 @@ from orchay.wbs_parser import parse_wbs
 
 async def main():
     # wbs.md 파일 파싱
-    tasks = await parse_wbs(".jjiban/projects/orchay/wbs.md")
+    tasks = await parse_wbs(".orchay/projects/orchay/wbs.md")
 
     for task in tasks:
         print(f"{task.id}: {task.title} [{task.status.value}]")
@@ -97,7 +97,7 @@ async def on_change(tasks: list[Task]) -> None:
 async def main():
     # 파일 감시 시작
     watcher = watch_wbs(
-        ".jjiban/projects/orchay/wbs.md",
+        ".orchay/projects/orchay/wbs.md",
         on_change,
         debounce=0.5  # 0.5초 디바운싱
     )
@@ -136,7 +136,7 @@ print(code3)  # [xx]
 from orchay.wbs_parser import WbsParser
 
 async def main():
-    parser = WbsParser(".jjiban/projects/orchay/wbs.md")
+    parser = WbsParser(".orchay/projects/orchay/wbs.md")
 
     # 첫 번째 파싱
     tasks1 = await parser.parse()

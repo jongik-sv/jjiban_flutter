@@ -93,7 +93,7 @@ parallel-processing: true
 
 @.claude/includes/wf-common.md
 
-**Task 폴더**: `.jjiban/projects/{project}/tasks/{TSK-ID}/`
+**Task 폴더**: `.orchay/projects/{project}/tasks/{TSK-ID}/`
 
 ---
 
@@ -102,7 +102,7 @@ parallel-processing: true
 상세설계 시 다음 계층 구조를 따라 상위 문서를 참조합니다:
 
 ```
-📁 .jjiban/                                    ← JJIBAN 데이터 루트
+📁 .orchay/                                    ← ORCHAY 데이터 루트
 └── 📁 {project}/                              ← 프로젝트 폴더
     ├── 📄 project.json                        ← 프로젝트 메타데이터
     ├── 📄 team.json                           ← 팀 멤버 정보
@@ -153,21 +153,21 @@ parallel-processing: true
    ```
    탐색 경로:
    ├── Task 레벨
-   │   ├── .jjiban/projects/{project}/tasks/{TSK-ID}/task.json
-   │   ├── .jjiban/projects/{project}/tasks/{TSK-ID}/010-basic-design.md
-   │   ├── .jjiban/projects/{project}/tasks/{TSK-ID}/011-ui-design.md (선택적)
-   │   └── .jjiban/projects/{project}/tasks/{TSK-ID}/ui-assets/*.svg (선택적)
+   │   ├── .orchay/projects/{project}/tasks/{TSK-ID}/task.json
+   │   ├── .orchay/projects/{project}/tasks/{TSK-ID}/010-basic-design.md
+   │   ├── .orchay/projects/{project}/tasks/{TSK-ID}/011-ui-design.md (선택적)
+   │   └── .orchay/projects/{project}/tasks/{TSK-ID}/ui-assets/*.svg (선택적)
    │
    ├── Activity 레벨
-   │   └── .jjiban/{project}/wbs/{WP-ID}/{ACT-ID}/meta.json
+   │   └── .orchay/{project}/wbs/{WP-ID}/{ACT-ID}/meta.json
    │
    ├── Work Package 레벨
-   │   └── .jjiban/{project}/wbs/{WP-ID}/meta.json
+   │   └── .orchay/{project}/wbs/{WP-ID}/meta.json
    │
    └── Project 레벨 (필수)
-       ├── .jjiban/{project}/project.json (프로젝트 정보)
-       ├── .jjiban/{project}/prd.md
-       └── .jjiban/{project}/trd.md
+       ├── .orchay/{project}/project.json (프로젝트 정보)
+       ├── .orchay/{project}/prd.md
+       └── .orchay/{project}/trd.md
    ```
 
 4. **기본설계에서 PRD 참조 섹션 추출**:
@@ -209,7 +209,7 @@ parallel-processing: true
    └── SVG 파일 목록 (ui-assets/*.svg 참조)
    ```
 
-3. **PRD 원본 섹션 읽기** (`.jjiban/{project}/prd.md`):
+3. **PRD 원본 섹션 읽기** (`.orchay/{project}/prd.md`):
    ```
    기본설계의 PRD 참조 섹션을 기반으로 원본 요구사항 추출:
    ├── 해당 섹션의 기능 요구사항 전문
@@ -218,7 +218,7 @@ parallel-processing: true
    └── 관련 화면/UI 요구사항
    ```
 
-3. **TRD 참조 내용 읽기** (`.jjiban/{project}/trd.md`):
+3. **TRD 참조 내용 읽기** (`.orchay/{project}/trd.md`):
    ```
    추출 항목:
    ├── 기술 스택 및 버전 (정확한 버전 확인)
@@ -508,9 +508,9 @@ parallel-processing: true
 
 | 파일명 | 템플릿 | 내용 |
 |--------|--------|------|
-| `020-detail-design.md` | `.jjiban/templates/020-detail-design.md` | 상세설계 본문 |
-| `025-traceability-matrix.md` | `.jjiban/templates/025-traceability-matrix.md` | 요구사항 추적성 매트릭스 |
-| `026-test-specification.md` | `.jjiban/templates/026-test-specification.md` | 테스트 시나리오/케이스/데이터 |
+| `020-detail-design.md` | `.orchay/templates/020-detail-design.md` | 상세설계 본문 |
+| `025-traceability-matrix.md` | `.orchay/templates/025-traceability-matrix.md` | 요구사항 추적성 매트릭스 |
+| `026-test-specification.md` | `.orchay/templates/026-test-specification.md` | 테스트 시나리오/케이스/데이터 |
 
 ### 020-detail-design.md 주요 섹션
 
@@ -571,8 +571,8 @@ Category: development
 ├── Activity: ACT-01-01_project-management/ (개요 없음)
 ├── Work Package: WP-01_core-issue-management/ (개요 없음)
 └── Project:
-    ├── jjiban-prd.md ✅ (참조 섹션: 3.1.4)
-    ├── jjiban-trd.md ✅
+    ├── orchay-prd.md ✅ (참조 섹션: 3.1.4)
+    ├── orchay-trd.md ✅
     └── wbs.md ✅
 
 📋 기본설계 문서 분석:
@@ -653,8 +653,8 @@ Category: development
 | 기본설계 미완료 | `[ERROR] 010-basic-design.md 파일이 없습니다` |
 | 추적성 매트릭스 생성 실패 | `[ERROR] 025-traceability-matrix.md 생성에 실패했습니다` |
 | 테스트 명세 생성 실패 | `[ERROR] 026-test-specification.md 생성에 실패했습니다` |
-| PRD 미발견 | `[ERROR] PRD 파일을 찾을 수 없습니다: .jjiban/{project}/prd.md` |
-| TRD 미발견 | `[ERROR] TRD 파일을 찾을 수 없습니다: .jjiban/{project}/trd.md` |
+| PRD 미발견 | `[ERROR] PRD 파일을 찾을 수 없습니다: .orchay/{project}/prd.md` |
+| TRD 미발견 | `[ERROR] TRD 파일을 찾을 수 없습니다: .orchay/{project}/trd.md` |
 | PRD 섹션 미발견 | `[WARN] 기본설계에 PRD 참조 섹션이 명시되지 않았습니다` |
 | 화면설계 미발견 | `[INFO] 011-ui-design.md 파일이 없습니다. 화면이 없는 기능이거나 /wf:ui 미실행` |
 | 화면설계 SVG 누락 | `[WARN] ui-assets/ 폴더가 비어있습니다. SVG 파일이 생성되지 않았습니다` |
@@ -724,7 +724,7 @@ Category: development
 ---
 
 <!--
-jjiban 프로젝트 - Workflow Command
+orchay 프로젝트 - Workflow Command
 author: 장종익
 Command: wf:draft
 Version: 1.0

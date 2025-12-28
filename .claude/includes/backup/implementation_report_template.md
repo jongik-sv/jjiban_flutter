@@ -387,11 +387,11 @@ X passed (Xs)
 ---
 
 <!--
-jjiban 프로젝트 - Implementation Report Template
+orchay 프로젝트 - Implementation Report Template
 Version: 2.0.0
 author: 장종익 
 Changes (v2.0.0):
-- jjiban 프로젝트 구조에 맞게 경로 수정
+- orchay 프로젝트 구조에 맞게 경로 수정
 - Task ID 형식: TSK-XX-XX-XX
 - 기술 스택: NestJS, Prisma, Vue 3/Nuxt 3, Element Plus, Vitest, Playwright
 - 소스 코드 위치: api/, web/

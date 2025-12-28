@@ -59,8 +59,8 @@
 
 | 문서 | 경로 | 관련 섹션 |
 |------|------|----------|
-| PRD | `.jjiban/projects/orchay/prd.md` | 9.1 스케줄러 시작, 3.7 인터랙티브 명령어 시스템 |
-| TRD | `.jjiban/projects/orchay/trd.md` | Textual 위젯 매핑, 디자인 시스템 |
+| PRD | `.orchay/projects/orchay/prd.md` | 9.1 스케줄러 시작, 3.7 인터랙티브 명령어 시스템 |
+| TRD | `.orchay/projects/orchay/trd.md` | Textual 위젯 매핑, 디자인 시스템 |
 
 ---
 

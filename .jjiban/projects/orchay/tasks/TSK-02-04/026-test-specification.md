@@ -88,8 +88,8 @@ def test_config_validation_error():
 
 ```python
 def test_load_config_from_file(tmp_path, monkeypatch):
-    # .jjiban/settings/orchay.json 생성
-    settings_dir = tmp_path / ".jjiban" / "settings"
+    # .orchay/settings/orchay.json 생성
+    settings_dir = tmp_path / ".orchay" / "settings"
     settings_dir.mkdir(parents=True)
     config_file = settings_dir / "orchay.json"
     config_file.write_text('{"workers": 5, "interval": 10}')
@@ -107,16 +107,16 @@ def test_load_config_from_file(tmp_path, monkeypatch):
 |------|------|
 | 테스트 ID | TC-04 |
 | 테스트 대상 | `load_config()` 함수 |
-| 사전 조건 | orchay.json 파일 없음, .jjiban 폴더 존재 |
+| 사전 조건 | orchay.json 파일 없음, .orchay 폴더 존재 |
 | 입력 | 함수 호출 |
 | 예상 결과 | 기본값 Config 객체 반환 |
 | 검증 방법 | assert 기본값 |
 
 ```python
 def test_load_config_default_when_missing(tmp_path, monkeypatch):
-    # .jjiban 폴더만 생성 (설정 파일 없음)
-    jjiban_dir = tmp_path / ".jjiban"
-    jjiban_dir.mkdir()
+    # .orchay 폴더만 생성 (설정 파일 없음)
+    orchay_dir = tmp_path / ".orchay"
+    orchay_dir.mkdir()
 
     monkeypatch.chdir(tmp_path)
 
@@ -138,7 +138,7 @@ def test_load_config_default_when_missing(tmp_path, monkeypatch):
 
 ```python
 def test_load_config_invalid_json(tmp_path, monkeypatch):
-    settings_dir = tmp_path / ".jjiban" / "settings"
+    settings_dir = tmp_path / ".orchay" / "settings"
     settings_dir.mkdir(parents=True)
     config_file = settings_dir / "orchay.json"
     config_file.write_text('{ invalid json }')
@@ -380,7 +380,7 @@ def test_history_rotation(tmp_path):
 ```python
 def test_cli_override_config(tmp_path, monkeypatch):
     # 설정 파일 생성
-    settings_dir = tmp_path / ".jjiban" / "settings"
+    settings_dir = tmp_path / ".orchay" / "settings"
     settings_dir.mkdir(parents=True)
     (settings_dir / "orchay.json").write_text('{"workers": 3}')
 
@@ -411,8 +411,8 @@ def test_cli_override_config(tmp_path, monkeypatch):
 ```python
 def test_dry_run_mode(tmp_path, monkeypatch, capsys):
     # 환경 설정
-    jjiban_dir = tmp_path / ".jjiban"
-    jjiban_dir.mkdir()
+    orchay_dir = tmp_path / ".orchay"
+    orchay_dir.mkdir()
 
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr("sys.argv", ["orchay", "--dry-run"])
@@ -447,7 +447,7 @@ def test_dry_run_mode(tmp_path, monkeypatch, capsys):
 ```python
 def test_history_command_flow(tmp_path, monkeypatch, capsys):
     # 히스토리 파일 생성
-    logs_dir = tmp_path / ".jjiban" / "logs"
+    logs_dir = tmp_path / ".orchay" / "logs"
     logs_dir.mkdir(parents=True)
     history_file = logs_dir / "orchay-history.jsonl"
     history_file.write_text(
@@ -456,10 +456,10 @@ def test_history_command_flow(tmp_path, monkeypatch, capsys):
     )
 
     # 설정 파일도 생성
-    settings_dir = tmp_path / ".jjiban" / "settings"
+    settings_dir = tmp_path / ".orchay" / "settings"
     settings_dir.mkdir(parents=True)
     (settings_dir / "orchay.json").write_text(
-        '{"history": {"storagePath": ".jjiban/logs/orchay-history.jsonl"}}'
+        '{"history": {"storagePath": ".orchay/logs/orchay-history.jsonl"}}'
     )
 
     monkeypatch.chdir(tmp_path)

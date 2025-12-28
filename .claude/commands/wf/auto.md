@@ -1,6 +1,6 @@
 # /wf:auto - 자동 워크플로우 실행
 
-> **Task 자동 선택**: `npx tsx .jjiban/script/next-task.ts`로 실행 가능한 Task를 조회하여 워크플로우를 자동 실행합니다.
+> **Task 자동 선택**: `npx tsx .orchay/script/next-task.ts`로 실행 가능한 Task를 조회하여 워크플로우를 자동 실행합니다.
 
 ## 실행 절차
 
@@ -8,10 +8,10 @@
 
 ```bash
 # 기본 (의존관계 적용)
-npx tsx .jjiban/script/next-task.ts -p {PROJECT}
+npx tsx .orchay/script/next-task.ts -p {PROJECT}
 
 # 설계 단계용 (의존관계 무시)
-npx tsx .jjiban/script/next-task.ts -p {PROJECT} --ignore-deps
+npx tsx .orchay/script/next-task.ts -p {PROJECT} --ignore-deps
 ```
 
 **--until 옵션에 따른 조회 방식:**
@@ -21,7 +21,7 @@ npx tsx .jjiban/script/next-task.ts -p {PROJECT} --ignore-deps
 **결과 JSON 파싱:**
 ```json
 {
-  "projectId": "jjiban",
+  "projectId": "orchay",
   "executable": [
     { "id": "TSK-XX-XX", "category": "development", "status": "[dd]", "nextAction": "build" }
   ],
@@ -51,12 +51,12 @@ npx tsx .jjiban/script/next-task.ts -p {PROJECT} --ignore-deps
 /wf:auto
 
 # 프로젝트 명시
-/wf:auto jjiban              # jjiban 프로젝트
+/wf:auto orchay              # orchay 프로젝트
 
 # 부분 실행
 /wf:auto --until detail-design   # 상세설계까지
 /wf:auto 상세설계까지             # 한글 자연어
-/wf:auto jjiban --until build    # 프로젝트 + 부분 실행
+/wf:auto orchay --until build    # 프로젝트 + 부분 실행
 
 # 옵션
 /wf:auto --dry-run      # 실행 계획만 출력
@@ -67,8 +67,8 @@ npx tsx .jjiban/script/next-task.ts -p {PROJECT} --ignore-deps
 | 예시 | 설명 |
 |------|------|
 | `/wf:auto` | 자동 프로젝트 (1개 또는 default) |
-| `/wf:auto jjiban` | 프로젝트 명시 |
-| `/wf:auto jjiban --until build` | 프로젝트 + 부분 실행 |
+| `/wf:auto orchay` | 프로젝트 명시 |
+| `/wf:auto orchay --until build` | 프로젝트 + 부분 실행 |
 
 ---
 
@@ -126,7 +126,7 @@ npx tsx .jjiban/script/next-task.ts -p {PROJECT} --ignore-deps
 ## 핵심 실행 로직
 
 ```
-1. npx tsx .jjiban/script/next-task.ts [-p PROJECT] 실행 → JSON 결과 획득
+1. npx tsx .orchay/script/next-task.ts [-p PROJECT] 실행 → JSON 결과 획득
 2. --until 옵션 확인:
    - 설계 단계(basic-design ~ apply): executable + waiting 모두 대상
    - 구현 단계(build ~): executable만 대상
@@ -158,7 +158,7 @@ npx tsx .jjiban/script/next-task.ts -p {PROJECT} --ignore-deps
 ```
 [wf:auto] Task 자동 선택
 
-실행: npx tsx .jjiban/script/next-task.ts
+실행: npx tsx .orchay/script/next-task.ts
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 🎯 실행 가능한 Task (3개)
@@ -249,7 +249,7 @@ ORCHAY_DONE:{task-id}:auto:error:{에러 요약}
 ---
 
 <!--
-jjiban 프로젝트 - Workflow Command
+orchay 프로젝트 - Workflow Command
 author: 장종익
 Command: wf:auto
 Version: 1.0

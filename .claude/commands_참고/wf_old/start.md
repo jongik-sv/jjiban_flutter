@@ -58,7 +58,7 @@ parallel-processing: true
 
 ### 1단계: Task 정보 수집
 
-1. **Task JSON에서 Task 찾기**: `.jjiban/projects/{project}/tasks/{TSK-ID}/task.json`
+1. **Task JSON에서 Task 찾기**: `.orchay/projects/{project}/tasks/{TSK-ID}/task.json`
 2. **수집할 정보**:
    - Task ID, Task명, category
    - 상위 계층 (WP-ID, ACT-ID)
@@ -88,7 +88,7 @@ parallel-processing: true
 
 #### 2.1 PRD 참조 섹션 읽기
 
-1. `.jjiban/projects/{project}/project.json` 또는 `.jjiban/projects/{project}/prd.md` 열기
+1. `.orchay/projects/{project}/project.json` 또는 `.orchay/projects/{project}/prd.md` 열기
 2. WBS에서 추출한 PRD 섹션 번호로 해당 내용 찾기
 3. **추출할 내용** (비즈니스 관점):
    - 해당 섹션의 기능 설명
@@ -100,7 +100,7 @@ parallel-processing: true
 
 #### 2.2 TRD 참조 내용 읽기 (참고용)
 
-1. `.jjiban/projects/{project}/trd.md` 열기
+1. `.orchay/projects/{project}/trd.md` 열기
 2. Task와 관련된 기술 요구사항 참고 (상세설계 단계에서 활용)
 
 ---
@@ -137,13 +137,13 @@ parallel-processing: true
 
 **Task 폴더 경로**:
 ```
-.jjiban/projects/{project}/tasks/{TSK-ID}/
+.orchay/projects/{project}/tasks/{TSK-ID}/
 ```
 
 **예시**:
-- Task 폴더: `.jjiban/projects/jjiban/tasks/TSK-01-01-01/`
-- Task JSON: `.jjiban/projects/jjiban/tasks/TSK-01-01-01/task.json`
-- 설계 문서: `.jjiban/projects/jjiban/tasks/TSK-01-01-01/010-basic-design.md`
+- Task 폴더: `.orchay/projects/orchay/tasks/TSK-01-01-01/`
+- Task JSON: `.orchay/projects/orchay/tasks/TSK-01-01-01/task.json`
+- 설계 문서: `.orchay/projects/orchay/tasks/TSK-01-01-01/010-basic-design.md`
 
 ---
 
@@ -308,9 +308,9 @@ flowchart TD
 ---
 
 ## 관련 문서
-- 프로젝트 정보: `.jjiban/projects/{project}/project.json`
-- PRD: `.jjiban/projects/{project}/prd.md`
-- TRD: `.jjiban/projects/{project}/trd.md`
+- 프로젝트 정보: `.orchay/projects/{project}/project.json`
+- PRD: `.orchay/projects/{project}/prd.md`
+- TRD: `.orchay/projects/{project}/trd.md`
 
 
 #### defect 카테고리
@@ -413,7 +413,7 @@ flowchart TD
 
 ### 6단계: Task JSON 상태 업데이트
 
-1. Task JSON 파일 열기: `.jjiban/projects/{project}/tasks/{TSK-ID}/task.json`
+1. Task JSON 파일 열기: `.orchay/projects/{project}/tasks/{TSK-ID}/task.json`
 2. status 필드 변경: `"[ ]"` → `"[bd]"` | `"[an]"` | `"[dd]"`
 3. updated_at 필드 업데이트
 4. 파일 저장
@@ -518,7 +518,7 @@ Category: development
 ---
 
 <!--
-jjiban 프로젝트 - Workflow Command
+orchay 프로젝트 - Workflow Command
 author: 장종익 
 Command: wf:start
 Version: 1.0

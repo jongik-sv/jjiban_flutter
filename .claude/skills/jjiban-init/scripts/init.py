@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-jjiban-init: Initialize .jjiban directory structure
+orchay-init: Initialize .orchay directory structure
 
 Usage:
     python init.py [options]
     python init.py --project <project-name> [options]
 
 Options:
-    --path <path>       Base path for .jjiban (default: current directory)
+    --path <path>       Base path for .orchay (default: current directory)
     --project <name>    Create a new project with given name
     --force             Overwrite existing files
     --dry-run           Preview changes without creating files
@@ -77,25 +77,25 @@ def copy_template_with_vars(src: Path, dst: Path, variables: dict, force: bool =
 
 
 def init_base_structure(base_path: Path, force: bool = False, dry_run: bool = False):
-    """Initialize base .jjiban directory structure."""
-    jjiban_path = base_path / ".jjiban"
+    """Initialize base .orchay directory structure."""
+    orchay_path = base_path / ".orchay"
     assets_dir = get_assets_dir()
 
     # Create base directories
-    create_directory(jjiban_path / "settings", dry_run)
-    create_directory(jjiban_path / "templates", dry_run)
-    create_directory(jjiban_path / "projects", dry_run)
+    create_directory(orchay_path / "settings", dry_run)
+    create_directory(orchay_path / "templates", dry_run)
+    create_directory(orchay_path / "projects", dry_run)
 
     # Copy settings files
     settings_src = assets_dir / "settings"
-    settings_dst = jjiban_path / "settings"
+    settings_dst = orchay_path / "settings"
 
     for settings_file in settings_src.glob("*.json"):
         copy_file(settings_file, settings_dst / settings_file.name, force, dry_run)
 
     # Copy template files
     templates_src = assets_dir / "templates"
-    templates_dst = jjiban_path / "templates"
+    templates_dst = orchay_path / "templates"
 
     # Only copy document templates (not project.json, team.json, wbs.md)
     exclude_files = {"project.json", "team.json", "wbs.md"}
@@ -103,19 +103,19 @@ def init_base_structure(base_path: Path, force: bool = False, dry_run: bool = Fa
         if template_file.name not in exclude_files:
             copy_file(template_file, templates_dst / template_file.name, force, dry_run)
 
-    print(f"\n🎉 Base structure initialized at: {jjiban_path}")
+    print(f"\n🎉 Base structure initialized at: {orchay_path}")
 
 
 def init_project(base_path: Path, project_name: str, force: bool = False, dry_run: bool = False):
-    """Initialize a new project within .jjiban/projects/."""
-    jjiban_path = base_path / ".jjiban"
-    projects_dir = jjiban_path / "projects"
+    """Initialize a new project within .orchay/projects/."""
+    orchay_path = base_path / ".orchay"
+    projects_dir = orchay_path / "projects"
     project_path = projects_dir / project_name
     assets_dir = get_assets_dir()
     templates_src = assets_dir / "templates"
 
     # Ensure base structure exists
-    if not (jjiban_path / "settings").exists():
+    if not (orchay_path / "settings").exists():
         print("⚠️  Base structure not found. Initializing...")
         init_base_structure(base_path, force, dry_run)
 
@@ -157,7 +157,7 @@ def init_project(base_path: Path, project_name: str, force: bool = False, dry_ru
 
     # Update projects.json
     if not dry_run:
-        projects_file = jjiban_path / "settings" / "projects.json"
+        projects_file = orchay_path / "settings" / "projects.json"
         if projects_file.exists():
             projects = json.loads(projects_file.read_text(encoding="utf-8"))
 
@@ -187,7 +187,7 @@ def init_project(base_path: Path, project_name: str, force: bool = False, dry_ru
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Initialize jjiban directory structure",
+        description="Initialize orchay directory structure",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__
     )
@@ -196,7 +196,7 @@ def main():
         "--path",
         type=str,
         default=".",
-        help="Base path for .jjiban directory (default: current directory)"
+        help="Base path for .orchay directory (default: current directory)"
     )
 
     parser.add_argument(

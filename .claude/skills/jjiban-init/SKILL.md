@@ -1,11 +1,11 @@
 ---
-name: jjiban-init
-description: Initialize jjiban project management directory structure. Use when creating .jjiban folder with settings, templates, and project folders. Triggers on "init jjiban", "create jjiban structure", "setup project management", "initialize .jjiban", or "new jjiban project".
+name: orchay-init
+description: Initialize orchay project management directory structure. Use when creating .orchay folder with settings, templates, and project folders. Triggers on "init orchay", "create orchay structure", "setup project management", "initialize .orchay", or "new orchay project".
 ---
 
-# jjiban-init
+# orchay-init
 
-Initialize the `.jjiban/` directory structure for AI-powered project management.
+Initialize the `.orchay/` directory structure for AI-powered project management.
 
 ## Quick Start
 
@@ -20,7 +20,7 @@ python scripts/init.py --path /path/to/project --project my-project
 ## Directory Structure Created
 
 ```
-.jjiban/
+.orchay/
 ├── settings/              # Global settings
 │   ├── projects.json      # Project list
 │   ├── columns.json       # Kanban columns

@@ -59,7 +59,7 @@
 #### 2.1.2 설정 로드 함수
 - **파일**: `orchay/src/orchay/utils/config.py`
 - **주요 기능**:
-  - `find_jjiban_root()`: 프로젝트 루트에서 .jjiban 폴더 탐색
+  - `find_orchay_root()`: 프로젝트 루트에서 .orchay 폴더 탐색
   - `load_config()`: 설정 파일 로드 및 Pydantic 검증
   - `ConfigLoadError`: 설정 로드 오류 예외 클래스
 
@@ -251,7 +251,7 @@ tests\test_integration.py .....                                          [100%]
 ---
 
 <!--
-jjiban 프로젝트 - Implementation Report
+orchay 프로젝트 - Implementation Report
 Task: TSK-02-04 CLI 및 설정 관리
 Version: 1.0.0
 -->

@@ -136,9 +136,7 @@ async def wezterm_send_text(pane_id: int, text: str) -> None:
         )
         _, stderr = await process.communicate()
     except FileNotFoundError as e:
-        raise WezTermNotFoundError(
-            "WezTerm CLI를 찾을 수 없습니다."
-        ) from e
+        raise WezTermNotFoundError("WezTerm CLI를 찾을 수 없습니다.") from e
 
     if process.returncode != 0:
         error_msg = stderr.decode(errors="replace") if stderr else "Unknown error"

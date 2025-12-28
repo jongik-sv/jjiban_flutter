@@ -13,7 +13,7 @@
 | 예시 | 설명 |
 |------|------|
 | `/wf:verify TSK-01-01` | 자동 검색 |
-| `/wf:verify jjiban/TSK-01-01` | 프로젝트 명시 |
+| `/wf:verify orchay/TSK-01-01` | 프로젝트 명시 |
 
 ---
 

@@ -2,7 +2,7 @@
  * 워크플로우 상태 전환 스크립트
  *
  * Usage:
- *   npx tsx .jjiban/script/transition.ts <task-id> <command> [options]
+ *   npx tsx .orchay/script/transition.ts <task-id> <command> [options]
  *
  * Arguments:
  *   task-id   Task ID (TSK-01-01 또는 project/TSK-01-01)

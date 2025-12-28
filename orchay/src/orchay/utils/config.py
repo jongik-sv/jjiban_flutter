@@ -12,19 +12,19 @@ class ConfigLoadError(Exception):
     """설정 로드 오류."""
 
 
-def find_jjiban_root() -> Path | None:
-    """프로젝트 루트에서 .jjiban 폴더를 찾는다.
+def find_orchay_root() -> Path | None:
+    """프로젝트 루트에서 .orchay 폴더를 찾는다.
 
     현재 디렉토리부터 상위로 탐색합니다.
 
     Returns:
-        .jjiban 폴더 경로 또는 None
+        .orchay 폴더 경로 또는 None
     """
     current = Path.cwd().resolve()
     while current != current.parent:
-        jjiban_path = current / ".jjiban"
-        if jjiban_path.is_dir():
-            return jjiban_path
+        orchay_path = current / ".orchay"
+        if orchay_path.is_dir():
+            return orchay_path
         current = current.parent
     return None
 
@@ -32,7 +32,7 @@ def find_jjiban_root() -> Path | None:
 def load_config() -> Config:
     """설정 파일을 로드하여 Config 객체를 반환한다.
 
-    설정 파일 경로: .jjiban/settings/orchay.json
+    설정 파일 경로: .orchay/settings/orchay.json
 
     Returns:
         Config 객체 (파일 없으면 기본값)
@@ -40,13 +40,13 @@ def load_config() -> Config:
     Raises:
         ConfigLoadError: JSON 파싱 오류 또는 스키마 검증 실패
     """
-    jjiban_root = find_jjiban_root()
+    orchay_root = find_orchay_root()
 
-    if jjiban_root is None:
-        # .jjiban 폴더가 없으면 기본값 반환
+    if orchay_root is None:
+        # .orchay 폴더가 없으면 기본값 반환
         return Config()
 
-    config_path = jjiban_root / "settings" / "orchay.json"
+    config_path = orchay_root / "settings" / "orchay.json"
 
     if not config_path.exists():
         # 설정 파일이 없으면 기본값 반환

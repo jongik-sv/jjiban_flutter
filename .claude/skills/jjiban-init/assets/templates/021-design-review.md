@@ -315,7 +315,7 @@
 | 기본설계서 | `010-basic-design.md` |
 | PRD | `projects/[project]/[project]-prd.md` |
 | TRD | `projects/[project]/[project]-trd.md` |
-| 상세설계 템플릿 | `.jjiban/templates/020-detail-design.md` |
+| 상세설계 템플릿 | `.orchay/templates/020-detail-design.md` |
 
 ---
 

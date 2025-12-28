@@ -55,8 +55,8 @@
 
 | 문서 | 경로 | 관련 섹션 |
 |------|------|----------|
-| PRD | `.jjiban/projects/orchay/prd.md` | 8.6 자동 재개 메커니즘 |
-| TRD | `.jjiban/projects/orchay/trd.md` | asyncio 패턴, 설정 검증 |
+| PRD | `.orchay/projects/orchay/prd.md` | 8.6 자동 재개 메커니즘 |
+| TRD | `.orchay/projects/orchay/trd.md` | asyncio 패턴, 설정 검증 |
 
 ---
 

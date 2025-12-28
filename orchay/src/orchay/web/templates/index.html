@@ -9,12 +9,20 @@
     </div>
 </header>
 
-<!-- Worker Bar (idiomorph로 상태 유지하며 갱신) -->
+<!-- SSE 연결 (깜빡임 없는 실시간 업데이트) -->
+<div id="sse-container"
+     sse-connect="/api/events"
+     sse-swap="tree-update"
+     hx-swap="none">
+    <!-- SSE 이벤트 수신 시 OOB로 해당 요소만 교체됨 -->
+</div>
+
+<!-- Worker Bar (초기 로드 후 SSE로 업데이트) -->
 <div id="workers-bar"
      class="bg-gray-800 border-b border-gray-700 px-4 py-2"
      hx-get="/api/workers"
-     hx-trigger="load, every 5s"
-     hx-swap="morph:innerHTML">
+     hx-trigger="load"
+     hx-swap="innerHTML">
     <div class="animate-pulse flex items-center gap-4">
         <span class="text-gray-500">Workers: 로딩 중...</span>
     </div>
@@ -22,13 +30,13 @@
 
 <!-- Main Content: 2-Column Layout -->
 <main class="flex h-[calc(100vh-100px)]">
-    <!-- Left: WBS Tree (idiomorph로 확장 상태 유지하며 갱신) -->
+    <!-- Left: WBS Tree (초기 로드 후 SSE로 상태 배지만 업데이트) -->
     <div class="w-1/2 border-r border-gray-700 overflow-auto p-4"
          id="tree-panel"
          data-testid="tree-panel"
          hx-get="/api/tree"
-         hx-trigger="load, every 5s"
-         hx-swap="morph:innerHTML">
+         hx-trigger="load"
+         hx-swap="innerHTML">
         <div class="animate-pulse">
             <div class="h-4 bg-gray-700 rounded w-3/4 mb-2"></div>
             <div class="h-4 bg-gray-700 rounded w-1/2 mb-2 ml-4"></div>
@@ -300,11 +308,11 @@ async function openDocument(taskId, docName) {
             // 이미지: img 태그로 표시
             content.innerHTML = `<div class="flex items-center justify-center"><img src="/api/document/${taskId}/${docName}" class="max-w-full max-h-[70vh] rounded" alt="${docName}" /></div>`;
         } else {
-            // 마크다운: marked.js로 렌더링
-            const text = await res.text();
-            content.innerHTML = marked.parse(text);
+            // 마크다운: 서버에서 렌더링된 HTML 직접 삽입
+            const html = await res.text();
+            content.innerHTML = `<div class="markdown-body">${html}</div>`;
 
-            // Mermaid 다이어그램 렌더링
+            // Mermaid 다이어그램 렌더링 (클라이언트 사이드)
             const mermaidBlocks = content.querySelectorAll('pre code.language-mermaid');
             if (mermaidBlocks.length > 0) {
                 mermaidBlocks.forEach((block, idx) => {
@@ -367,7 +375,7 @@ function showToast(message, type = 'error') {
 }
 
 // ========== HTMX 이벤트 리스너 ==========
-// 트리 갱신 후 상태 복원
+// 트리 초기 로드 후 상태 복원
 document.body.addEventListener('htmx:afterSwap', function(evt) {
     if (evt.detail.target.id === 'tree-panel') {
         restoreState();
@@ -388,7 +396,7 @@ document.body.addEventListener('htmx:sendError', function(evt) {
     showToast('네트워크 연결 실패. 재시도 중...', 'error');
 });
 
-// 로딩 인디케이터
+// 로딩 인디케이터 (Task Detail 등 사용자 요청에만 적용)
 document.body.addEventListener('htmx:beforeRequest', function(evt) {
     evt.detail.target?.classList.add('htmx-request');
 });

@@ -3,9 +3,10 @@
 TSK-02-01: 자동 재개 메커니즘 테스트 명세 기반
 """
 
-import pytest
 from datetime import datetime
-from unittest.mock import AsyncMock, patch, MagicMock
+from unittest.mock import AsyncMock, patch
+
+import pytest
 
 # 테스트 대상 모듈 (구현 후 임포트 가능)
 # from orchay.recovery import (
@@ -211,126 +212,124 @@ class TestHandlePausedWorker:
     @pytest.mark.asyncio
     async def test_max_retries_exceeded(self) -> None:
         """최대 재시도 초과 시 error 상태 전환."""
-        from orchay.recovery import handle_paused_worker
-        from orchay.models.worker import Worker, WorkerState
         from orchay.models.config import RecoveryConfig
+        from orchay.models.worker import Worker, WorkerState
+        from orchay.recovery import handle_paused_worker
 
         worker = Worker(id=1, pane_id=100, state=WorkerState.PAUSED, retry_count=2)
         config = RecoveryConfig(max_retries=3)
 
-        with patch("orchay.recovery.wezterm_get_text", new_callable=AsyncMock) as mock_get:
+        with (
+            patch("orchay.recovery.wezterm_get_text", new_callable=AsyncMock) as mock_get,
+            patch("orchay.recovery.wezterm_send_text", new_callable=AsyncMock),
+            patch("orchay.recovery.detect_worker_state", new_callable=AsyncMock) as mock_state,
+            patch("asyncio.sleep", new_callable=AsyncMock),
+        ):
             mock_get.return_value = "rate limit"
-            with patch("orchay.recovery.wezterm_send_text", new_callable=AsyncMock):
-                with patch(
-                    "orchay.recovery.detect_worker_state", new_callable=AsyncMock
-                ) as mock_state:
-                    # 재개 실패 시뮬레이션
-                    mock_state.return_value = ("paused", None)
-                    with patch("asyncio.sleep", new_callable=AsyncMock):
-                        result = await handle_paused_worker(worker, config)
+            # 재개 실패 시뮬레이션
+            mock_state.return_value = ("paused", None)
+            result = await handle_paused_worker(worker, config)
 
-                        assert result is False
-                        assert worker.retry_count == 3
-                        assert worker.state == WorkerState.ERROR
+            assert result is False
+            assert worker.retry_count == 3
+            assert worker.state == WorkerState.ERROR
 
     @pytest.mark.asyncio
     async def test_retry_within_limit(self) -> None:
         """재시도 제한 내 재시도."""
-        from orchay.recovery import handle_paused_worker
-        from orchay.models.worker import Worker, WorkerState
         from orchay.models.config import RecoveryConfig
+        from orchay.models.worker import Worker, WorkerState
+        from orchay.recovery import handle_paused_worker
 
         worker = Worker(id=1, pane_id=100, state=WorkerState.PAUSED, retry_count=0)
         config = RecoveryConfig(max_retries=3)
 
-        with patch("orchay.recovery.wezterm_get_text", new_callable=AsyncMock) as mock_get:
+        with (
+            patch("orchay.recovery.wezterm_get_text", new_callable=AsyncMock) as mock_get,
+            patch("orchay.recovery.wezterm_send_text", new_callable=AsyncMock),
+            patch("orchay.recovery.detect_worker_state", new_callable=AsyncMock) as mock_state,
+            patch("asyncio.sleep", new_callable=AsyncMock),
+        ):
             mock_get.return_value = "rate limit"
-            with patch("orchay.recovery.wezterm_send_text", new_callable=AsyncMock):
-                with patch(
-                    "orchay.recovery.detect_worker_state", new_callable=AsyncMock
-                ) as mock_state:
-                    mock_state.return_value = ("paused", None)
-                    with patch("asyncio.sleep", new_callable=AsyncMock):
-                        result = await handle_paused_worker(worker, config)
+            mock_state.return_value = ("paused", None)
+            result = await handle_paused_worker(worker, config)
 
-                        assert result is False
-                        assert worker.retry_count == 1
-                        assert worker.state == WorkerState.PAUSED
+            assert result is False
+            assert worker.retry_count == 1
+            assert worker.state == WorkerState.PAUSED
 
     @pytest.mark.asyncio
     async def test_retry_count_reset_on_success(self) -> None:
         """재개 성공 시 retry_count 0으로 초기화."""
-        from orchay.recovery import handle_paused_worker
-        from orchay.models.worker import Worker, WorkerState
         from orchay.models.config import RecoveryConfig
+        from orchay.models.worker import Worker, WorkerState
+        from orchay.recovery import handle_paused_worker
 
         worker = Worker(id=1, pane_id=100, state=WorkerState.PAUSED, retry_count=2)
         config = RecoveryConfig()
 
-        with patch("orchay.recovery.wezterm_get_text", new_callable=AsyncMock) as mock_get:
+        with (
+            patch("orchay.recovery.wezterm_get_text", new_callable=AsyncMock) as mock_get,
+            patch("orchay.recovery.wezterm_send_text", new_callable=AsyncMock),
+            patch("orchay.recovery.detect_worker_state", new_callable=AsyncMock) as mock_state,
+            patch("asyncio.sleep", new_callable=AsyncMock),
+        ):
             mock_get.return_value = "context limit"
-            with patch("orchay.recovery.wezterm_send_text", new_callable=AsyncMock):
-                with patch(
-                    "orchay.recovery.detect_worker_state", new_callable=AsyncMock
-                ) as mock_state:
-                    # 재개 성공 시뮬레이션
-                    mock_state.return_value = ("busy", None)
-                    with patch("asyncio.sleep", new_callable=AsyncMock):
-                        result = await handle_paused_worker(worker, config)
+            # 재개 성공 시뮬레이션
+            mock_state.return_value = ("busy", None)
+            result = await handle_paused_worker(worker, config)
 
-                        assert result is True
-                        assert worker.retry_count == 0
-                        assert worker.state == WorkerState.BUSY
+            assert result is True
+            assert worker.retry_count == 0
+            assert worker.state == WorkerState.BUSY
 
     @pytest.mark.asyncio
     async def test_uses_asyncio_sleep(self) -> None:
         """asyncio.sleep 사용 확인."""
-        from orchay.recovery import handle_paused_worker
-        from orchay.models.worker import Worker, WorkerState
         from orchay.models.config import RecoveryConfig
+        from orchay.models.worker import Worker, WorkerState
+        from orchay.recovery import handle_paused_worker
 
         worker = Worker(id=1, pane_id=100, state=WorkerState.PAUSED, retry_count=0)
         config = RecoveryConfig(context_limit_wait=1)
 
-        with patch("orchay.recovery.wezterm_get_text", new_callable=AsyncMock) as mock_get:
+        with (
+            patch("orchay.recovery.wezterm_get_text", new_callable=AsyncMock) as mock_get,
+            patch("orchay.recovery.wezterm_send_text", new_callable=AsyncMock),
+            patch("orchay.recovery.detect_worker_state", new_callable=AsyncMock) as mock_state,
+            patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep,
+        ):
             mock_get.return_value = "context limit"
-            with patch("orchay.recovery.wezterm_send_text", new_callable=AsyncMock):
-                with patch(
-                    "orchay.recovery.detect_worker_state", new_callable=AsyncMock
-                ) as mock_state:
-                    mock_state.return_value = ("busy", None)
-                    with patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
-                        await handle_paused_worker(worker, config)
+            mock_state.return_value = ("busy", None)
+            await handle_paused_worker(worker, config)
 
-                        # asyncio.sleep이 호출되었는지 확인
-                        mock_sleep.assert_called()
+            # asyncio.sleep이 호출되었는지 확인
+            mock_sleep.assert_called()
 
     @pytest.mark.asyncio
     async def test_sends_resume_text(self) -> None:
         """'계속' 텍스트 전송 확인."""
-        from orchay.recovery import handle_paused_worker
-        from orchay.models.worker import Worker, WorkerState
         from orchay.models.config import RecoveryConfig
+        from orchay.models.worker import Worker, WorkerState
+        from orchay.recovery import handle_paused_worker
 
         worker = Worker(id=1, pane_id=100, state=WorkerState.PAUSED, retry_count=0)
         config = RecoveryConfig(resume_text="계속")
 
         with patch("orchay.recovery.wezterm_get_text", new_callable=AsyncMock) as mock_get:
             mock_get.return_value = "context limit"
-            with patch(
-                "orchay.recovery.wezterm_send_text", new_callable=AsyncMock
-            ) as mock_send:
-                with patch(
-                    "orchay.recovery.detect_worker_state", new_callable=AsyncMock
-                ) as mock_state:
-                    mock_state.return_value = ("busy", None)
-                    with patch("asyncio.sleep", new_callable=AsyncMock):
-                        await handle_paused_worker(worker, config)
+            with (
+                patch("orchay.recovery.wezterm_send_text", new_callable=AsyncMock) as mock_send,
+                patch("orchay.recovery.detect_worker_state", new_callable=AsyncMock) as mock_state,
+            ):
+                mock_state.return_value = ("busy", None)
+                with patch("asyncio.sleep", new_callable=AsyncMock):
+                    await handle_paused_worker(worker, config)
 
-                        mock_send.assert_called()
-                        # 전송된 텍스트에 "계속" 포함 확인
-                        call_args = mock_send.call_args
-                        assert "계속" in call_args[0][1]
+                    mock_send.assert_called()
+                    # 전송된 텍스트에 "계속" 포함 확인
+                    call_args = mock_send.call_args
+                    assert "계속" in call_args[0][1]
 
 
 class TestWeeklyLimitIntegration:
@@ -339,9 +338,9 @@ class TestWeeklyLimitIntegration:
     @pytest.mark.asyncio
     async def test_weekly_limit_full_flow(self) -> None:
         """Weekly limit 전체 흐름."""
-        from orchay.recovery import handle_paused_worker
-        from orchay.models.worker import Worker, WorkerState
         from orchay.models.config import RecoveryConfig
+        from orchay.models.worker import Worker, WorkerState
+        from orchay.recovery import handle_paused_worker
 
         worker = Worker(id=1, pane_id=100, state=WorkerState.PAUSED)
         config = RecoveryConfig()
@@ -350,20 +349,18 @@ class TestWeeklyLimitIntegration:
 
         with patch("orchay.recovery.wezterm_get_text", new_callable=AsyncMock) as mock_get:
             mock_get.return_value = weekly_output
-            with patch(
-                "orchay.recovery.wezterm_send_text", new_callable=AsyncMock
-            ) as mock_send:
-                with patch(
-                    "orchay.recovery.detect_worker_state", new_callable=AsyncMock
-                ) as mock_state:
-                    mock_state.return_value = ("busy", None)
-                    with patch("asyncio.sleep", new_callable=AsyncMock):
-                        result = await handle_paused_worker(worker, config)
+            with (
+                patch("orchay.recovery.wezterm_send_text", new_callable=AsyncMock) as mock_send,
+                patch("orchay.recovery.detect_worker_state", new_callable=AsyncMock) as mock_state,
+            ):
+                mock_state.return_value = ("busy", None)
+                with patch("asyncio.sleep", new_callable=AsyncMock):
+                    result = await handle_paused_worker(worker, config)
 
-                        assert result is True
-                        mock_send.assert_called_once()
-                        call_args = mock_send.call_args
-                        assert "계속" in call_args[0][1]
+                    assert result is True
+                    mock_send.assert_called_once()
+                    call_args = mock_send.call_args
+                    assert "계속" in call_args[0][1]
 
 
 @pytest.mark.parametrize(

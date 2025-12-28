@@ -56,8 +56,8 @@
 
 | 문서 | 경로 | 관련 섹션 |
 |------|------|----------|
-| PRD | `.jjiban/projects/orchay_web/prd.md` | 3.6.2 트리 패널 개선, 3.6.3 트리 노드 인터랙션 |
-| TRD | `.jjiban/projects/orchay_web/trd.md` | UI 스타일링, HTMX 패턴 |
+| PRD | `.orchay/projects/orchay_web/prd.md` | 3.6.2 트리 패널 개선, 3.6.3 트리 노드 인터랙션 |
+| TRD | `.orchay/projects/orchay_web/trd.md` | UI 스타일링, HTMX 패턴 |
 
 ---
 

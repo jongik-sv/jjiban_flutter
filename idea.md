@@ -14,7 +14,7 @@ wezterm cli send-text --no-paste --pane-id 1 프롬프트 # 예 : /wf:design TSK
 wezterm cli send-text --no-paste --pane-id 1 `r # 명령어를 submit 하기 위한 enter 키
 
 
- python C:\project\jjiban_flutter\orchay\launcher.py
+ python C:\project\orchay_flutter\orchay\launcher.py
 
 
 # orchay
@@ -23,14 +23,14 @@ wezterm cli send-text --no-paste --pane-id 1 `r # 명령어를 submit 하기 위
 - claude code 
   - commands
   - includes
-  - skills : jjiban-init, user-manual-create
+  - skills : orchay-init, user-manual-create
   - hooks 설정 : 아 이것은 어떻게 해야하나?
-- jjiban 폴더
+- orchay 폴더
   - script, settings, templates
 
 
 
-   python C:\project\jjiban_flutter\orchay\launcher.py orchay_web -w 3 --web --port 8080 --font-size 9
+   python C:\project\orchay_flutter\orchay\launcher.py orchay_web -w 3 --web --port 8080 --font-size 9
 
 
    http://localhost:3000/wbs

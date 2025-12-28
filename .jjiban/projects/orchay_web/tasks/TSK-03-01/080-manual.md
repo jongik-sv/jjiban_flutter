@@ -97,7 +97,7 @@ A: 네트워크 연결을 확인하세요. 브라우저 개발자 도구(F12)의
 
 ### Q2. 문서 링크가 비어있어요.
 
-A: 해당 Task의 문서 디렉토리(`.jjiban/projects/{project}/tasks/{task_id}/`)에 `.md` 파일이 없을 수 있습니다.
+A: 해당 Task의 문서 디렉토리(`.orchay/projects/{project}/tasks/{task_id}/`)에 `.md` 파일이 없을 수 있습니다.
 
 ### Q3. 상태 배지 색상이 회색으로 표시돼요.
 
@@ -112,7 +112,7 @@ A: 알 수 없는 상태 코드입니다. WBS 파일의 status 값을 확인하�
 **원인**: 요청한 Task ID가 WBS에 존재하지 않음
 
 **해결**:
-1. WBS 파일 확인: `.jjiban/projects/{project}/wbs.md`
+1. WBS 파일 확인: `.orchay/projects/{project}/wbs.md`
 2. Task ID 형식 확인: `TSK-XX-XX`
 3. 웹 서버 재시작: WBS 변경 후 서버 재시작 필요할 수 있음
 
@@ -121,14 +121,14 @@ A: 알 수 없는 상태 코드입니다. WBS 파일의 status 값을 확인하�
 **원인**: Task 문서 디렉토리가 없거나 비어있음
 
 **해결**:
-1. 디렉토리 확인: `.jjiban/projects/{project}/tasks/{task_id}/`
+1. 디렉토리 확인: `.orchay/projects/{project}/tasks/{task_id}/`
 2. `.md` 파일 존재 확인
 
 ---
 
 ## 6. 참고 자료
 
-- [orchay 웹 모니터링 UI PRD](.jjiban/projects/orchay_web/prd.md)
+- [orchay 웹 모니터링 UI PRD](.orchay/projects/orchay_web/prd.md)
 - [TSK-03-01 설계 문서](./010-design.md)
 - [TSK-03-01 구현 보고서](./030-implementation.md)
 

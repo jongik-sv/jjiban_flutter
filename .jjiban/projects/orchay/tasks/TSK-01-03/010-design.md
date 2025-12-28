@@ -55,9 +55,9 @@
 
 | 문서 | 경로 | 관련 섹션 |
 |------|------|----------|
-| PRD | `.jjiban/projects/orchay/prd.md` | 3.2 스케줄 큐 관리, 3.4 작업 분배, 3.8 실행 모드 |
-| TRD | `.jjiban/projects/orchay/trd.md` | asyncio 기반 설계, workflows.json 연동 |
-| WBS | `.jjiban/projects/orchay/wbs.md` | TSK-01-03 |
+| PRD | `.orchay/projects/orchay/prd.md` | 3.2 스케줄 큐 관리, 3.4 작업 분배, 3.8 실행 모드 |
+| TRD | `.orchay/projects/orchay/trd.md` | asyncio 기반 설계, workflows.json 연동 |
+| WBS | `.orchay/projects/orchay/wbs.md` | TSK-01-03 |
 
 ---
 

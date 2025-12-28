@@ -63,7 +63,7 @@ allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, Task]
 
 @.claude/includes/wf-conflict-resolution.md
 
-**Task 폴더**: `.jjiban/projects/{project}/tasks/{TSK-ID}/`
+**Task 폴더**: `.orchay/projects/{project}/tasks/{TSK-ID}/`
 
 ---
 
@@ -245,7 +245,7 @@ WP 또는 ACT 단위 입력 시, 해당 범위 내 `[ ]` Todo 상태인 infrastr
 ---
 
 <!--
-jjiban 프로젝트 - Workflow Command
+orchay 프로젝트 - Workflow Command
 author: 장종익
 Command: wf:skip
 Version: 1.0

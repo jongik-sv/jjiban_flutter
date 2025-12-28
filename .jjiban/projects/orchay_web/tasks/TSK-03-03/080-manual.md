@@ -147,9 +147,9 @@ HTMX settle 시간(100ms)이 적용되어 갱신 시 화면 깜빡임이 최소�
 
 | 문서 | 경로 |
 |------|------|
-| 설계서 | `.jjiban/projects/orchay_web/tasks/TSK-03-03/010-design.md` |
-| 테스트 명세서 | `.jjiban/projects/orchay_web/tasks/TSK-03-03/026-test-specification.md` |
-| 구현 보고서 | `.jjiban/projects/orchay_web/tasks/TSK-03-03/030-implementation.md` |
+| 설계서 | `.orchay/projects/orchay_web/tasks/TSK-03-03/010-design.md` |
+| 테스트 명세서 | `.orchay/projects/orchay_web/tasks/TSK-03-03/026-test-specification.md` |
+| 구현 보고서 | `.orchay/projects/orchay_web/tasks/TSK-03-03/030-implementation.md` |
 
 ### 6.2 API 엔드포인트
 

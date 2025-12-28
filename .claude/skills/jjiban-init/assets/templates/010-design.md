@@ -49,8 +49,8 @@
 
 | 문서 | 경로 | 관련 섹션 |
 |------|------|----------|
-| PRD | `.jjiban/projects/{project}/prd.md` | {관련 섹션} |
-| TRD | `.jjiban/projects/{project}/trd.md` | {관련 섹션} |
+| PRD | `.orchay/projects/{project}/prd.md` | {관련 섹션} |
+| TRD | `.orchay/projects/{project}/trd.md` | {관련 섹션} |
 
 ---
 

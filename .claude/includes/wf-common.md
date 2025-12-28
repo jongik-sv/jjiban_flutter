@@ -8,12 +8,12 @@
 
 ### 1. 디렉토리 구조
 
-JJIBAN은 `.jjiban/` 폴더에 모든 데이터와 문서를 관리합니다.
+ORCHAY은 `.orchay/` 폴더에 모든 데이터와 문서를 관리합니다.
 
 > **중요**: PRD 5.1 디렉토리 구조를 따릅니다.
 
 ```
-.jjiban/
+.orchay/
 ├── settings/                      # 전역 설정 (모든 프로젝트 공통)
 │   ├── projects.json              # 프로젝트 목록
 │   ├── columns.json               # 칸반 컬럼 정의
@@ -53,16 +53,16 @@ JJIBAN은 `.jjiban/` 폴더에 모든 데이터와 문서를 관리합니다.
 
 | 용도 | 경로 | 설명 |
 |------|------|------|
-| 프로젝트 목록 | `.jjiban/settings/projects.json` | 전역 프로젝트 목록 |
-| 프로젝트 정보 | `.jjiban/projects/{project}/project.json` | 프로젝트 메타데이터 |
-| WBS 통합 파일 | `.jjiban/projects/{project}/wbs.md` | WP/ACT/TSK 메타데이터 |
-| 팀 정보 | `.jjiban/projects/{project}/team.json` | 팀 멤버 목록 |
-| Task 문서 폴더 | `.jjiban/projects/{project}/tasks/{TSK-ID}/` | Task 관련 문서 |
-| 문서 템플릿 | `.jjiban/templates/` | 전역 문서 템플릿 |
+| 프로젝트 목록 | `.orchay/settings/projects.json` | 전역 프로젝트 목록 |
+| 프로젝트 정보 | `.orchay/projects/{project}/project.json` | 프로젝트 메타데이터 |
+| WBS 통합 파일 | `.orchay/projects/{project}/wbs.md` | WP/ACT/TSK 메타데이터 |
+| 팀 정보 | `.orchay/projects/{project}/team.json` | 팀 멤버 목록 |
+| Task 문서 폴더 | `.orchay/projects/{project}/tasks/{TSK-ID}/` | Task 관련 문서 |
+| 문서 템플릿 | `.orchay/templates/` | 전역 문서 템플릿 |
 
 ### 3. wbs.md 구조 (Task 메타데이터 관리)
 
-**파일 경로**: `.jjiban/projects/{project}/wbs.md`
+**파일 경로**: `.orchay/projects/{project}/wbs.md`
 
 ```markdown
 # WBS - {Project Name}
@@ -116,7 +116,7 @@ JJIBAN은 `.jjiban/` 폴더에 모든 데이터와 문서를 관리합니다.
 
 모든 Task 관련 문서는 Task 폴더 내에 저장됩니다.
 
-> **Task 문서 경로**: `.jjiban/projects/{project}/tasks/{TSK-ID}/`
+> **Task 문서 경로**: `.orchay/projects/{project}/tasks/{TSK-ID}/`
 
 ```
 {TSK-ID}/                              # Task 폴더
@@ -163,9 +163,9 @@ JJIBAN은 `.jjiban/` 폴더에 모든 데이터와 문서를 관리합니다.
 
 | Task ID | Task 폴더 경로 | 구조 |
 |---------|----------------|------|
-| TSK-01-01-01 | `.jjiban/projects/{project}/tasks/TSK-01-01-01/` | 4단계 |
-| TSK-01-02-01 | `.jjiban/projects/{project}/tasks/TSK-01-02-01/` | 4단계 |
-| TSK-02-01 | `.jjiban/projects/{project}/tasks/TSK-02-01/` | 3단계 |
+| TSK-01-01-01 | `.orchay/projects/{project}/tasks/TSK-01-01-01/` | 4단계 |
+| TSK-01-02-01 | `.orchay/projects/{project}/tasks/TSK-01-02-01/` | 4단계 |
+| TSK-02-01 | `.orchay/projects/{project}/tasks/TSK-02-01/` | 3단계 |
 
 ---
 
@@ -176,17 +176,17 @@ JJIBAN은 `.jjiban/` 폴더에 모든 데이터와 문서를 관리합니다.
 ```javascript
 // wbs.md 파일 경로
 function getWbsPath(project) {
-    return `.jjiban/projects/${project}/wbs.md`;
+    return `.orchay/projects/${project}/wbs.md`;
 }
 
 // Task 문서 폴더 경로
 function getTaskFolderPath(project, taskId) {
-    return `.jjiban/projects/${project}/tasks/${taskId}/`;
+    return `.orchay/projects/${project}/tasks/${taskId}/`;
 }
 
 // Task 문서 경로
 function getTaskDocPath(project, taskId, docName) {
-    return `.jjiban/projects/${project}/tasks/${taskId}/${docName}`;
+    return `.orchay/projects/${project}/tasks/${taskId}/${docName}`;
 }
 ```
 
@@ -231,33 +231,33 @@ function updateTaskStatus(project, taskId, newStatus) {
 
 ### settings/projects.json 스키마
 
-**경로**: `.jjiban/settings/projects.json`
+**경로**: `.orchay/settings/projects.json`
 
 ```json
 {
   "version": "1.0",
   "projects": [
     {
-      "id": "jjiban",
-      "name": "JJIBAN Project Manager",
-      "path": "jjiban",
+      "id": "orchay",
+      "name": "ORCHAY Project Manager",
+      "path": "orchay",
       "status": "active",
       "wbsDepth": 4,
       "createdAt": "2026-01-15"
     }
   ],
-  "defaultProject": "jjiban"
+  "defaultProject": "orchay"
 }
 ```
 
 ### project.json 스키마
 
-**경로**: `.jjiban/projects/{project}/project.json`
+**경로**: `.orchay/projects/{project}/project.json`
 
 ```json
 {
-  "id": "jjiban",
-  "name": "JJIBAN Project Manager",
+  "id": "orchay",
+  "name": "ORCHAY Project Manager",
   "description": "AI 기반 프로젝트 관리 도구",
   "version": "0.1.0",
   "status": "active",
@@ -271,21 +271,21 @@ function updateTaskStatus(project, taskId, newStatus) {
 ---
 
 <!--
-jjiban 프로젝트 - Workflow Common Module
+orchay 프로젝트 - Workflow Common Module
 Version: 4.0
 author: 장종익
 
 Changes (v4.0):
 - PRD 5.1 디렉토리 구조에 맞게 전면 개편
-- .jjiban/projects/{project}/ 경로로 변경
-- .jjiban/settings/ 전역 설정 폴더 추가
-- .jjiban/templates/ 문서 템플릿 폴더 추가
+- .orchay/projects/{project}/ 경로로 변경
+- .orchay/settings/ 전역 설정 폴더 추가
+- .orchay/templates/ 문서 템플릿 폴더 추가
 - task.json 제거 → wbs.md에서 메타데이터 통합 관리
 - tasks/ 폴더에는 문서만 저장 (TSK-ID 폴더)
 - wbs.md 구조 및 파싱 방법 설명 추가
 - 상태 코드에 칸반 컬럼 매핑 추가
 
 Previous (v3.0):
-- .jjiban/{project}/ 구조
+- .orchay/{project}/ 구조
 - task.json 개별 파일 사용
 -->

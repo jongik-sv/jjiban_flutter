@@ -24,8 +24,8 @@
 
 | 문서 유형 | 경로 | 참조 섹션 |
 |----------|------|----------|
-| PRD | `.jjiban/[project]/prd.md` | 섹션 [번호] |
-| TRD | `.jjiban/[project]/trd.md` | 전체 |
+| PRD | `.orchay/[project]/prd.md` | 섹션 [번호] |
+| TRD | `.orchay/[project]/trd.md` | 전체 |
 
 ---
 
@@ -119,8 +119,8 @@
 
 ## 관련 문서
 
-- PRD: `.jjiban/[project]/prd.md`
-- TRD: `.jjiban/[project]/trd.md`
+- PRD: `.orchay/[project]/prd.md`
+- TRD: `.orchay/[project]/trd.md`
 - 상세설계: `020-detail-design.md` (다음 단계)
 
 ---

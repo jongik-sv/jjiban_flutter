@@ -12,7 +12,6 @@ from orchay.models import Task, TaskCategory, TaskPriority, TaskStatus, Worker, 
 from orchay.ui.app import OrchayApp
 from orchay.ui.widgets import HelpModal, QueueWidget
 
-
 # ============================================================================
 # Fixtures
 # ============================================================================

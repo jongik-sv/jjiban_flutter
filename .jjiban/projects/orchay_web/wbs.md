@@ -249,7 +249,7 @@
 #### 기술 스펙 (TRD)
 - tech-spec:
   - Task 모델에서 직접 데이터 추출
-  - 문서 경로: .jjiban/projects/{project}/tasks/{task_id}/
+  - 문서 경로: .orchay/projects/{project}/tasks/{task_id}/
 - ui-spec:
   - 레이아웃: 세로 정렬, 섹션 구분
   - 상태 배지: 색상 + 아이콘

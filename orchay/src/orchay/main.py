@@ -27,7 +27,6 @@ from orchay.scheduler import (
     filter_executable_tasks,
     get_next_workflow_command,
 )
-from orchay.utils.active_tasks import load_active_tasks
 from orchay.utils.wezterm import (
     WezTermNotFoundError,
     get_active_pane_id,
@@ -47,9 +46,7 @@ class Orchestrator:
     WBS 파일을 모니터링하고 Worker에 Task를 분배합니다.
     """
 
-    def __init__(
-        self, config: Config, wbs_path: Path, base_dir: Path, project_name: str
-    ) -> None:
+    def __init__(self, config: Config, wbs_path: Path, base_dir: Path, project_name: str) -> None:
         self.config = config
         self.wbs_path = wbs_path
         self.base_dir = base_dir  # 프로젝트 루트 디렉토리
@@ -179,7 +176,10 @@ class Orchestrator:
             for worker in self.workers:
                 if not executable:
                     break
-                logger.debug(f"Worker {worker.id}: state={worker.state.value}, manually_paused={worker.is_manually_paused}")
+                logger.debug(
+                    f"Worker {worker.id}: state={worker.state.value}, "
+                    f"manually_paused={worker.is_manually_paused}"
+                )
                 if worker.state == WorkerState.IDLE and not worker.is_manually_paused:
                     task = executable.pop(0)
                     logger.info(f"Dispatch: {task.id} -> Worker {worker.id}")
@@ -239,7 +239,7 @@ class Orchestrator:
         stop_statuses = stop_state_map.get(self.mode, {TaskStatus.DONE})
 
         # WBS에서 stopAtState 이상인 Task들의 ID 수집
-        completed_task_ids = {t.id for t in self.tasks if t.status in stop_statuses}
+        {t.id for t in self.tasks if t.status in stop_statuses}
 
         # 완료된 Task의 할당 해제
         for task in self.tasks:
@@ -403,9 +403,7 @@ class Orchestrator:
         pending = sum(1 for t in self.tasks if t.status.value == "[ ]")
         running = sum(1 for t in self.tasks if t.assigned_worker is not None)
         done = sum(1 for t in self.tasks if t.status.value == "[xx]")
-        console.print(
-            f"\n[dim]Queue:[/] {pending} pending, {running} running, {done} done\n"
-        )
+        console.print(f"\n[dim]Queue:[/] {pending} pending, {running} running, {done} done\n")
 
     def stop(self) -> None:
         """스케줄러 중지."""
@@ -447,22 +445,25 @@ def parse_args() -> argparse.Namespace:
         "project",
         nargs="?",
         default="orchay",
-        help="프로젝트명 (.jjiban/projects/{project}/ 사용, 기본: orchay)",
+        help="프로젝트명 (.orchay/projects/{project}/ 사용, 기본: orchay)",
     )
     parser.add_argument(
-        "-w", "--workers",
+        "-w",
+        "--workers",
         type=int,
         default=3,
         help="Worker 수 (기본: 3)",
     )
     parser.add_argument(
-        "-i", "--interval",
+        "-i",
+        "--interval",
         type=int,
         default=5,
         help="모니터링 간격 초 (기본: 5)",
     )
     parser.add_argument(
-        "-m", "--mode",
+        "-m",
+        "--mode",
         choices=["design", "quick", "develop", "force"],
         default="quick",
         help="실행 모드 (기본: quick)",
@@ -473,7 +474,8 @@ def parse_args() -> argparse.Namespace:
         help="분배 없이 상태만 표시",
     )
     parser.add_argument(
-        "-v", "--verbose",
+        "-v",
+        "--verbose",
         action="store_true",
         help="상세 로그 출력",
     )
@@ -505,8 +507,8 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def find_jjiban_root() -> Path | None:
-    """`.jjiban` 폴더가 있는 프로젝트 루트를 찾습니다.
+def find_orchay_root() -> Path | None:
+    """`.orchay` 폴더가 있는 프로젝트 루트를 찾습니다.
 
     현재 디렉토리부터 상위로 탐색합니다.
 
@@ -515,7 +517,7 @@ def find_jjiban_root() -> Path | None:
     """
     cwd = Path.cwd().resolve()
     for parent in [cwd, *cwd.parents]:
-        if (parent / ".jjiban").is_dir():
+        if (parent / ".orchay").is_dir():
             return parent
     return None
 
@@ -529,13 +531,13 @@ def get_project_paths(project_name: str) -> tuple[Path, Path]:
     Returns:
         (wbs_path, base_dir) 튜플
     """
-    base_dir = find_jjiban_root()
+    base_dir = find_orchay_root()
     if base_dir is None:
-        # .jjiban 폴더를 찾지 못하면 현재 디렉토리 사용
+        # .orchay 폴더를 찾지 못하면 현재 디렉토리 사용
         base_dir = Path.cwd()
 
-    jjiban_dir = base_dir / ".jjiban" / "projects" / project_name
-    wbs_path = jjiban_dir / "wbs.md"
+    orchay_dir = base_dir / ".orchay" / "projects" / project_name
+    wbs_path = orchay_dir / "wbs.md"
     return wbs_path, base_dir
 
 
@@ -601,12 +603,12 @@ def setup_logging(verbose: bool = False) -> Path | None:
     console_handler.setFormatter(formatter)
     root_logger.addHandler(console_handler)
 
-    # 파일 핸들러 (.jjiban/logs/orchay.log)
+    # 파일 핸들러 (.orchay/logs/orchay.log)
     log_file = None
     try:
-        base_dir = find_jjiban_root()
+        base_dir = find_orchay_root()
         if base_dir:
-            log_dir = base_dir / ".jjiban" / "logs"
+            log_dir = base_dir / ".orchay" / "logs"
             log_dir.mkdir(parents=True, exist_ok=True)
             log_file = log_dir / "orchay.log"
 
@@ -633,7 +635,7 @@ async def async_main() -> int:
     args = parse_args()
 
     # 로깅 설정 (콘솔 + 파일)
-    log_file = setup_logging(args.verbose)
+    setup_logging(args.verbose)
 
     # WebConfig 생성 (TSK-01-03)
     web_config = WebConfig(
@@ -672,9 +674,7 @@ async def async_main() -> int:
         console.print(f"[green]Tasks:[/] {len(orchestrator.tasks)}개\n")
 
         # 웹서버만 실행
-        console.print(
-            f"[bold green]웹서버 시작[/] http://{web_config.host}:{web_config.port}"
-        )
+        console.print(f"[bold green]웹서버 시작[/] http://{web_config.host}:{web_config.port}")
         console.print("[dim]Ctrl+C로 종료[/]\n")
 
         with contextlib.suppress(KeyboardInterrupt):
@@ -733,9 +733,7 @@ async def async_main() -> int:
 
     # --web 모드: TUI/CLI + 웹서버 병렬 실행
     if args.web:
-        console.print(
-            f"[bold green]웹서버 시작[/] http://{web_config.host}:{web_config.port}"
-        )
+        console.print(f"[bold green]웹서버 시작[/] http://{web_config.host}:{web_config.port}")
         console.print("[dim]Ctrl+C로 종료[/]\n")
 
         try:
@@ -783,8 +781,8 @@ def main() -> None:
 
         # crash 파일에도 기록 (로그 파일 접근 불가 시 대비)
         try:
-            base_dir = find_jjiban_root() or Path.cwd()
-            crash_dir = base_dir / ".jjiban" / "logs"
+            base_dir = find_orchay_root() or Path.cwd()
+            crash_dir = base_dir / ".orchay" / "logs"
             crash_dir.mkdir(parents=True, exist_ok=True)
             crash_file = crash_dir / "orchay-crash.log"
 

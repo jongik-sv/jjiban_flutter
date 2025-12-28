@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from orchay.models.config import Config, ExecutionConfig, WebConfig
+from orchay.models.config import Config, ExecutionConfig
 
 
 class TestConfigDefaultValues:
@@ -78,8 +78,8 @@ class TestLoadConfigFromFile:
         """유효한 설정 파일에서 로드."""
         from orchay.utils.config import load_config
 
-        # .jjiban/settings/orchay.json 생성
-        settings_dir = tmp_path / ".jjiban" / "settings"
+        # .orchay/settings/orchay.json 생성
+        settings_dir = tmp_path / ".orchay" / "settings"
         settings_dir.mkdir(parents=True)
         config_file = settings_dir / "orchay.json"
         config_file.write_text('{"workers": 5, "interval": 10}', encoding="utf-8")
@@ -96,7 +96,7 @@ class TestLoadConfigFromFile:
         """중첩 설정값 로드 테스트."""
         from orchay.utils.config import load_config
 
-        settings_dir = tmp_path / ".jjiban" / "settings"
+        settings_dir = tmp_path / ".orchay" / "settings"
         settings_dir.mkdir(parents=True)
         config_file = settings_dir / "orchay.json"
         config_data = {
@@ -123,9 +123,9 @@ class TestLoadConfigMissing:
         """설정 파일 없을 때 기본값 사용."""
         from orchay.utils.config import load_config
 
-        # .jjiban 폴더만 생성 (설정 파일 없음)
-        jjiban_dir = tmp_path / ".jjiban"
-        jjiban_dir.mkdir()
+        # .orchay 폴더만 생성 (설정 파일 없음)
+        orchay_dir = tmp_path / ".orchay"
+        orchay_dir.mkdir()
 
         monkeypatch.chdir(tmp_path)
 
@@ -133,15 +133,15 @@ class TestLoadConfigMissing:
         assert config.workers == 3  # 기본값
         assert config.interval == 5  # 기본값
 
-    def test_load_config_no_jjiban_folder(
+    def test_load_config_no_orchay_folder(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """.jjiban 폴더 없을 때 기본값 사용."""
+        """.orchay 폴더 없을 때 기본값 사용."""
         from orchay.utils.config import load_config
 
         monkeypatch.chdir(tmp_path)
 
-        # .jjiban 폴더가 없어도 기본값 반환
+        # .orchay 폴더가 없어도 기본값 반환
         config = load_config()
         assert config.workers == 3
         assert config.interval == 5
@@ -154,9 +154,9 @@ class TestLoadConfigInvalidJson:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """잘못된 JSON 형식 파일."""
-        from orchay.utils.config import load_config, ConfigLoadError
+        from orchay.utils.config import ConfigLoadError, load_config
 
-        settings_dir = tmp_path / ".jjiban" / "settings"
+        settings_dir = tmp_path / ".orchay" / "settings"
         settings_dir.mkdir(parents=True)
         config_file = settings_dir / "orchay.json"
         config_file.write_text("{ invalid json }", encoding="utf-8")
@@ -170,9 +170,9 @@ class TestLoadConfigInvalidJson:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """스키마 검증 실패."""
-        from orchay.utils.config import load_config, ConfigLoadError
+        from orchay.utils.config import ConfigLoadError, load_config
 
-        settings_dir = tmp_path / ".jjiban" / "settings"
+        settings_dir = tmp_path / ".orchay" / "settings"
         settings_dir.mkdir(parents=True)
         config_file = settings_dir / "orchay.json"
         config_file.write_text('{"workers": -1}', encoding="utf-8")

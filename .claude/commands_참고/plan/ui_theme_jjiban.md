@@ -1,6 +1,6 @@
 ---
 name: plan:ui_theme
-description: "외부 사이트 UI/UX 테마 추출 및 jjiban 적용 가이드 생성"
+description: "외부 사이트 UI/UX 테마 추출 및 orchay 적용 가이드 생성"
 category: analysis
 complexity: complex
 wave-enabled: true
@@ -17,9 +17,9 @@ personas: [analyzer, frontend, architect]
 allowed-tools: [WebFetch, Read, Write, Glob, Grep, TodoWrite, Bash]
 ---
 
-# /plan:ui_theme - jjiban UI/UX 테마 추출 시스템
+# /plan:ui_theme - orchay UI/UX 테마 추출 시스템
 
-> **목적**: 외부 사이트의 UI/UX 디자인 요소를 분석하여 jjiban 프로젝트(Nuxt 3 + Vue 3 + PrimeVue 4 + TailwindCSS)에 적용 가능한 테마 가이드를 생성합니다.
+> **목적**: 외부 사이트의 UI/UX 디자인 요소를 분석하여 orchay 프로젝트(Nuxt 3 + Vue 3 + PrimeVue 4 + TailwindCSS)에 적용 가능한 테마 가이드를 생성합니다.
 
 ## 트리거
 - 참고할 외부 사이트의 디자인 시스템 분석 필요
@@ -36,7 +36,7 @@ allowed-tools: [WebFetch, Read, Write, Glob, Grep, TodoWrite, Bash]
 
 ## 기술 스택 맵핑
 
-| 추출 요소 | jjiban 적용 대상 |
+| 추출 요소 | orchay 적용 대상 |
 |-----------|-----------------|
 | 색상 시스템 | TailwindCSS `tailwind.config.ts`, PrimeVue preset |
 | 타이포그래피 | `assets/css/main.css`, Tailwind 폰트 설정 |
@@ -102,7 +102,7 @@ allowed-tools: [WebFetch, Read, Write, Glob, Grep, TodoWrite, Bash]
    - Loading/Disabled
    - 에러 상태
 
-### Wave 4: jjiban 적용 가이드 생성
+### Wave 4: orchay 적용 가이드 생성
 **MCP**: sequential + context7
 **산출물**: 테마 설정 파일, 적용 가이드 문서
 
@@ -227,7 +227,7 @@ export const CustomPreset = definePreset(Aura, {
 - 색상 시스템 사용 가이드
 - 타이포그래피 가이드
 - 컴포넌트 스타일 가이드
-- jjiban 적용 방법
+- orchay 적용 방법
 - 코드 예시
 
 ---
@@ -249,7 +249,7 @@ export const CustomPreset = definePreset(Aura, {
 
 ---
 
-## jjiban 특화 분석 포인트
+## orchay 특화 분석 포인트
 
 ### 프로젝트 관리 UI 패턴
 ```yaml
@@ -324,6 +324,6 @@ gantt_chart:
 - 저작권 준수: 분석 목적으로만 사용, 디자인 복제 금지
 
 <!--
-jjiban 프로젝트 - UI Theme Extract Command
+orchay 프로젝트 - UI Theme Extract Command
 Target: Nuxt 3 + Vue 3 + PrimeVue 4 + TailwindCSS
 -->

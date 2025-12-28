@@ -10,14 +10,14 @@
 | 입력 형식 | 프로젝트 | Task ID |
 |----------|----------|---------|
 | `TSK-01-01` | 자동 해결/검색 | TSK-01-01 |
-| `jjiban/TSK-01-01` | jjiban (명시) | TSK-01-01 |
+| `orchay/TSK-01-01` | orchay (명시) | TSK-01-01 |
 
 ### 해결 프로세스
 1. **입력 파싱**: `/` 포함 여부 확인
    - 포함 → `{project}/{task-id}` 분리
    - 미포함 → Task ID만 추출
 
-2. **프로젝트 수 확인**: `.jjiban/projects/` 스캔
+2. **프로젝트 수 확인**: `.orchay/projects/` 스캔
 
 3. **프로젝트 1개**: 해당 프로젝트 자동 사용
 
@@ -33,8 +33,8 @@
 ### 선택지 출력 형식
 ```
 [INFO] Task '{task-id}'가 여러 프로젝트에 존재합니다:
-  1. jjiban - TSK-01-01: {task-title}
-  2. jjiban개선 - TSK-01-01: {task-title}
+  1. orchay - TSK-01-01: {task-title}
+  2. orchay개선 - TSK-01-01: {task-title}
 
 다음 형식으로 재실행: /wf:start {project}/{task-id}
 ```
@@ -52,10 +52,10 @@
 
 | 용도 | 경로 |
 |------|------|
-| WBS 파일 | `.jjiban/projects/{project}/wbs.md` |
-| Task 문서 | `.jjiban/projects/{project}/tasks/{TSK-ID}/` |
-| 템플릿 | `.jjiban/templates/` |
-| 프로젝트 설정 | `.jjiban/projects/{project}/project.json` |
+| WBS 파일 | `.orchay/projects/{project}/wbs.md` |
+| Task 문서 | `.orchay/projects/{project}/tasks/{TSK-ID}/` |
+| 템플릿 | `.orchay/templates/` |
+| 프로젝트 설정 | `.orchay/projects/{project}/project.json` |
 
 ---
 
@@ -205,7 +205,7 @@ cd orchay && uv run orchay exec stop {TASK_ID}
 
 ### 상태 파일
 
-실행 상태는 `.jjiban/logs/orchay-active.json`에 저장됩니다:
+실행 상태는 `.orchay/logs/orchay-active.json`에 저장됩니다:
 
 ```json
 {
@@ -231,6 +231,6 @@ cd orchay && uv run orchay exec stop {TASK_ID}
 ---
 
 <!--
-jjiban - Workflow Common Module (Lite)
+orchay - Workflow Common Module (Lite)
 Version: 1.2
 -->

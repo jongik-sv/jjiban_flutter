@@ -11,15 +11,21 @@
     <!-- HTMX CDN -->
     <script src="https://unpkg.com/htmx.org@2.0.0"></script>
 
+    <!-- HTMX SSE Extension (깜빡임 없는 실시간 업데이트) -->
+    <script src="https://unpkg.com/htmx-ext-sse@2.2.2/sse.js"></script>
+
     <!-- HTMX Idiomorph Extension (DOM morphing for state preservation) -->
     <script src="https://unpkg.com/htmx-ext-morph@2.0.0/morph.js"></script>
 
-    <!-- Markdown & Mermaid for Document Viewer -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Mermaid for Diagrams (클라이언트 사이드) -->
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
     <script>
         mermaid.initialize({ startOnLoad: false, theme: 'dark' });
     </script>
+
+    <!-- Markdown 스타일 (서버 사이드 렌더링) -->
+    <link rel="stylesheet" href="/static/markdown.css">
+    <link rel="stylesheet" href="/api/pygments.css">
 
     <!-- Tailwind 다크테마 설정 -->
     <script>
@@ -30,7 +36,7 @@
 
     {% block head %}{% endblock %}
 </head>
-<body class="bg-gray-900 text-gray-100 min-h-screen" hx-ext="morph">
+<body class="bg-gray-900 text-gray-100 min-h-screen" hx-ext="morph,sse">
     {% block content %}{% endblock %}
 </body>
 </html>

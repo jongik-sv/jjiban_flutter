@@ -16,7 +16,7 @@ Task의 사용자 매뉴얼(080-user-manual.md)을 생성하는 스킬.
 
 - 애플리케이션 실행 중 (localhost:3000)
 - Playwright MCP 활성화
-- Task 폴더 존재 (.jjiban/projects/{project}/tasks/{TSK-ID}/)
+- Task 폴더 존재 (.orchay/projects/{project}/tasks/{TSK-ID}/)
 
 ## 워크플로우
 
@@ -43,8 +43,8 @@ Task의 사용자 매뉴얼(080-user-manual.md)을 생성하는 스킬.
 
 **이미지 복사**:
 ```bash
-mkdir -p .jjiban/projects/{project}/tasks/{TSK-ID}/manual-images
-cp .playwright-mcp/{파일명}.png .jjiban/projects/{project}/tasks/{TSK-ID}/manual-images/
+mkdir -p .orchay/projects/{project}/tasks/{TSK-ID}/manual-images
+cp .playwright-mcp/{파일명}.png .orchay/projects/{project}/tasks/{TSK-ID}/manual-images/
 ```
 
 ### Phase 3: 문서 작성

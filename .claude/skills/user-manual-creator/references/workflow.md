@@ -8,7 +8,7 @@
 - 011-ui-design.md (있는 경우)
 
 **작업**:
-1. `.jjiban/templates/080-manual.md` 템플릿 확인
+1. `.orchay/templates/080-manual.md` 템플릿 확인
 2. 기능 범위 파악
 3. 시나리오 목록 초안 (3~6개)
 
@@ -57,10 +57,10 @@
 
 ```bash
 # 폴더 생성
-mkdir -p .jjiban/projects/{project}/tasks/{TSK-ID}/manual-images
+mkdir -p .orchay/projects/{project}/tasks/{TSK-ID}/manual-images
 
 # 이미지 복사
-cp .playwright-mcp/{파일명}.png .jjiban/projects/{project}/tasks/{TSK-ID}/manual-images/
+cp .playwright-mcp/{파일명}.png .orchay/projects/{project}/tasks/{TSK-ID}/manual-images/
 ```
 
 ### Playwright 제약사항

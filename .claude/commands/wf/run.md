@@ -12,9 +12,9 @@
 
 # 특정 범위 지정
 /wf:run WP-01              # WP-01 내 Task만 (자동 프로젝트)
-/wf:run jjiban/WP-01       # 프로젝트 명시
+/wf:run orchay/WP-01       # 프로젝트 명시
 /wf:run TSK-01-01-01       # 단일 Task (자동 검색)
-/wf:run jjiban/TSK-01-01   # 프로젝트 명시
+/wf:run orchay/TSK-01-01   # 프로젝트 명시
 
 # 부분 실행
 /wf:run TSK-XX --until detail-design   # 상세설계까지
@@ -171,10 +171,10 @@ const mapping = {
 
 ## 실행 내용
 1. wbs.md에서 Task 메타데이터 확인
-   - 경로: .jjiban/projects/{project}/wbs.md
+   - 경로: .orchay/projects/{project}/wbs.md
 2. {역할별 작업 수행}
 3. {산출물} 문서 생성
-   - 경로: .jjiban/projects/{project}/tasks/{taskId}/{문서번호}
+   - 경로: .orchay/projects/{project}/tasks/{taskId}/{문서번호}
 4. wbs.md 상태 업데이트
 
 ## 참고 문서
@@ -317,7 +317,7 @@ ORCHAY_DONE:{task-id}:run:error:{에러 요약}
 ---
 
 <!--
-jjiban 프로젝트 - Workflow Command
+orchay 프로젝트 - Workflow Command
 author: 장종익
 Command: wf:run
 Version: 1.0

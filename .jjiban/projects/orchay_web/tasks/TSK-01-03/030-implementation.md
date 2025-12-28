@@ -13,7 +13,7 @@
 
 ### 문서 위치
 ```
-.jjiban/projects/orchay_web/tasks/TSK-01-03/
+.orchay/projects/orchay_web/tasks/TSK-01-03/
 ├── 010-design.md               ← 통합설계
 ├── 025-traceability-matrix.md
 ├── 026-test-specification.md
@@ -195,23 +195,23 @@ tests/test_cli.py::TestWebConfigInConfig::test_config_default_web_config PASSED
 
 ### 5.1 웹서버 포함 실행 (--web)
 ```bash
-$ orchay jjiban --web
+$ orchay orchay --web
 [INFO] Initializing Orchestrator...
 [INFO] Starting web server at http://127.0.0.1:8080
 [INFO] Press Ctrl+C to stop
 
-┌─ orchay - jjiban ─────────────────────────┐
+┌─ orchay - orchay ─────────────────────────┐
 │  TUI 화면...                              │
 └───────────────────────────────────────────┘
 ```
 
 ### 5.2 웹서버만 실행 (--web-only)
 ```bash
-$ orchay jjiban --web-only
+$ orchay orchay --web-only
 orchay - Web Monitor (web-only mode)
 
-Project: jjiban
-WBS: .jjiban/projects/jjiban/wbs.md
+Project: orchay
+WBS: .orchay/projects/orchay/wbs.md
 Tasks: 12개
 
 웹서버 시작 http://127.0.0.1:8080
@@ -220,7 +220,7 @@ Ctrl+C로 종료
 
 ### 5.3 포트 지정
 ```bash
-$ orchay jjiban --web --port 3000
+$ orchay orchay --web --port 3000
 웹서버 시작 http://127.0.0.1:3000
 ```
 

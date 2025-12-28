@@ -56,8 +56,8 @@
 
 | 문서 | 경로 | 관련 섹션 |
 |------|------|----------|
-| PRD | `.jjiban/projects/orchay_web/prd.md` | 2.3 실시간 갱신 |
-| TRD | `.jjiban/projects/orchay_web/trd.md` | HTMX 패턴, API 설계 |
+| PRD | `.orchay/projects/orchay_web/prd.md` | 2.3 실시간 갱신 |
+| TRD | `.orchay/projects/orchay_web/trd.md` | HTMX 패턴, API 설계 |
 
 ---
 

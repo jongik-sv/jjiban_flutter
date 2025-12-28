@@ -24,7 +24,7 @@ Chain PRD 문서를 분석하여 **Module 단위 (1-4주 User Story)**로 분리
 
 | 레벨 | 크기 | 목적 | 예시 |
 |------|------|------|------|
-| **EPIC-Level** | 3-6개월 | 전략적 비즈니스 역량 | "jjiban - AI-Assisted Kanban Tool" |
+| **EPIC-Level** | 3-6개월 | 전략적 비즈니스 역량 | "orchay - AI-Assisted Kanban Tool" |
 | **Chain-Level** | 1-3개월 | 실행 가능한 Feature | "Core Project Management System" |
 | **Module-Level** | 1-4주 | User Story | "칸반 보드 UI" |
 | **Task-Level** | 1-5일 | 구현 작업 | "드래그 앤 드롭 구현" |
@@ -248,8 +248,8 @@ MODULE-04: 사용자 인증 & 권한 관리 (2주)
 ## 사전 요구사항
 
 사용자에게 다음 정보를 요청하세요:
-1. **Chain PRD 파일 경로** (예: `projects/jjiban/CHAIN-jjiban-01-platform-foundation/chain-prd.md`)
-2. **Chain 폴더 경로** (예: `projects/jjiban/CHAIN-jjiban-01-platform-foundation/`)
+1. **Chain PRD 파일 경로** (예: `projects/orchay/CHAIN-orchay-01-platform-foundation/chain-prd.md`)
+2. **Chain 폴더 경로** (예: `projects/orchay/CHAIN-orchay-01-platform-foundation/`)
 3. **Module 분류 방식** (자동 추론 또는 수동 지정)
 
 ---
@@ -319,9 +319,9 @@ Chain PRD에서 다음 형식의 Module 정의를 파싱:
 - **ID 형식**: `MODULE-{chain-id}-{01-99}`
 - **폴더명**: `MODULE-{chain-id}-{number}-{kebab-case-name}`
 - **예시**:
-  - `MODULE-jjiban-01-01-portal-layout-system`
-  - `MODULE-jjiban-01-02-design-system-components`
-  - `MODULE-jjiban-01-03-database-schema-orm`
+  - `MODULE-orchay-01-01-portal-layout-system`
+  - `MODULE-orchay-01-02-design-system-components`
+  - `MODULE-orchay-01-03-database-schema-orm`
 
 ---
 
@@ -655,19 +655,19 @@ src/
 ### 단일 Chain 처리
 
 ```bash
-/split-modules projects/jjiban/CHAIN-jjiban-01-platform-foundation/chain-prd.md
+/split-modules projects/orchay/CHAIN-orchay-01-platform-foundation/chain-prd.md
 ```
 
 ### 전체 EPIC의 모든 Chain 처리
 
 ```bash
-/split-modules --all projects/jjiban/
+/split-modules --all projects/orchay/
 ```
 
 ### 기존 Module 정의 활용
 
 ```bash
-/split-modules --use-existing projects/jjiban/CHAIN-jjiban-01-platform-foundation/chain-prd.md
+/split-modules --use-existing projects/orchay/CHAIN-orchay-01-platform-foundation/chain-prd.md
 ```
 
 ---
@@ -679,10 +679,10 @@ src/
    - 없으면 자동 생성
 
 2. **Module ID는 Chain ID 기반으로 생성**
-   - Chain: `CHAIN-jjiban-01` → Module: `MODULE-jjiban-01-01`
+   - Chain: `CHAIN-orchay-01` → Module: `MODULE-orchay-01-01`
 
 3. **폴더명은 kebab-case 사용**
-   - `MODULE-jjiban-01-01-portal-layout-system`
+   - `MODULE-orchay-01-01-portal-layout-system`
 
 4. **Task는 문서에만 정의**
    - Task 폴더와 task-prd.md는 별도 명령어로 생성

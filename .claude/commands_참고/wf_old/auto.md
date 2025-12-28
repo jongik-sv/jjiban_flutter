@@ -324,8 +324,8 @@ function sortByPriority(tasks) {
 ```
 [wf:auto] 실행 가능 Task 분석
 
-프로젝트: jjiban
-wbs.md: .jjiban/projects/jjiban/wbs.md
+프로젝트: orchay
+wbs.md: .orchay/projects/orchay/wbs.md
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -498,7 +498,7 @@ function parseTarget(input) {
 // ⭐ 테스트 결과 문서 존재 여부 확인
 // wf:build가 내부적으로 wf:test를 호출하므로, 중복 실행 방지
 function checkTestResultsExist(taskId) {
-  const taskFolder = `.jjiban/projects/{project}/tasks/${taskId}/`;
+  const taskFolder = `.orchay/projects/{project}/tasks/${taskId}/`;
 
   // 테스트 결과 문서 존재 여부 확인
   const tddResultExists = fileExists(`${taskFolder}070-tdd-test-results.md`);
@@ -570,11 +570,11 @@ Task({
   description: "TSK-01-01-01 기본설계 수행",
   prompt: `
     Task ID: TSK-01-01-01
-    프로젝트: jjiban
+    프로젝트: orchay
     단계: 기본설계 (start)
 
-    wbs.md 경로: .jjiban/projects/jjiban/wbs.md
-    Task 폴더: .jjiban/projects/jjiban/tasks/TSK-01-01-01/
+    wbs.md 경로: .orchay/projects/orchay/wbs.md
+    Task 폴더: .orchay/projects/orchay/tasks/TSK-01-01-01/
 
     실행 내용:
     1. wbs.md에서 Task 메타데이터 확인
@@ -807,11 +807,11 @@ const subagentMapping = {
 
 ## 실행 내용
 1. wbs.md에서 Task 메타데이터 확인
-   - 경로: .jjiban/projects/{project}/wbs.md
+   - 경로: .orchay/projects/{project}/wbs.md
 2. 요구사항 분석 및 기본설계 수행
 3. 010-basic-design.md 문서 생성
-   - 경로: .jjiban/projects/{project}/tasks/{taskId}/010-basic-design.md
-   - 템플릿: .jjiban/templates/010-basic-design.md
+   - 경로: .orchay/projects/{project}/tasks/{taskId}/010-basic-design.md
+   - 템플릿: .orchay/templates/010-basic-design.md
 4. wbs.md 상태 업데이트: [ ] → [bd]
 
 ## 참고 문서
@@ -1256,7 +1256,7 @@ Subagent 실행 통계:
 ---
 
 <!--
-jjiban 프로젝트 - Workflow Command
+orchay 프로젝트 - Workflow Command
 author: 장종익
 Command: wf:auto
 Version: 2.6

@@ -37,7 +37,7 @@ WBS 트리 템플릿은 orchay 웹 모니터링 UI에서 프로젝트의 Work Pa
 
 ### 2.1 사전 요구사항
 - orchay 서버 실행 중 (`python -m orchay --web` 또는 `--web-only`)
-- `.jjiban/projects/{project}/wbs.md` 파일 존재
+- `.orchay/projects/{project}/wbs.md` 파일 존재
 - 브라우저 지원: Chrome, Firefox, Edge (최신 버전)
 
 ### 2.2 접근 방법
@@ -89,7 +89,7 @@ uv run python -m orchay orchay_web --web-only --port 8080
 ## 4. FAQ
 
 ### Q1: 트리가 비어있어요
-**A**: `.jjiban/projects/{project}/wbs.md` 파일이 존재하는지 확인하세요. wbs.md에 Task가 정의되어 있어야 합니다.
+**A**: `.orchay/projects/{project}/wbs.md` 파일이 존재하는지 확인하세요. wbs.md에 Task가 정의되어 있어야 합니다.
 
 ### Q2: 상태 색상이 회색으로만 표시돼요
 **A**: Task의 status 필드가 올바른 형식인지 확인하세요. 예: `- status: implement [im]`
@@ -127,7 +127,7 @@ uv run python -m orchay orchay_web --web-only --port 8080
 - 추적성 매트릭스: `./025-traceability-matrix.md`
 - 테스트 명세서: `./026-test-specification.md`
 - 구현 보고서: `./030-implementation.md`
-- PRD: `.jjiban/projects/orchay_web/prd.md`
+- PRD: `.orchay/projects/orchay_web/prd.md`
 
 ### 6.2 소스 코드 위치
 - 템플릿: `orchay/src/orchay/web/templates/partials/tree.html`

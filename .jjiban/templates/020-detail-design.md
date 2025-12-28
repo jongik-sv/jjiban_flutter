@@ -31,8 +31,8 @@
 
 | 문서 유형 | 경로 | 참조 섹션 |
 |----------|------|----------|
-| PRD | `.jjiban/[project]/prd.md` | 섹션 [번호] |
-| TRD | `.jjiban/[project]/trd.md` | 전체 |
+| PRD | `.orchay/[project]/prd.md` | 섹션 [번호] |
+| TRD | `.orchay/[project]/trd.md` | 전체 |
 | 기본설계 | `010-basic-design.md` | 전체 |
 | 상위 Activity | [ACT-ID]: [Activity 이름] | - |
 | 상위 Work Package | [WP-ID]: [Work Package 이름] | - |
@@ -99,7 +99,7 @@
 | UI Framework | PrimeVue | 4.x | 컴포넌트 라이브러리 |
 | Styling | TailwindCSS | 3.4.x | 유틸리티 CSS |
 | Backend | Nuxt Server Routes | - | API 서버 |
-| Data | JSON 파일 (.jjiban/) | - | 데이터 저장 |
+| Data | JSON 파일 (.orchay/) | - | 데이터 저장 |
 | Testing | Vitest + Playwright | 2.x / 1.49.x | 테스트 |
 
 ---
@@ -410,8 +410,8 @@ stateDiagram-v2
 - 기본설계: `010-basic-design.md`
 - 추적성 매트릭스: `025-traceability-matrix.md`
 - 테스트 명세: `026-test-specification.md`
-- PRD: `.jjiban/[project]/prd.md`
-- TRD: `.jjiban/[project]/trd.md`
+- PRD: `.orchay/[project]/prd.md`
+- TRD: `.orchay/[project]/trd.md`
 
 ---
 

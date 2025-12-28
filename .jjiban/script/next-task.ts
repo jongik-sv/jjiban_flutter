@@ -2,7 +2,7 @@
  * 실행 가능한 Task 목록 조회 스크립트 (의존관계 분석)
  *
  * Usage:
- *   npx tsx .jjiban/script/next-task.ts [input] [options]
+ *   npx tsx .orchay/script/next-task.ts [input] [options]
  *
  * Arguments:
  *   input   프로젝트ID, TaskID, 또는 project/task-id 형식
@@ -254,7 +254,7 @@ class WbsReader {
   }
 
   async getAllProjects(): Promise<string[]> {
-    const projectsDir = join(this.projectRoot, '.jjiban', 'projects');
+    const projectsDir = join(this.projectRoot, '.orchay', 'projects');
     try {
       const entries = await fs.readdir(projectsDir, { withFileTypes: true });
       return entries.filter((e) => e.isDirectory()).map((e) => e.name);
@@ -285,7 +285,7 @@ class WbsReader {
   }
 
   async detectProjectId(): Promise<string | null> {
-    const projectsDir = join(this.projectRoot, '.jjiban', 'projects');
+    const projectsDir = join(this.projectRoot, '.orchay', 'projects');
 
     try {
       const entries = await fs.readdir(projectsDir, { withFileTypes: true });
@@ -302,7 +302,7 @@ class WbsReader {
   }
 
   getWbsPath(projectId: string): string {
-    return join(this.projectRoot, '.jjiban', 'projects', projectId, 'wbs.md');
+    return join(this.projectRoot, '.orchay', 'projects', projectId, 'wbs.md');
   }
 
   async readWbs(projectId: string): Promise<WbsNode[]> {
@@ -514,7 +514,7 @@ function printProjectSelection(
     const title = r.task.title || '(제목 없음)';
     console.log(`  ${i + 1}. ${r.projectId} - ${r.task.id}: ${title}`);
   });
-  console.log(`\n다음 형식으로 재실행하세요: npx tsx .jjiban/script/next-task.ts {project}/${taskId}\n`);
+  console.log(`\n다음 형식으로 재실행하세요: npx tsx .orchay/script/next-task.ts {project}/${taskId}\n`);
 }
 
 function outputError(reason: string, message: string): void {
