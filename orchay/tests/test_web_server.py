@@ -1415,6 +1415,260 @@ def test_server_stops_cleanly() -> None:
     assert True, "서버가 예외 없이 종료됨"
 
 
+# =============================================================================
+# TSK-05-01: Document Viewer API 테스트
+# 테스트 명세서 (026-test-specification.md) UT-01 ~ UT-05
+# =============================================================================
+
+
+# UT-01: 마크다운 문서 API 정상 응답
+@pytest.mark.asyncio
+async def test_get_markdown_document(tmp_path: pytest.TempPathFactory) -> None:
+    """마크다운 파일 요청 시 PlainTextResponse 반환 확인."""
+    from httpx import ASGITransport, AsyncClient
+
+    from orchay.web.server import create_app
+
+    # 테스트용 마크다운 파일 생성
+    task_dir = tmp_path / "orchay_web" / "tasks" / "TSK-TEST"
+    task_dir.mkdir(parents=True)
+    test_md = task_dir / "test.md"
+    test_md.write_text("# Test Document\n\nHello World!", encoding="utf-8")
+
+    mock_orchestrator = Mock()
+    mock_orchestrator.project_name = "orchay_web"
+    mock_orchestrator.mode = Mock(value="quick")
+    mock_orchestrator.tasks = []
+    mock_orchestrator.workers = []
+
+    import os
+    original_cwd = os.getcwd()
+    os.chdir(tmp_path)
+
+    try:
+        # .jjiban 경로 구조 생성
+        jjiban_tasks = tmp_path / ".jjiban" / "projects" / "orchay_web" / "tasks" / "TSK-TEST"
+        jjiban_tasks.mkdir(parents=True)
+        (jjiban_tasks / "test.md").write_text("# Test Document\n\nHello World!", encoding="utf-8")
+
+        app = create_app(mock_orchestrator)
+        transport = ASGITransport(app=app)
+
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.get("/api/document/TSK-TEST/test.md")
+
+        assert response.status_code == 200
+        assert "text/plain" in response.headers["content-type"]
+        assert "# Test Document" in response.text
+    finally:
+        os.chdir(original_cwd)
+
+
+# UT-02: 허용되지 않는 확장자 차단
+@pytest.mark.asyncio
+@pytest.mark.parametrize("ext", [".pdf", ".exe", ".py", ".html"])
+async def test_reject_disallowed_extensions(ext: str) -> None:
+    """허용되지 않는 확장자 요청 시 400 반환."""
+    from httpx import ASGITransport, AsyncClient
+
+    from orchay.web.server import create_app
+
+    mock_orchestrator = Mock()
+    mock_orchestrator.project_name = "test_project"
+    mock_orchestrator.mode = Mock(value="quick")
+    mock_orchestrator.tasks = []
+    mock_orchestrator.workers = []
+
+    app = create_app(mock_orchestrator)
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get(f"/api/document/TSK-TEST/file{ext}")
+
+    assert response.status_code == 400
+    assert "Unsupported file type" in response.text
+
+
+# UT-03: Path Traversal 차단
+@pytest.mark.asyncio
+@pytest.mark.parametrize("malicious_path", [
+    "../../../etc/passwd.md",
+    "..%2F..%2F..%2Fetc%2Fpasswd.md",
+    "test/../../../etc/passwd.md",
+])
+async def test_block_path_traversal(malicious_path: str) -> None:
+    """Path traversal 시도 시 403 또는 404 반환 (경로 탈출 불가)."""
+    from httpx import ASGITransport, AsyncClient
+
+    from orchay.web.server import create_app
+
+    mock_orchestrator = Mock()
+    mock_orchestrator.project_name = "test_project"
+    mock_orchestrator.mode = Mock(value="quick")
+    mock_orchestrator.tasks = []
+    mock_orchestrator.workers = []
+
+    app = create_app(mock_orchestrator)
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get(f"/api/document/TSK-TEST/{malicious_path}")
+
+    # 403 Access denied 또는 404 (경로 resolve 후 존재하지 않음)
+    assert response.status_code in [403, 404]
+
+
+# UT-04: 이미지 파일 API 정상 응답
+@pytest.mark.asyncio
+async def test_get_image_document(tmp_path: pytest.TempPathFactory) -> None:
+    """이미지 파일 요청 시 FileResponse 반환 확인."""
+    from httpx import ASGITransport, AsyncClient
+
+    from orchay.web.server import create_app
+
+    mock_orchestrator = Mock()
+    mock_orchestrator.project_name = "test_project"
+    mock_orchestrator.mode = Mock(value="quick")
+    mock_orchestrator.tasks = []
+    mock_orchestrator.workers = []
+
+    import os
+    original_cwd = os.getcwd()
+    os.chdir(tmp_path)
+
+    try:
+        # 이미지 파일 생성 (1x1 PNG 바이트)
+        jjiban_tasks = tmp_path / ".jjiban" / "projects" / "test_project" / "tasks" / "TSK-TEST"
+        jjiban_tasks.mkdir(parents=True)
+        png_bytes = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x02\x00\x00\x00\x90wS\xde\x00\x00\x00\x0cIDATx\x9cc\xf8\x0f\x00\x00\x01\x01\x00\x05\x18\xd8N\x00\x00\x00\x00IEND\xaeB`\x82'
+        (jjiban_tasks / "image.png").write_bytes(png_bytes)
+
+        app = create_app(mock_orchestrator)
+        transport = ASGITransport(app=app)
+
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.get("/api/document/TSK-TEST/image.png")
+
+        assert response.status_code == 200
+        assert "image/png" in response.headers["content-type"]
+    finally:
+        os.chdir(original_cwd)
+
+
+# UT-05: 존재하지 않는 파일 404
+@pytest.mark.asyncio
+async def test_document_not_found() -> None:
+    """존재하지 않는 파일 요청 시 404 반환."""
+    from httpx import ASGITransport, AsyncClient
+
+    from orchay.web.server import create_app
+
+    mock_orchestrator = Mock()
+    mock_orchestrator.project_name = "test_project"
+    mock_orchestrator.mode = Mock(value="quick")
+    mock_orchestrator.tasks = []
+    mock_orchestrator.workers = []
+
+    app = create_app(mock_orchestrator)
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/api/document/TSK-TEST/nonexistent.md")
+
+    assert response.status_code == 404
+    assert "not found" in response.text.lower()
+
+
+# Document Viewer 모달 HTML 확인
+@pytest.mark.asyncio
+async def test_document_viewer_modal_exists() -> None:
+    """index.html에 Document Viewer 모달이 포함되어 있는지 확인."""
+    from httpx import ASGITransport, AsyncClient
+
+    from orchay.web.server import create_app
+
+    mock_orchestrator = Mock()
+    mock_orchestrator.project_name = "test_project"
+    mock_orchestrator.mode = Mock(value="quick")
+    mock_orchestrator.tasks = []
+    mock_orchestrator.workers = []
+
+    app = create_app(mock_orchestrator)
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/")
+
+    html = response.text
+
+    # 모달 요소 확인
+    assert 'id="document-modal"' in html
+    assert 'id="document-content"' in html
+    assert 'id="document-close-btn"' in html
+    assert "openDocument" in html
+    assert "closeDocument" in html
+
+
+# Document Viewer JavaScript 함수 확인
+@pytest.mark.asyncio
+async def test_document_viewer_javascript_functions() -> None:
+    """Document Viewer JavaScript 함수가 정의되어 있는지 확인."""
+    from httpx import ASGITransport, AsyncClient
+
+    from orchay.web.server import create_app
+
+    mock_orchestrator = Mock()
+    mock_orchestrator.project_name = "test_project"
+    mock_orchestrator.mode = Mock(value="quick")
+    mock_orchestrator.tasks = []
+    mock_orchestrator.workers = []
+
+    app = create_app(mock_orchestrator)
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/")
+
+    html = response.text
+
+    # JavaScript 함수 확인
+    assert "async function openDocument" in html
+    assert "function closeDocument" in html
+    assert "marked.parse" in html
+    assert "mermaid.run" in html
+    # ESC 키 핸들러
+    assert 'e.key === \'Escape\'' in html or "Escape" in html
+
+
+# get_task_documents 이미지 지원 확인
+def test_get_task_documents_includes_images(tmp_path: pytest.TempPathFactory) -> None:
+    """get_task_documents가 이미지 파일도 반환하는지 확인."""
+    from orchay.web.server import get_task_documents
+
+    # Given
+    task_dir = tmp_path / "TSK-TEST"
+    task_dir.mkdir()
+    (task_dir / "010-design.md").touch()
+    (task_dir / "wireframe.png").touch()
+    (task_dir / "screenshot.jpg").touch()
+    (task_dir / "secret.pdf").touch()  # 허용되지 않는 확장자
+
+    # When
+    docs = get_task_documents("TSK-TEST", base_path=tmp_path)
+
+    # Then
+    assert len(docs) == 3  # md + png + jpg (pdf 제외)
+    assert "010-design.md" in docs
+    assert "wireframe.png" in docs
+    assert "screenshot.jpg" in docs
+    assert "secret.pdf" not in docs
+
+
+# =============================================================================
+# TC-12b: 대용량 데이터 성능 테스트
+# =============================================================================
+
+
 # TC-12b: 대용량 데이터 성능 테스트
 @pytest.mark.asyncio
 async def test_api_response_time_with_large_data() -> None:

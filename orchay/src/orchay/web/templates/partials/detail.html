@@ -67,4 +67,23 @@
         </div>
     </div>
     {% endif %}
+
+    <!-- Documents (FR-007 + TSK-05-01: Document Viewer) -->
+    <div class="mt-4 pt-4 border-t border-orchay-border" data-testid="documents-section">
+        <span class="text-orchay-muted text-sm">Documents</span>
+        <div class="mt-2 space-y-1" data-testid="documents-list">
+            {% if documents %}
+            {% for doc in documents %}
+            <div class="flex items-center gap-2 text-sm cursor-pointer hover:bg-gray-700 rounded px-2 py-1 -mx-2 transition-colors"
+                 data-testid="document-item"
+                 onclick="openDocument('{{ task.id }}', '{{ doc }}')">
+                <span>{% if doc.endswith('.md') %}📄{% else %}🖼️{% endif %}</span>
+                <span class="text-orchay-accent hover:underline">{{ doc }}</span>
+            </div>
+            {% endfor %}
+            {% else %}
+            <p class="text-orchay-muted text-sm">문서 없음</p>
+            {% endif %}
+        </div>
+    </div>
 </div>
