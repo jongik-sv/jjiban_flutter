@@ -9,12 +9,12 @@
     </div>
 </header>
 
-<!-- Worker Bar -->
+<!-- Worker Bar (TSK-03-03: settle 추가로 깜빡임 최소화) -->
 <div id="workers-bar"
      class="bg-gray-800 border-b border-gray-700 px-4 py-2"
      hx-get="/api/workers"
      hx-trigger="load, every 5s"
-     hx-swap="innerHTML">
+     hx-swap="innerHTML settle:100ms">
     <div class="animate-pulse flex items-center gap-4">
         <span class="text-gray-500">Workers: 로딩 중...</span>
     </div>
@@ -22,13 +22,13 @@
 
 <!-- Main Content: 2-Column Layout -->
 <main class="flex h-[calc(100vh-100px)]">
-    <!-- Left: WBS Tree -->
+    <!-- Left: WBS Tree (TSK-03-03: settle 추가로 깜빡임 최소화) -->
     <div class="w-1/2 border-r border-gray-700 overflow-auto p-4"
          id="tree-panel"
          data-testid="tree-panel"
          hx-get="/api/tree"
          hx-trigger="load, every 5s"
-         hx-swap="innerHTML">
+         hx-swap="innerHTML settle:100ms">
         <div class="animate-pulse">
             <div class="h-4 bg-gray-700 rounded w-3/4 mb-2"></div>
             <div class="h-4 bg-gray-700 rounded w-1/2 mb-2 ml-4"></div>
@@ -36,17 +36,58 @@
         </div>
     </div>
 
-    <!-- Right: Task Detail -->
-    <div class="w-1/2 overflow-auto p-4" id="detail-panel" data-testid="detail-panel">
+    <!-- Right: Task Detail (TSK-03-03: 선택 시 자동 갱신 추가) -->
+    <div class="w-1/2 overflow-auto p-4" id="detail-panel" data-testid="detail-panel"
+         data-selected-task="">
         <div class="flex items-center justify-center h-full text-gray-500">
             <p>Task를 선택하세요</p>
         </div>
     </div>
 </main>
 
-<!-- 글로벌 스크립트 (selectTask 함수) -->
+<!-- 에러 토스트 컨테이너 -->
+<div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+<!-- 글로벌 스크립트 -->
 <script>
-// Task 선택 표시 (글로벌)
+// ========== BR-02: 선택 상태 관리 (localStorage) ==========
+const STATE_KEY = 'orchay_ui_state';
+
+function saveState() {
+    const state = {
+        selectedTaskId: document.querySelector('.tree-node.task.selected')?.dataset.id || null,
+        expandedWps: Array.from(document.querySelectorAll('.tree-node.wp[data-expanded="true"]'))
+            .map(el => el.dataset.id)
+    };
+    localStorage.setItem(STATE_KEY, JSON.stringify(state));
+}
+
+function restoreState() {
+    try {
+        const state = JSON.parse(localStorage.getItem(STATE_KEY) || '{}');
+
+        // 선택된 Task 복원
+        if (state.selectedTaskId) {
+            const taskEl = document.querySelector(`.tree-node.task[data-id="${state.selectedTaskId}"]`);
+            if (taskEl) {
+                taskEl.classList.add('selected', 'bg-gray-700', 'ring-2', 'ring-blue-500');
+            }
+        }
+
+        // 펼쳐진 WP 복원
+        (state.expandedWps || []).forEach(wpId => {
+            const wpNode = document.querySelector(`.tree-node.wp[data-id="${wpId}"]`);
+            if (wpNode && wpNode.dataset.expanded === 'false') {
+                // WP 펼치기 트리거
+                wpNode.click();
+            }
+        });
+    } catch (e) {
+        console.warn('상태 복원 실패:', e);
+    }
+}
+
+// ========== Task 선택 표시 ==========
 function selectTask(el) {
     // 기존 선택 해제
     document.querySelectorAll('.tree-node.task.selected').forEach(node => {
@@ -54,9 +95,46 @@ function selectTask(el) {
     });
     // 새로운 선택
     el.classList.add('selected', 'bg-gray-700', 'ring-2', 'ring-blue-500');
+
+    // TSK-03-03: Task Detail 자동 갱신 설정
+    const taskId = el.dataset.id;
+    const detailPanel = document.getElementById('detail-panel');
+    detailPanel.setAttribute('data-selected-task', taskId);
+
+    // 상태 저장
+    saveState();
 }
 
-// WP 확장/축소 토글 (글로벌)
+// ========== TSK-03-03: Task Detail 자동 갱신 ==========
+let detailRefreshInterval = null;
+
+function startDetailRefresh() {
+    // 기존 인터벌 제거
+    if (detailRefreshInterval) {
+        clearInterval(detailRefreshInterval);
+    }
+
+    // 5초마다 선택된 Task 상세 갱신
+    detailRefreshInterval = setInterval(() => {
+        const detailPanel = document.getElementById('detail-panel');
+        const selectedTaskId = detailPanel.getAttribute('data-selected-task');
+
+        if (selectedTaskId) {
+            htmx.ajax('GET', '/api/detail/' + selectedTaskId, {
+                target: '#detail-panel',
+                swap: 'innerHTML settle:100ms'
+            }).then(() => {
+                // 갱신 후에도 data-selected-task 유지
+                detailPanel.setAttribute('data-selected-task', selectedTaskId);
+            });
+        }
+    }, 5000);
+}
+
+// 페이지 로드 시 자동 갱신 시작
+document.addEventListener('DOMContentLoaded', startDetailRefresh);
+
+// ========== WP 확장/축소 토글 ==========
 function toggleWp(el) {
     const wpDiv = el.closest('[data-id^="WP-"]');
     const childrenDiv = wpDiv.querySelector('.children');
@@ -76,6 +154,80 @@ function toggleWp(el) {
         toggleIcon.classList.add('rotate-90');
         el.dataset.expanded = 'true';
     }
+    // 상태 저장
+    saveState();
 }
+
+// ========== 에러 토스트 ==========
+function showToast(message, type = 'error') {
+    const toast = document.createElement('div');
+    toast.className = `px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 transform transition-all duration-300 ${
+        type === 'error' ? 'bg-red-800 text-red-100' : 'bg-gray-800 text-gray-100'
+    }`;
+    toast.innerHTML = `
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="${type === 'error'
+                      ? 'M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
+                      : 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'}"/>
+        </svg>
+        <span>${message}</span>
+        <button onclick="this.parentElement.remove()" class="ml-2 hover:text-white">×</button>
+    `;
+    document.getElementById('toast-container').appendChild(toast);
+
+    // 5초 후 자동 제거
+    setTimeout(() => toast.remove(), 5000);
+}
+
+// ========== HTMX 이벤트 리스너 ==========
+// 트리 갱신 후 상태 복원
+document.body.addEventListener('htmx:afterSwap', function(evt) {
+    if (evt.detail.target.id === 'tree-panel') {
+        restoreState();
+    }
+});
+
+// 네트워크 에러 처리
+document.body.addEventListener('htmx:responseError', function(evt) {
+    const status = evt.detail.xhr?.status;
+    if (status === 404) {
+        showToast('요청한 리소스를 찾을 수 없습니다', 'error');
+    } else if (status >= 500) {
+        showToast('서버 오류가 발생했습니다', 'error');
+    }
+});
+
+document.body.addEventListener('htmx:sendError', function(evt) {
+    showToast('네트워크 연결 실패. 재시도 중...', 'error');
+});
+
+// 로딩 인디케이터
+document.body.addEventListener('htmx:beforeRequest', function(evt) {
+    evt.detail.target?.classList.add('htmx-request');
+});
+
+document.body.addEventListener('htmx:afterRequest', function(evt) {
+    evt.detail.target?.classList.remove('htmx-request');
+});
 </script>
+
+<!-- HTMX 로딩 스타일 -->
+<style>
+.htmx-request {
+    position: relative;
+}
+.htmx-request::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(17, 24, 39, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+</style>
 {% endblock %}

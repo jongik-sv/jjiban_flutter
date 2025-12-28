@@ -2,6 +2,7 @@
 
 TSK-01-01: FastAPI 앱 및 라우트 정의
 TSK-02-01: 트리 데이터 API
+TSK-03-01: Task 상세 API 및 템플릿
 """
 
 from __future__ import annotations
@@ -20,6 +21,53 @@ from orchay.web.tree import build_tree, build_wp_children
 if TYPE_CHECKING:
     from orchay.main import Orchestrator
     from orchay.models import Task
+
+
+def calculate_progress(tasks: list[Task]) -> dict[str, int]:
+    """전체 진행률 계산.
+
+    Args:
+        tasks: Task 목록
+
+    Returns:
+        진행률 정보 {"total": int, "done": int, "percentage": int}
+    """
+    total = len(tasks)
+    if total == 0:
+        return {"total": 0, "done": 0, "percentage": 0}
+
+    done = sum(1 for t in tasks if t.status.value == "[xx]")
+    percentage = int((done / total) * 100)
+    return {"total": total, "done": done, "percentage": percentage}
+
+
+def get_task_documents(
+    task_id: str,
+    base_path: Path | None = None,
+    project_name: str = "",
+) -> list[str]:
+    """Task 관련 문서 목록 조회.
+
+    Args:
+        task_id: Task ID (예: TSK-01-01)
+        base_path: Task 문서 기본 경로 (기본: .jjiban/projects/{project}/tasks)
+        project_name: 프로젝트 이름
+
+    Returns:
+        존재하는 문서 파일명 목록 (정렬됨)
+    """
+    if base_path is None:
+        # 기본 경로: .jjiban/projects/{project}/tasks/{task_id}/
+        base_path = Path(".jjiban/projects") / project_name / "tasks"
+
+    task_dir = base_path / task_id
+
+    if not task_dir.exists() or not task_dir.is_dir():
+        return []
+
+    # .md 파일만 반환, 정렬
+    docs = [f.name for f in task_dir.iterdir() if f.is_file() and f.suffix == ".md"]
+    return sorted(docs)
 
 
 def create_app(orchestrator: Orchestrator) -> FastAPI:
@@ -103,20 +151,28 @@ def create_app(orchestrator: Orchestrator) -> FastAPI:
                 {"message": f"Task '{task_id}'를 찾을 수 없습니다"},
                 status_code=404,
             )
+
+        # FR-007: 관련 문서 목록 조회
+        documents = get_task_documents(
+            task_id=task_id,
+            project_name=orchestrator.project_name,
+        )
+
         return templates.TemplateResponse(
             request,
             "partials/detail.html",
-            {"task": task},
+            {"task": task, "documents": documents},
         )
 
     @app.get("/api/workers", response_class=HTMLResponse)
     async def _get_workers(request: Request) -> HTMLResponse:
-        """Worker 상태 HTML 조각."""
+        """Worker 상태 HTML 조각 (진행률 포함)."""
         workers = orchestrator.workers
+        progress = calculate_progress(orchestrator.tasks)
         return templates.TemplateResponse(
             request,
             "partials/workers.html",
-            {"workers": workers},
+            {"workers": workers, "progress": progress},
         )
 
     return app

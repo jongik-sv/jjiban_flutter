@@ -291,7 +291,7 @@
 ### TSK-03-03: 실시간 자동 갱신
 - category: development
 - domain: frontend
-- status: approved [ap]
+- status: implement [im]
 - priority: medium
 - assignee: -
 - schedule: 2026-01-03 ~ 2026-01-03

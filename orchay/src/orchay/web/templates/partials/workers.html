@@ -1,22 +1,39 @@
 <!-- TSK-03-02: Worker 상태 바 템플릿 -->
-<div class="flex items-center gap-4">
-    <span class="text-gray-400 text-sm">Workers:</span>
-    <div class="flex items-center gap-3">
-        {% for worker in workers %}
-        <div class="flex items-center gap-2 px-3 py-2 rounded-lg {{ worker.state | status_bg }}">
-            <span class="text-xl">{{ worker.state | status_icon }}</span>
-            <div class="flex flex-col">
-                <span class="font-medium">W{{ worker.id }}</span>
-                {% if worker.current_task %}
-                <span class="text-xs text-gray-400">({{ worker.current_task }})</span>
-                {% endif %}
+<!-- TSK-03-03: 진행률 표시 추가 -->
+<div class="flex items-center justify-between w-full" data-testid="workers-bar">
+    <!-- Worker 상태 영역 -->
+    <div class="flex items-center gap-4">
+        <span class="text-gray-400 text-sm">Workers:</span>
+        <div class="flex items-center gap-3">
+            {% for worker in workers %}
+            <div class="flex items-center gap-2 px-3 py-2 rounded-lg {{ worker.state | status_bg }}"
+                 data-testid="worker-item">
+                <span class="text-xl">{{ worker.state | status_icon }}</span>
+                <div class="flex flex-col">
+                    <span class="font-medium">W{{ worker.id }}</span>
+                    {% if worker.current_task %}
+                    <span class="text-xs text-gray-400">({{ worker.current_task }})</span>
+                    {% endif %}
+                </div>
+                <span class="text-xs text-gray-500">{{ worker.state.value }}</span>
             </div>
-            <span class="text-xs text-gray-500">{{ worker.state.value }}</span>
+            {% endfor %}
         </div>
-        {% endfor %}
+
+        {% if not workers %}
+        <span class="text-gray-500 text-sm">No workers available</span>
+        {% endif %}
     </div>
 
-    {% if not workers %}
-    <span class="text-gray-500 text-sm">No workers available</span>
-    {% endif %}
+    <!-- 진행률 표시 영역 -->
+    <div class="flex items-center gap-3" data-testid="progress-section">
+        <span class="text-gray-400 text-sm">Progress:</span>
+        <div class="w-32 h-2 bg-gray-700 rounded-full overflow-hidden" data-testid="progress-bar">
+            <div class="h-full bg-green-500 transition-all duration-300"
+                 style="width: {{ progress.percentage }}%"></div>
+        </div>
+        <span class="text-sm text-gray-300" data-testid="progress-text">
+            {{ progress.done }}/{{ progress.total }} ({{ progress.percentage }}%)
+        </span>
+    </div>
 </div>

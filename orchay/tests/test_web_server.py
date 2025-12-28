@@ -730,7 +730,8 @@ async def test_htmx_auto_refresh_attributes() -> None:
     assert 'id="workers-bar"' in response.text
     assert 'hx-get="/api/workers"' in response.text
     assert 'hx-trigger="load, every 5s"' in response.text
-    assert 'hx-swap="innerHTML"' in response.text
+    # TSK-03-03: settle 시간 추가로 깜빡임 최소화
+    assert 'hx-swap="innerHTML settle:100ms"' in response.text
 
 
 # =============================================================================
@@ -1093,3 +1094,228 @@ async def test_status_badge_color_mapping() -> None:
     # 상태별 색상 클래스 확인
     for color in expected_colors:
         assert color in html
+
+
+# =============================================================================
+# TSK-03-03: 실시간 자동 갱신 테스트
+# 테스트 명세서 (026-test-specification.md) TC-U01 ~ TC-E05
+# =============================================================================
+
+
+# TC-U01: 진행률 계산 - 정상 케이스
+def test_calculate_progress_normal_case() -> None:
+    """진행률 계산: 10개 중 4개 완료 = 40%."""
+    from orchay.web.server import calculate_progress
+
+    tasks = [
+        Mock(status=Mock(value="[xx]")),
+        Mock(status=Mock(value="[xx]")),
+        Mock(status=Mock(value="[xx]")),
+        Mock(status=Mock(value="[xx]")),
+        Mock(status=Mock(value="[im]")),
+        Mock(status=Mock(value="[dd]")),
+        Mock(status=Mock(value="[ ]")),
+        Mock(status=Mock(value="[ ]")),
+        Mock(status=Mock(value="[ ]")),
+        Mock(status=Mock(value="[ ]")),
+    ]
+    result = calculate_progress(tasks)
+    assert result["total"] == 10
+    assert result["done"] == 4
+    assert result["percentage"] == 40
+
+
+# TC-U02: 진행률 계산 - 빈 리스트
+def test_calculate_progress_empty_list() -> None:
+    """진행률 계산: 빈 리스트 = 0%."""
+    from orchay.web.server import calculate_progress
+
+    result = calculate_progress([])
+    assert result["total"] == 0
+    assert result["done"] == 0
+    assert result["percentage"] == 0
+
+
+# TC-U03: Worker API 진행률 포함 응답
+@pytest.mark.asyncio
+async def test_workers_api_includes_progress_display() -> None:
+    """Worker API 응답에 진행률 표시가 포함되는지 확인."""
+    from httpx import ASGITransport, AsyncClient
+
+    from orchay.models.worker import Worker, WorkerState
+    from orchay.web.server import create_app
+
+    # 5개 Task: 2개 완료, 3개 미완료 = 40%
+    tasks = [
+        Mock(status=Mock(value="[xx]")),
+        Mock(status=Mock(value="[xx]")),
+        Mock(status=Mock(value="[im]")),
+        Mock(status=Mock(value="[dd]")),
+        Mock(status=Mock(value="[ ]")),
+    ]
+
+    mock_orchestrator = Mock()
+    mock_orchestrator.project_name = "test_project"
+    mock_orchestrator.mode = Mock(value="quick")
+    mock_orchestrator.tasks = tasks
+    mock_orchestrator.workers = [Worker(id=1, pane_id=1, state=WorkerState.IDLE)]
+
+    app = create_app(mock_orchestrator)
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/api/workers")
+
+    html = response.text
+
+    # 진행률 표시 확인
+    assert "Progress:" in html
+    assert "2/5" in html
+    assert "40%" in html
+    assert 'data-testid="progress-section"' in html
+    assert 'data-testid="progress-bar"' in html
+    assert 'data-testid="progress-text"' in html
+
+
+# TC-E01: Worker 상태 5초 자동 갱신 (HTMX 설정 확인)
+@pytest.mark.asyncio
+async def test_worker_bar_auto_refresh_5s() -> None:
+    """Worker 상태 바에 5초 자동 갱신 HTMX 속성 확인."""
+    from httpx import ASGITransport, AsyncClient
+
+    from orchay.web.server import create_app
+
+    mock_orchestrator = Mock()
+    mock_orchestrator.project_name = "test_project"
+    mock_orchestrator.mode = Mock(value="quick")
+    mock_orchestrator.tasks = []
+    mock_orchestrator.workers = []
+
+    app = create_app(mock_orchestrator)
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/")
+
+    html = response.text
+
+    # Worker 바 자동 갱신 설정 확인
+    assert 'id="workers-bar"' in html
+    assert 'hx-get="/api/workers"' in html
+    assert 'hx-trigger="load, every 5s"' in html
+
+
+# TC-E03: Task 상세 자동 갱신 (JavaScript 함수 확인)
+@pytest.mark.asyncio
+async def test_task_detail_auto_refresh_function() -> None:
+    """Task Detail 자동 갱신 JavaScript 함수가 정의되어 있는지 확인."""
+    from httpx import ASGITransport, AsyncClient
+
+    from orchay.web.server import create_app
+
+    mock_orchestrator = Mock()
+    mock_orchestrator.project_name = "test_project"
+    mock_orchestrator.mode = Mock(value="quick")
+    mock_orchestrator.tasks = []
+    mock_orchestrator.workers = []
+
+    app = create_app(mock_orchestrator)
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/")
+
+    html = response.text
+
+    # Task Detail 자동 갱신 함수 확인
+    assert "startDetailRefresh" in html
+    assert "detailRefreshInterval" in html
+    assert "setInterval" in html
+    # 선택된 Task 저장 속성 확인
+    assert 'data-selected-task' in html
+
+
+# TC-E04: UI 깜빡임 방지 (settle 시간 확인)
+@pytest.mark.asyncio
+async def test_htmx_settle_time_for_flicker_prevention() -> None:
+    """HTMX settle 시간이 설정되어 깜빡임이 최소화되는지 확인."""
+    from httpx import ASGITransport, AsyncClient
+
+    from orchay.web.server import create_app
+
+    mock_orchestrator = Mock()
+    mock_orchestrator.project_name = "test_project"
+    mock_orchestrator.mode = Mock(value="quick")
+    mock_orchestrator.tasks = []
+    mock_orchestrator.workers = []
+
+    app = create_app(mock_orchestrator)
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/")
+
+    html = response.text
+
+    # settle:100ms 설정 확인 (깜빡임 방지)
+    assert "settle:100ms" in html
+
+
+# TC-E05: 네트워크 오류 처리 (에러 핸들러 확인)
+@pytest.mark.asyncio
+async def test_network_error_handler_exists() -> None:
+    """네트워크 오류 처리를 위한 HTMX 이벤트 핸들러 확인."""
+    from httpx import ASGITransport, AsyncClient
+
+    from orchay.web.server import create_app
+
+    mock_orchestrator = Mock()
+    mock_orchestrator.project_name = "test_project"
+    mock_orchestrator.mode = Mock(value="quick")
+    mock_orchestrator.tasks = []
+    mock_orchestrator.workers = []
+
+    app = create_app(mock_orchestrator)
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/")
+
+    html = response.text
+
+    # 에러 핸들러 확인
+    assert "htmx:responseError" in html
+    assert "htmx:sendError" in html
+    assert "showToast" in html
+
+
+# 진행률 프로그레스 바 스타일 확인
+@pytest.mark.asyncio
+async def test_progress_bar_styling() -> None:
+    """진행률 프로그레스 바에 적절한 스타일이 적용되는지 확인."""
+    from httpx import ASGITransport, AsyncClient
+
+    from orchay.models.worker import Worker, WorkerState
+    from orchay.web.server import create_app
+
+    tasks = [Mock(status=Mock(value="[xx]")) for _ in range(5)]
+
+    mock_orchestrator = Mock()
+    mock_orchestrator.project_name = "test_project"
+    mock_orchestrator.mode = Mock(value="quick")
+    mock_orchestrator.tasks = tasks
+    mock_orchestrator.workers = [Worker(id=1, pane_id=1, state=WorkerState.IDLE)]
+
+    app = create_app(mock_orchestrator)
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/api/workers")
+
+    html = response.text
+
+    # 프로그레스 바 스타일 확인
+    assert "bg-green-500" in html  # 진행 바 색상
+    assert "transition-all" in html  # 애니메이션
+    assert "duration-300" in html  # 애니메이션 시간
+    assert 'style="width: 100%"' in html  # 5/5 = 100%
