@@ -52,7 +52,7 @@
 ### TSK-01-02: Jinja2 템플릿 기본 구조
 - category: development
 - domain: frontend
-- status: implement [im]
+- status: done [xx]
 - priority: critical
 - assignee: -
 - schedule: 2025-12-29 ~ 2025-12-29
