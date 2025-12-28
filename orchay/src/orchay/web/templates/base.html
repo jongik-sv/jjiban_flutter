@@ -11,6 +11,16 @@
     <!-- HTMX CDN -->
     <script src="https://unpkg.com/htmx.org@2.0.0"></script>
 
+    <!-- HTMX Idiomorph Extension (DOM morphing for state preservation) -->
+    <script src="https://unpkg.com/htmx-ext-morph@2.0.0/morph.js"></script>
+
+    <!-- Markdown & Mermaid for Document Viewer -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({ startOnLoad: false, theme: 'dark' });
+    </script>
+
     <!-- Tailwind 다크테마 설정 -->
     <script>
         tailwind.config = {
@@ -20,7 +30,7 @@
 
     {% block head %}{% endblock %}
 </head>
-<body class="bg-gray-900 text-gray-100 min-h-screen">
+<body class="bg-gray-900 text-gray-100 min-h-screen" hx-ext="morph">
     {% block content %}{% endblock %}
 </body>
 </html>

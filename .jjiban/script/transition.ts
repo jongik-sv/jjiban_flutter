@@ -6,7 +6,7 @@
  *
  * Arguments:
  *   task-id   Task ID (TSK-01-01 또는 project/TSK-01-01)
- *   command   워크플로우 명령 (start, draft, approve, build, verify, done, fix, skip)
+ *   command   워크플로우 명령 (start, design, draft, approve, build, verify, done, fix, skip)
  *
  * Options:
  *   -p, --project <id>  프로젝트 ID
@@ -17,13 +17,9 @@
  */
 
 import { parseArgs } from 'node:util';
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-
-// 서버 유틸리티 import (wbs.md 조작용)
-import { findTaskById, findTaskInProject } from '../../server/utils/wbs/taskService.js';
-import { getWbsTree, saveWbsTree } from '../../server/utils/wbs/wbsService.js';
 
 // ====================
 // 타입 정의
@@ -33,7 +29,6 @@ interface Transition {
   from: string;
   to: string;
   command: string;
-  document: string | null;
 }
 
 interface Workflow {
@@ -45,7 +40,7 @@ interface Workflow {
 
 interface WorkflowsConfig {
   version: string;
-  states: Record<string, unknown>;
+  states: Record<string, { id: string; label: string }>;
   commands: Record<string, unknown>;
   workflows: Record<string, Workflow>;
 }
@@ -60,14 +55,11 @@ interface TransitionOutput {
   message?: string;
 }
 
-interface WbsNode {
+interface TaskInfo {
   id: string;
-  type: string;
-  status?: string;
-  category?: string;
-  completed?: Record<string, string>;
-  children?: WbsNode[];
-  [key: string]: unknown;
+  category: string;
+  status: string;
+  statusCode: string;
 }
 
 // ====================
@@ -97,15 +89,6 @@ function formatStatusCode(code: string): string {
   return `[${code}]`;
 }
 
-function formatCompletedTimestamp(date: Date = new Date()): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  return `${year}-${month}-${day} ${hours}:${minutes}`;
-}
-
 // ====================
 // 워크플로우 로딩
 // ====================
@@ -132,78 +115,122 @@ function findTransition(
 }
 
 // ====================
-// 롤백 계산
+// WBS 파일 직접 조작
 // ====================
 
-function calculateRollbackDeletions(
-  workflows: WorkflowsConfig,
-  category: string,
-  currentStatus: string,
-  newStatus: string
-): string[] {
-  const workflow = workflows.workflows[category];
-  if (!workflow) return [];
-
-  const currentIndex = workflow.states.indexOf(currentStatus);
-  const newIndex = workflow.states.indexOf(newStatus);
-
-  // 롤백 아님 (전진 또는 동일)
-  if (newIndex >= currentIndex || newIndex < 0 || currentIndex < 0) {
-    return [];
-  }
-
-  // 롤백 이후 단계의 상태 코드 추출
-  const stateCodesToDelete: string[] = [];
-  for (let i = newIndex + 1; i < workflow.states.length; i++) {
-    const stateCode = extractStatusCode(workflow.states[i]);
-    if (stateCode && stateCode.trim()) {
-      stateCodesToDelete.push(stateCode);
-    }
-  }
-  return stateCodesToDelete;
+function getWbsPath(projectId: string): string {
+  return join(__dirname, `../projects/${projectId}/wbs.md`);
 }
 
-// ====================
-// WBS 트리 업데이트
-// ====================
+async function readWbsFile(projectId: string): Promise<string> {
+  const wbsPath = getWbsPath(projectId);
+  return await readFile(wbsPath, 'utf-8');
+}
 
-function updateTaskInTree(
-  nodes: WbsNode[],
-  taskId: string,
-  newStatus: string,
-  completedTimestamp: string,
-  stateCodesToDelete: string[]
-): boolean {
-  for (const node of nodes) {
-    if (node.id === taskId && node.type === 'task') {
-      // 상태 업데이트
-      node.status = newStatus;
+async function writeWbsFile(projectId: string, content: string): Promise<void> {
+  const wbsPath = getWbsPath(projectId);
+  await writeFile(wbsPath, content, 'utf-8');
+}
 
-      // 롤백 시 이후 단계 completed 삭제
-      if (stateCodesToDelete.length > 0 && node.completed) {
-        for (const code of stateCodesToDelete) {
-          delete node.completed[code];
-        }
-      }
+/**
+ * wbs.md에서 Task 정보 추출
+ *
+ * 형식:
+ * ### TSK-01-01: 제목
+ * - category: development
+ * - status: todo [ ]
+ */
+function findTaskInContent(content: string, taskId: string): TaskInfo | null {
+  // Task 블록 시작 패턴: ### TSK-XX-XX: 또는 ### TSK-XX-XX-XX:
+  const taskHeaderPattern = new RegExp(
+    `###\\s*${escapeRegex(taskId)}\\s*:`,
+    'i'
+  );
 
-      // completed 필드에 완료 시각 기록
-      const newStatusCode = extractStatusCode(newStatus);
-      if (newStatusCode) {
-        if (!node.completed) {
-          node.completed = {};
-        }
-        node.completed[newStatusCode] = completedTimestamp;
-      }
-
-      return true;
-    }
-    if (node.children && node.children.length > 0) {
-      if (updateTaskInTree(node.children, taskId, newStatus, completedTimestamp, stateCodesToDelete)) {
-        return true;
-      }
-    }
+  const headerMatch = content.match(taskHeaderPattern);
+  if (!headerMatch || headerMatch.index === undefined) {
+    return null;
   }
-  return false;
+
+  // Task 블록 추출 (다음 ### 또는 ## 전까지)
+  const startIndex = headerMatch.index;
+  const nextSectionMatch = content.slice(startIndex + 1).match(/\n#{2,3}\s/);
+  const endIndex = nextSectionMatch
+    ? startIndex + 1 + nextSectionMatch.index!
+    : content.length;
+
+  const taskBlock = content.slice(startIndex, endIndex);
+
+  // category 추출
+  const categoryMatch = taskBlock.match(/^-\s*category:\s*(\S+)/m);
+  const category = categoryMatch ? categoryMatch[1] : 'development';
+
+  // status 추출: "- status: todo [ ]" 또는 "- status: done [xx]"
+  const statusMatch = taskBlock.match(/^-\s*status:\s*(\S+)\s*(\[[^\]]*\])/m);
+  if (!statusMatch) {
+    return null;
+  }
+
+  const statusLabel = statusMatch[1]; // "todo", "done", etc.
+  const statusCode = statusMatch[2];  // "[ ]", "[xx]", etc.
+
+  return {
+    id: taskId,
+    category,
+    status: `${statusLabel} ${statusCode}`,
+    statusCode: extractStatusCode(statusCode),
+  };
+}
+
+/**
+ * wbs.md에서 Task 상태 업데이트
+ *
+ * "- status: todo [ ]" → "- status: detail-design [dd]"
+ */
+function updateTaskStatusInContent(
+  content: string,
+  taskId: string,
+  newStatusCode: string,
+  workflows: WorkflowsConfig
+): string {
+  // 상태 코드 → 라벨 매핑 (workflows.json의 states에서)
+  const stateInfo = Object.entries(workflows.states).find(
+    ([code]) => extractStatusCode(code) === newStatusCode.replace(/[\[\]]/g, '')
+  );
+  const newLabel = stateInfo ? stateInfo[1].id.replace(/-/g, '-') : 'unknown';
+
+  // Task 블록 시작 찾기
+  const taskHeaderPattern = new RegExp(
+    `(###\\s*${escapeRegex(taskId)}\\s*:[^]*?)(-\\s*status:\\s*)(\\S+)\\s*(\\[[^\\]]*\\])`,
+    'i'
+  );
+
+  const match = content.match(taskHeaderPattern);
+  if (!match) {
+    return content; // 변경 없음
+  }
+
+  // 상태 라인 교체
+  const fullMatch = match[0];
+  const prefix = match[1];      // "### TSK-01-01: ... - status: "
+  const statusKey = match[2];   // "- status: "
+  const oldLabel = match[3];    // "todo"
+  const oldCode = match[4];     // "[ ]"
+
+  // 새 상태 문자열: workflows.json의 states에서 id 사용
+  const stateEntry = Object.entries(workflows.states).find(
+    ([code]) => code === newStatusCode
+  );
+  const newLabelFromState = stateEntry ? stateEntry[1].id : newLabel;
+
+  const newStatusLine = `${statusKey}${newLabelFromState} ${newStatusCode}`;
+  const replacement = prefix + newStatusLine;
+
+  return content.replace(fullMatch, replacement);
+}
+
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 // ====================
@@ -214,21 +241,19 @@ async function resolveProjectId(
   taskIdInput: string,
   projectOption?: string
 ): Promise<{ projectId: string; taskId: string } | null> {
+  // -p 옵션이 있으면 사용
   if (projectOption) {
     return { projectId: projectOption, taskId: taskIdInput };
   }
 
+  // project/TSK-01-01 형식
   if (taskIdInput.includes('/')) {
     const [projectId, taskId] = taskIdInput.split('/');
     return { projectId, taskId };
   }
 
-  const taskResult = await findTaskById(taskIdInput);
-  if (!taskResult) {
-    return null;
-  }
-
-  return { projectId: taskResult.projectId, taskId: taskIdInput };
+  // 프로젝트 ID 없으면 에러 (findTaskById 대체 불가)
+  return null;
 }
 
 // ====================
@@ -241,56 +266,59 @@ async function executeTransition(
   projectId: string,
   workflows: WorkflowsConfig
 ): Promise<TransitionOutput> {
-  // 1. Task 검색
-  const taskResult = await findTaskInProject(projectId, taskId);
-  if (!taskResult) {
-    return { success: false, reason: 'TASK_NOT_FOUND', message: `Task를 찾을 수 없습니다: ${taskId}` };
+  // 1. WBS 파일 읽기
+  let content: string;
+  try {
+    content = await readWbsFile(projectId);
+  } catch (error) {
+    return {
+      success: false,
+      reason: 'WBS_NOT_FOUND',
+      message: `WBS 파일을 찾을 수 없습니다: ${projectId}`
+    };
   }
 
-  const { task } = taskResult;
-  const category = task.category as string;
-  const statusCode = extractStatusCode(task.status);
+  // 2. Task 정보 추출
+  const taskInfo = findTaskInContent(content, taskId);
+  if (!taskInfo) {
+    return {
+      success: false,
+      reason: 'TASK_NOT_FOUND',
+      message: `Task를 찾을 수 없습니다: ${taskId}`
+    };
+  }
+
+  const { category, statusCode } = taskInfo;
   const currentStatus = formatStatusCode(statusCode);
 
-  // 2. 전환 규칙 검색
+  // 3. 전환 규칙 검색
   const transition = findTransition(workflows, category, currentStatus, command);
   if (!transition) {
     return {
       success: false,
       reason: 'INVALID_TRANSITION',
-      message: `현재 상태 ${currentStatus}에서 명령어 '${command}'를 사용할 수 없습니다`,
+      message: `현재 상태 ${currentStatus}에서 명령어 '${command}'를 사용할 수 없습니다 (category: ${category})`,
     };
   }
 
-  // 3. WBS 트리 조회
-  const { metadata, tree } = await getWbsTree(projectId);
-
-  // 4. 롤백 계산
-  const stateCodesToDelete = calculateRollbackDeletions(
-    workflows,
-    category,
-    currentStatus,
-    transition.to
-  );
-
-  // 5. 타임스탬프 생성
-  const completedTimestamp = formatCompletedTimestamp();
-
-  // 6. 트리 업데이트
-  const updated = updateTaskInTree(
-    tree as WbsNode[],
+  // 4. 상태 업데이트
+  const newContent = updateTaskStatusInContent(
+    content,
     taskId,
     transition.to,
-    completedTimestamp,
-    stateCodesToDelete
+    workflows
   );
 
-  if (!updated) {
-    return { success: false, reason: 'TASK_NOT_FOUND', message: `트리에서 Task를 찾을 수 없습니다: ${taskId}` };
+  // 5. WBS 파일 저장
+  try {
+    await writeWbsFile(projectId, newContent);
+  } catch (error) {
+    return {
+      success: false,
+      reason: 'WRITE_FAILED',
+      message: `WBS 파일 저장 실패: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    };
   }
-
-  // 7. WBS 저장
-  await saveWbsTree(projectId, metadata, tree);
 
   return {
     success: true,
@@ -337,7 +365,7 @@ async function main(): Promise<void> {
   // 프로젝트 ID 해석
   const resolved = await resolveProjectId(taskIdInput, projectOption);
   if (!resolved) {
-    outputError('TASK_NOT_FOUND', `Task를 찾을 수 없습니다: ${taskIdInput}`);
+    outputError('PROJECT_REQUIRED', `-p 옵션으로 프로젝트를 지정하거나 project/TSK-XX-XX 형식을 사용하세요`);
     return;
   }
 

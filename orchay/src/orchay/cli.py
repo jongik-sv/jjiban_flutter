@@ -88,6 +88,29 @@ def create_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="상세 로그 출력",
     )
+    run_parser.add_argument(
+        "--no-tui",
+        action="store_true",
+        help="TUI 없이 CLI 모드로 실행",
+    )
+    # 웹서버 옵션
+    web_group = run_parser.add_mutually_exclusive_group()
+    web_group.add_argument(
+        "--web",
+        action="store_true",
+        help="웹서버 활성화 (기본 포트: 8080)",
+    )
+    web_group.add_argument(
+        "--web-only",
+        action="store_true",
+        help="웹서버만 실행 (스케줄링 비활성화)",
+    )
+    run_parser.add_argument(
+        "--port",
+        type=int,
+        default=8080,
+        help="웹서버 포트 (기본: 8080)",
+    )
 
     # exec 서브커맨드 (실행 상태 관리)
     exec_parser = subparsers.add_parser(

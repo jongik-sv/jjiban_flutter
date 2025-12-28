@@ -132,7 +132,7 @@ async def filter_executable_tasks(
         if task.blocked_by is not None:
             continue
 
-        # BR-03: 실행 중 Task 제외
+        # BR-03: 실행 중 Task 제외 (TaskQueue 기반)
         if task.id in running_tasks:
             continue
 

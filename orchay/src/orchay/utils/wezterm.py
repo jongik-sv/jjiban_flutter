@@ -156,3 +156,41 @@ async def pane_exists(pane_id: int) -> bool:
     """
     panes = await wezterm_list_panes()
     return any(p.pane_id == pane_id for p in panes)
+
+
+async def get_active_pane_id() -> int | None:
+    """현재 활성화된 pane ID를 반환합니다.
+
+    WezTerm CLI의 list 명령에서 is_active=true인 pane을 찾습니다.
+
+    Returns:
+        활성 pane ID 또는 None (찾을 수 없는 경우)
+    """
+    try:
+        process = await asyncio.create_subprocess_exec(
+            "wezterm",
+            "cli",
+            "list",
+            "--format",
+            "json",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        stdout, _ = await process.communicate()
+    except FileNotFoundError:
+        return None
+
+    if process.returncode != 0:
+        return None
+
+    try:
+        data = json.loads(stdout.decode())
+    except json.JSONDecodeError:
+        return None
+
+    # is_active=true인 pane 찾기
+    for item in data:
+        if item.get("is_active", False):
+            return item.get("pane_id")
+
+    return None

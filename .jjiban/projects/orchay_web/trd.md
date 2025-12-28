@@ -20,6 +20,7 @@
 | 웹 프레임워크 | FastAPI | ^0.115 | 비동기, 경량, Starlette 기반 |
 | 템플릿 | Jinja2 | ^3.0 | FastAPI 네이티브 지원 |
 | 동적 UI | HTMX | 2.0 (CDN) | 빌드 불필요, HTML 속성만으로 동적 UI |
+| DOM Morphing | htmx-ext-morph | 2.0 (CDN) | HTMX 2.0용 idiomorph 확장, 깜빡임 없는 갱신 |
 | 스타일링 | Tailwind CSS | 3.x (CDN) | 빌드 불필요, 다크테마 쉬움 |
 
 ### 선정 근거
@@ -97,11 +98,14 @@ orchay/src/orchay/
 ### HTMX 패턴
 
 ```html
-<!-- 5초마다 자동 갱신 -->
+<!-- HTMX morph 확장 활성화 (body에 선언) -->
+<body hx-ext="morph">
+
+<!-- 5초마다 자동 갱신 (깜빡임 없는 morph swap) -->
 <div id="workers"
      hx-get="/api/workers"
      hx-trigger="every 5s"
-     hx-swap="innerHTML">
+     hx-swap="morph:innerHTML">
   ...
 </div>
 
@@ -259,3 +263,4 @@ if args.web or args.web_only:
 | 버전 | 날짜 | 변경 내용 |
 |------|------|-----------|
 | 1.0 | 2025-12-28 | 초기 TRD 작성 |
+| 1.1 | 2025-12-28 | htmx-ext-morph 2.0 CDN 추가, morph swap 패턴 명시 |

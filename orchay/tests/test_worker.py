@@ -125,9 +125,15 @@ class TestDetectWorkerState:
 
     @pytest.mark.asyncio
     async def test_detect_done(self) -> None:
-        """UT-007: done 상태 감지."""
-        with patch("orchay.worker.wezterm_get_text") as mock_get_text:
+        """UT-007: done 상태 감지 (active pane에서)."""
+        with (
+            patch("orchay.worker.pane_exists") as mock_pane_exists,
+            patch("orchay.worker.wezterm_get_text") as mock_get_text,
+            patch("orchay.worker.is_pane_active") as mock_is_active,
+        ):
+            mock_pane_exists.return_value = True
             mock_get_text.return_value = "ORCHAY_DONE:TSK-01-04:build:success\n> "
+            mock_is_active.return_value = True  # active 상태에서만 done 반환
 
             state, done_info = await detect_worker_state(pane_id=1)
 
@@ -227,16 +233,19 @@ class TestDetectWorkerState:
 
     @pytest.mark.asyncio
     async def test_priority_done_over_idle(self) -> None:
-        """UT-013: 우선순위 테스트 - done이 idle보다 우선."""
-        with patch("orchay.worker.pane_exists", return_value=True):
-            with patch("orchay.worker.wezterm_get_text") as mock_get_text:
-                # done 패턴과 idle 패턴(>) 동시 존재
-                mock_get_text.return_value = "ORCHAY_DONE:TSK-01-04:build:success\n> "
+        """UT-013: 우선순위 테스트 - done이 idle보다 우선 (active pane에서)."""
+        with (
+            patch("orchay.worker.pane_exists", return_value=True),
+            patch("orchay.worker.is_pane_active", return_value=True),
+            patch("orchay.worker.wezterm_get_text") as mock_get_text,
+        ):
+            # done 패턴과 idle 패턴(>) 동시 존재
+            mock_get_text.return_value = "ORCHAY_DONE:TSK-01-04:build:success\n> "
 
-                state, done_info = await detect_worker_state(pane_id=1)
+            state, done_info = await detect_worker_state(pane_id=1)
 
-                # done이 idle보다 우선
-                assert state == "done"
+            # active pane에서 done이 idle보다 우선
+            assert state == "done"
 
     @pytest.mark.asyncio
     async def test_priority_paused_over_idle(self) -> None:

@@ -730,8 +730,8 @@ async def test_htmx_auto_refresh_attributes() -> None:
     assert 'id="workers-bar"' in response.text
     assert 'hx-get="/api/workers"' in response.text
     assert 'hx-trigger="load, every 5s"' in response.text
-    # TSK-03-03: settle 시간 추가로 깜빡임 최소화
-    assert 'hx-swap="innerHTML settle:100ms"' in response.text
+    # TSK-03-03: morph extension으로 깜빡임 최소화 (idiomorph 사용)
+    assert 'hx-swap="morph:innerHTML"' in response.text
 
 
 # =============================================================================
@@ -773,8 +773,8 @@ async def test_wp_node_expand_htmx_attributes() -> None:
     assert 'hx-swap="innerHTML"' in html
     # 토글 아이콘 확인 (▶)
     assert "▶" in html
-    # 토글 함수 호출 확인
-    assert "toggleWp(this)" in html
+    # TSK-06-01: 토글 함수 호출 확인 (클릭 분리로 parentElement 참조)
+    assert "toggleWp(this.parentElement)" in html
 
 
 # TC-02: WP 노드 축소 (CSS 애니메이션 클래스 검증)
@@ -1238,7 +1238,7 @@ async def test_task_detail_auto_refresh_function() -> None:
 # TC-E04: UI 깜빡임 방지 (settle 시간 확인)
 @pytest.mark.asyncio
 async def test_htmx_settle_time_for_flicker_prevention() -> None:
-    """HTMX settle 시간이 설정되어 깜빡임이 최소화되는지 확인."""
+    """HTMX morph extension이 설정되어 깜빡임이 최소화되는지 확인."""
     from httpx import ASGITransport, AsyncClient
 
     from orchay.web.server import create_app
@@ -1257,8 +1257,9 @@ async def test_htmx_settle_time_for_flicker_prevention() -> None:
 
     html = response.text
 
-    # settle:100ms 설정 확인 (깜빡임 방지)
-    assert "settle:100ms" in html
+    # morph extension 활성화 확인 (idiomorph 기반 깜빡임 방지)
+    assert 'hx-ext="morph"' in html
+    assert 'hx-swap="morph:innerHTML"' in html
 
 
 # TC-E05: 네트워크 오류 처리 (에러 핸들러 확인)

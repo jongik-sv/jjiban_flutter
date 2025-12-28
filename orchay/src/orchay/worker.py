@@ -14,7 +14,7 @@ from orchay.utils.wezterm import pane_exists, wezterm_get_text
 
 # 모듈 시작 시간 (idle 감지 지연용)
 _startup_time: float = time.time()
-_IDLE_DETECTION_DELAY: float = 10.0  # 시작 후 10초간 idle 감지 비활성화
+_IDLE_DETECTION_DELAY: float = 3.0  # 시작 후 3초간 idle 감지 비활성화
 
 # ORCHAY_DONE 패턴: ORCHAY_DONE:{task-id}:{action}:{status}[:{message}]
 DONE_PATTERN = re.compile(r"ORCHAY_DONE:([^:]+):(\w+):(success|error)(?::(.+))?")
@@ -49,13 +49,34 @@ ERROR_PATTERNS = [
 BLOCKED_PATTERNS = [
     re.compile(r"\?\s*$"),
     re.compile(r"\(y/n\)", re.IGNORECASE),
-    re.compile(r"선택", re.IGNORECASE),
+    re.compile(r"선택하세요", re.IGNORECASE),  # "선택" -> "선택하세요"로 변경 (optional과 구분)
+    re.compile(r"선택해\s*주세요", re.IGNORECASE),
     re.compile(r"Press.*to continue", re.IGNORECASE),
 ]
 
+# idle 프롬프트 패턴 (명령어 입력이 아닌 대기 상태)
+# Claude Code가 프롬프트 대기 중일 때 나타나는 패턴
 PROMPT_PATTERNS = [
-    re.compile(r"^>\s", re.MULTILINE),  # ">" 뒤에 공백 (텍스트 있어도 됨)
-    re.compile(r"^>\s*$", re.MULTILINE),  # ">" 만 있는 경우
+    re.compile(r'^>\s*$', re.MULTILINE),  # ">" 만 있는 경우 (입력 대기)
+    re.compile(r'^>\s+Try\s', re.MULTILINE),  # "> Try ..." 힌트 (idle 상태)
+    re.compile(r'↵\s*send', re.IGNORECASE),  # 추천 프롬프트 표시 (idle 상태)
+    re.compile(r'⏵⏵\s*bypass\s*permissions', re.IGNORECASE),  # bypass 표시 (idle 상태)
+]
+
+# 작업 중 패턴 (busy 상태 강제)
+# Claude Code가 작업 중일 때 나타나는 패턴
+BUSY_PATTERNS = [
+    re.compile(r'\*\s+.+\s+중\.\.\.', re.MULTILINE),  # "* ... 중..." (Claude Code 작업 표시)
+    re.compile(r'구현\s*중', re.IGNORECASE),
+    re.compile(r'분석\s*중', re.IGNORECASE),
+    re.compile(r'작업\s*중', re.IGNORECASE),
+    re.compile(r'처리\s*중', re.IGNORECASE),
+    re.compile(r'생성\s*중', re.IGNORECASE),
+    re.compile(r'실행\s*중', re.IGNORECASE),
+    re.compile(r'검색\s*중', re.IGNORECASE),
+    re.compile(r'로딩\s*중', re.IGNORECASE),
+    re.compile(r'esc to interrupt', re.IGNORECASE),  # Claude Code 작업 진행 표시
+    re.compile(r'ctrl\+t to hide', re.IGNORECASE),  # Claude Code 작업 진행 표시
 ]
 
 
@@ -131,41 +152,21 @@ async def detect_worker_state(pane_id: int) -> tuple[WorkerState, DoneInfo | Non
     if not output.strip():
         return "busy", None
 
-    # 1. 파일 기반 상태 확인 (작업 중인 pane인지)
+    # 1. ORCHAY_DONE 체크 (최우선 - 완료 신호는 busy보다 우선)
+    # active pane에서 완료 신호가 있으면 무조건 done
     if is_pane_active(pane_id):
-        # 작업 중인 pane: ORCHAY_DONE 신호만 체크
         done_info = parse_done_signal(output)
         if done_info:
-            # 완료 신호 감지 (active 제거는 스케줄러에서 WBS 상태 기반으로 처리)
             return "done", done_info
 
-        # 완료 신호 없으면 계속 busy
-        return "busy", None
-
-    # 2. 파일에 없으면: pane 출력 기반 판단 (초기 상태 또는 작업 완료 후)
-
-    # 2-1. 완료 신호 패턴 (혹시 남아있는 경우)
-    done_info = parse_done_signal(output)
-    if done_info:
-        return "done", done_info
-
-    # 2-2. 일시 중단 패턴 (idle보다 우선)
+    # 2. 일시 중단 패턴 (rate limit 등은 실제 제약이므로 프롬프트보다 우선)
     for pattern in PAUSE_PATTERNS:
         if pattern.search(output):
             return "paused", None
 
-    # 2-3. 에러 패턴
-    for pattern in ERROR_PATTERNS:
-        if pattern.search(output):
-            return "error", None
-
-    # 2-4. 질문/입력 대기 패턴
-    for pattern in BLOCKED_PATTERNS:
-        if pattern.search(output):
-            return "blocked", None
-
-    # 2-5. 프롬프트 패턴 (idle) - 마지막 5줄에서 확인
-    # 시작 후 10초간은 idle 감지 비활성화 (Worker 초기화 대기)
+    # 3. 프롬프트 패턴 체크 (BUSY/ERROR보다 우선)
+    # 마지막 5줄에 프롬프트가 있으면 idle로 판정
+    # (이전 출력에 BUSY/ERROR 패턴이 남아있어도 프롬프트가 보이면 idle)
     elapsed = time.time() - _startup_time
     if elapsed >= _IDLE_DETECTION_DELAY:
         last_lines = output.strip().split("\n")[-5:]
@@ -174,5 +175,28 @@ async def detect_worker_state(pane_id: int) -> tuple[WorkerState, DoneInfo | Non
             if pattern.search(last_text):
                 return "idle", None
 
-    # 2-6. 기본값: 작업 중
+    # 4. 작업 중 패턴 체크 (명시적 busy 상태)
+    # Claude Code가 작업 중일 때 나타나는 패턴이 있으면 busy
+    for pattern in BUSY_PATTERNS:
+        if pattern.search(output):
+            return "busy", None
+
+    # 5. 파일 기반 상태 확인 (작업 중인 pane인지)
+    if is_pane_active(pane_id):
+        # 프롬프트도 없고 BUSY 패턴도 없으면 계속 busy
+        return "busy", None
+
+    # 6. 파일에 없으면: pane 출력 기반 판단 (초기 상태 또는 작업 완료 후)
+
+    # 6-1. 에러 패턴
+    for pattern in ERROR_PATTERNS:
+        if pattern.search(output):
+            return "error", None
+
+    # 6-2. 질문/입력 대기 패턴
+    for pattern in BLOCKED_PATTERNS:
+        if pattern.search(output):
+            return "blocked", None
+
+    # 6-3. 기본값: 작업 중
     return "busy", None

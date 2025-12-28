@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from orchay.models.config import Config, ExecutionConfig
+from orchay.models.config import Config, ExecutionConfig, WebConfig
 
 
 class TestConfigDefaultValues:

@@ -327,13 +327,49 @@
 
 ---
 
+### TSK-02-06: 워커 단위 Pause/Resume 및 스케줄러 상태 표시
+- category: development
+- domain: frontend
+- status: done [xx]
+- priority: medium
+- assignee: -
+- schedule: 2025-12-28 ~ 2025-12-28
+- tags: tui, worker-control, scheduler-state
+- depends: TSK-02-03
+
+#### PRD 요구사항
+- prd-ref: PRD 3.10 스케줄러 상태 및 워커 제어
+- requirements:
+  - SchedulerState 열거형 (running, paused, stopped)
+  - TUI 헤더에 스케줄러 상태 아이콘(▶/⏸/⏹) 표시
+  - 워커 단위 수동 일시정지/재개 (is_manually_paused 필드)
+  - TUI에서 F4 또는 1~5 키로 워커 선택, P 키로 pause/resume
+  - 상태 파일 확장: pausedWorkers, schedulerState 필드
+- acceptance:
+  - 스케줄러 상태가 TUI 헤더에 실시간 표시
+  - 워커 수동 일시정지 시 Task 분배 안 됨
+  - 파일에 상태 영속화 (orchay-active.json)
+
+#### 기술 스펙 (TRD)
+- tech-spec:
+  - Textual Static 위젯 (SchedulerStateIndicator)
+  - WorkerPanel 인터랙티브 선택 기능
+  - active_tasks.py 확장 (pausedWorkers, schedulerState)
+- api-spec:
+  - SchedulerState (Enum): running, paused, stopped
+  - Worker.is_manually_paused (bool): 수동 일시정지 상태
+  - Worker.pause() / Worker.resume(): 일시정지/재개 메서드
+  - pause_worker(id) / resume_worker(id): 파일 저장 함수
+
+---
+
 ## 요약
 
 | 단계 | Task 수 | 개발 방식 | 예상 기간 |
 |------|---------|----------|----------|
 | WP-01 (부트스트랩) | 4개 | 수동 순차 | 7일 |
-| WP-02 (고급 기능) | 5개 | orchay 자동 병렬 | 7일 |
-| **총합** | **9개** | - | **14일** |
+| WP-02 (고급 기능) | 6개 | orchay 자동 병렬 | 7일 |
+| **총합** | **10개** | - | **14일** |
 
 ### 의존성 그래프
 

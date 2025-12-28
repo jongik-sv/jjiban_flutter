@@ -12,21 +12,25 @@ import logging
 import os
 import signal
 import sys
+import traceback
+from datetime import datetime
+from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 from rich.console import Console
 from rich.table import Table
 
-from orchay.models import Config, ExecutionConfig, Task, TaskStatus, WebConfig, Worker, WorkerState
+from orchay.models import Config, ExecutionConfig, Task, TaskQueue, TaskStatus, WebConfig, Worker, WorkerState
 from orchay.scheduler import (
     ExecutionMode,
     dispatch_task,
     filter_executable_tasks,
     get_next_workflow_command,
 )
-from orchay.utils.active_tasks import load_active_tasks, unregister_active_task
+from orchay.utils.active_tasks import clear_active_tasks, load_active_tasks, unregister_active_task
 from orchay.utils.wezterm import (
     WezTermNotFoundError,
+    get_active_pane_id,
     wezterm_list_panes,
     wezterm_send_text,
 )
@@ -53,7 +57,7 @@ class Orchestrator:
         self.parser = WbsParser(wbs_path)
         self.workers: list[Worker] = []
         self.tasks: list[Task] = []
-        self.running_tasks: set[str] = set()
+        self.task_queue = TaskQueue()  # 메모리 기반 할당 관리
         self.mode = ExecutionMode(config.execution.mode)
         self._running = False
         self._paused = False
@@ -66,13 +70,9 @@ class Orchestrator:
         """
         console.print("[bold cyan]orchay[/] - Task Scheduler v0.1.0\n")
 
-        # 기존 active tasks 로드 (다른 pane에서 실행 중인 작업 제외용)
-        active_data = load_active_tasks()
-        self.running_tasks = set(active_data.get("activeTasks", {}).keys())
-        if self.running_tasks:
-            console.print(
-                f"[dim]기존 실행 중 Task 로드: {', '.join(sorted(self.running_tasks))}[/]\n"
-            )
+        # 시작 시 active tasks 초기화 (이전 세션의 stale 데이터 제거)
+        clear_active_tasks()
+        self.running_tasks = set()
 
         # WBS 파일 확인
         if not self.wbs_path.exists():
@@ -91,8 +91,23 @@ class Orchestrator:
             return False
 
         # Worker 초기화 (현재 pane 제외, 최대 config.workers 개)
-        # 현재 pane은 orchay가 실행 중인 pane (WEZTERM_PANE 환경변수 또는 pane 0)
-        current_pane_id = int(os.environ.get("WEZTERM_PANE", 0))
+        # 현재 pane 감지: 환경변수 → WezTerm CLI → 경고
+        env_pane = os.environ.get("WEZTERM_PANE")
+        if env_pane:
+            current_pane_id = int(env_pane)
+        else:
+            # WezTerm CLI로 현재 활성 pane 감지
+            active_pane = await get_active_pane_id()
+            if active_pane is not None:
+                current_pane_id = active_pane
+                logger.info(f"현재 활성 pane 감지: {current_pane_id}")
+            else:
+                # 감지 실패 시 -1 사용 (모든 pane을 Worker로 등록)
+                current_pane_id = -1
+                console.print(
+                    "[yellow]Warning:[/] 현재 pane을 감지할 수 없습니다. "
+                    "WEZTERM_PANE 환경변수를 설정하거나 WezTerm에서 실행하세요."
+                )
         worker_count = 0
         for pane in panes:
             if worker_count >= self.config.workers:
@@ -143,6 +158,8 @@ class Orchestrator:
 
     async def _tick(self) -> None:
         """단일 스케줄링 사이클."""
+        logger.debug("_tick 시작")
+
         # 1. WBS 재파싱
         self.tasks = await self.parser.parse()
 
@@ -152,24 +169,73 @@ class Orchestrator:
         # 3. Worker 상태 업데이트
         await self._update_worker_states()
 
-        # 4. 실행 가능 Task 필터링
+        # 3.5. Worker의 current_step을 WBS 상태 기반으로 업데이트
+        self._sync_worker_steps()
+
+        # 4. 실행 가능 Task 필터링 (TaskQueue 기반)
+        assigned_ids = self.task_queue.get_assigned_task_ids()
         executable = await filter_executable_tasks(
             self.tasks,
             self.mode,
-            self.running_tasks,
+            assigned_ids,  # 메모리 기반 할당 상태
         )
 
         # 5. idle Worker에 Task 분배 (일시정지 상태가 아닐 때만)
+        logger.debug(f"_tick: executable={len(executable)}개, paused={self._paused}")
         if not self._paused:
             for worker in self.workers:
                 if not executable:
                     break
-                if worker.state == WorkerState.IDLE:
+                logger.debug(f"Worker {worker.id}: state={worker.state.value}, manually_paused={worker.is_manually_paused}")
+                if worker.state == WorkerState.IDLE and not worker.is_manually_paused:
                     task = executable.pop(0)
+
+                    # TaskQueue로 할당 시도 (즉시 메모리에서 확인)
+                    if not self.task_queue.try_assign(task.id, worker.id):
+                        logger.debug(f"Task {task.id} 이미 할당됨, 건너뜀")
+                        continue
+
+                    logger.info(f"Dispatch: {task.id} -> Worker {worker.id}")
                     await self._dispatch_to_worker(worker, task)
 
         # 6. 상태 출력
         self.print_status()
+
+    def _sync_worker_steps(self) -> None:
+        """Worker의 current_step을 WBS 상태 기반으로 동기화."""
+        # Task ID → Task 매핑
+        task_map = {t.id: t for t in self.tasks}
+
+        for worker in self.workers:
+            if not worker.current_task:
+                continue
+
+            # Worker가 작업 중인 Task 찾기
+            task = task_map.get(worker.current_task)
+            if not task:
+                continue
+
+            # Task 상태를 step으로 변환
+            status_to_step = {
+                "[ ]": "start",
+                "[bd]": "design",
+                "[dd]": "draft",
+                "[ap]": "approve",
+                "[im]": "build",
+                "[vf]": "verify",
+                "[xx]": "done",
+                "[an]": "analyze",
+                "[fx]": "fix",
+                "[ds]": "design",
+            }
+            new_step = status_to_step.get(task.status.value, worker.current_step)
+
+            if new_step and new_step != worker.current_step:
+                worker.current_step = new_step
+                # 파일도 업데이트
+                from orchay.utils.active_tasks import update_active_task_step
+
+                update_active_task_step(worker.current_task, new_step)
 
     def _cleanup_completed_tasks(self) -> None:
         """stopAtState에 도달한 Task를 active에서 제거.
@@ -193,18 +259,26 @@ class Orchestrator:
         completed_task_ids = {t.id for t in self.tasks if t.status in stop_statuses}
 
         # active tasks에서 완료된 것들 제거
-        active_data = load_active_tasks()
-        for task_id in list(active_data["activeTasks"].keys()):
-            # task_id에서 순수 ID 추출 (orchay/TSK-01-01 → TSK-01-01)
+        # TaskQueue에서 완료된 Task 해제
+        for task_id in list(self.task_queue.get_assigned_task_ids()):
             pure_id = task_id.split("/")[-1] if "/" in task_id else task_id
-            if pure_id in completed_task_ids:
-                unregister_active_task(task_id)
-                self.running_tasks.discard(task_id)
-                self.running_tasks.discard(pure_id)
+            if pure_id in completed_task_ids or task_id in completed_task_ids:
+                self.task_queue.release(task_id)
+                unregister_active_task(task_id)  # 파일도 정리
 
     async def _update_worker_states(self) -> None:
         """모든 Worker의 상태를 업데이트."""
         for worker in self.workers:
+            # Grace period: dispatch 직후에는 상태 체크 건너뛰기
+            if worker.dispatch_time:
+                elapsed = (datetime.now() - worker.dispatch_time).total_seconds()
+                if elapsed < self.config.dispatch.grace_period:
+                    logger.debug(
+                        f"Worker {worker.id}: grace period ({elapsed:.1f}s < "
+                        f"{self.config.dispatch.grace_period}s)"
+                    )
+                    continue  # 상태 체크 건너뛰기
+
             state, done_info = await detect_worker_state(worker.pane_id)
 
             # 상태 매핑
@@ -219,7 +293,7 @@ class Orchestrator:
             }
             new_state = state_map.get(state, WorkerState.BUSY)
 
-            # done 상태 처리: active 파일에서 Task 제거
+            # done 상태 처리: TaskQueue에서 Task 해제
             if new_state == WorkerState.DONE:
                 # 이미 DONE 상태면 중복 처리 방지 (다음 tick에서 idle로 전환됨)
                 if worker.state == WorkerState.DONE:
@@ -228,11 +302,10 @@ class Orchestrator:
                 # done_info 또는 worker.current_task에서 task_id 획득
                 task_id = done_info.task_id if done_info else worker.current_task
                 if task_id:
-                    self.running_tasks.discard(task_id)
-                    # active 파일에서도 제거
-                    unregister_active_task(task_id)
-                if worker.current_task:
-                    self.running_tasks.discard(worker.current_task)
+                    self.task_queue.release(task_id)
+                    unregister_active_task(task_id)  # 파일도 정리
+                if worker.current_task and worker.current_task != task_id:
+                    self.task_queue.release(worker.current_task)
 
                 # DONE 상태로 유지 (다음 tick에서 신호가 사라지면 idle로 전환)
                 worker.state = WorkerState.DONE
@@ -246,7 +319,7 @@ class Orchestrator:
                 # BUSY → IDLE 전환: Task 완료로 간주
                 elif worker.state == WorkerState.BUSY:
                     if worker.current_task:
-                        self.running_tasks.discard(worker.current_task)
+                        self.task_queue.release(worker.current_task)
                         unregister_active_task(worker.current_task)
                     worker.reset()
                 else:
@@ -256,16 +329,17 @@ class Orchestrator:
 
     async def _dispatch_to_worker(self, worker: Worker, task: Task) -> None:
         """Worker에 Task를 분배."""
-        # Worker 상태 업데이트
+        # Worker 상태 업데이트 (TaskQueue 할당은 이미 완료됨)
         await dispatch_task(worker, task, self.mode)
-        self.running_tasks.add(task.id)
 
         # /clear 전송 (옵션)
         if self.config.dispatch.clear_before_dispatch:
             try:
                 await wezterm_send_text(worker.pane_id, "/clear")
+                await asyncio.sleep(3.0)  # /clear 처리 대기
                 await wezterm_send_text(worker.pane_id, "\r")
-                await asyncio.sleep(self.config.dispatch.clear_wait_time)
+                await asyncio.sleep(1.0)  # Enter 처리 대기
+                await wezterm_send_text(worker.pane_id, " ")  # 추천 프롬프트 제거
             except Exception as e:
                 logger.warning(f"Worker {worker.id} /clear 실패: {e}")
 
@@ -281,7 +355,7 @@ class Orchestrator:
                 f"다음 transition을 찾을 수 없음 (category: {task.category.value})"
             )
             worker.reset()
-            self.running_tasks.discard(task.id)
+            self.task_queue.release(task.id)
             return
 
         command = f"/wf:{next_workflow} {self.project_name}/{task.id}"
@@ -289,8 +363,10 @@ class Orchestrator:
         try:
             # 명령어 전송
             await wezterm_send_text(worker.pane_id, command)
-            # Enter 키 전송 (submit)
+            await asyncio.sleep(1.0)  # 명령어 입력 대기
             await wezterm_send_text(worker.pane_id, "\r")
+            await asyncio.sleep(1.0)  # Enter 처리 대기
+            await wezterm_send_text(worker.pane_id, " ")  # 추천 프롬프트 제거
             console.print(
                 f"[cyan]Dispatch:[/] {task.id} ({task.status.value}) → Worker {worker.id} "
                 f"(/wf:{next_workflow})"
@@ -298,7 +374,7 @@ class Orchestrator:
         except Exception as e:
             logger.error(f"Worker {worker.id} 명령 전송 실패: {e}")
             worker.reset()
-            self.running_tasks.discard(task.id)
+            self.task_queue.release(task.id)
 
     def print_status(self) -> None:
         """현재 상태 출력."""
@@ -504,16 +580,67 @@ async def _run_web_server(
     await server.serve()
 
 
+def setup_logging(verbose: bool = False) -> Path | None:
+    """로깅 설정 (콘솔 + 파일).
+
+    Args:
+        verbose: 상세 로그 출력 여부
+
+    Returns:
+        로그 파일 경로 (설정 실패 시 None)
+    """
+    log_level = logging.DEBUG if verbose else logging.INFO
+
+    # 로그 포맷
+    log_format = "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+    formatter = logging.Formatter(log_format)
+
+    # 루트 로거 설정
+    root_logger = logging.getLogger()
+    root_logger.setLevel(log_level)
+
+    # 기존 핸들러 제거 (중복 방지)
+    root_logger.handlers.clear()
+
+    # 콘솔 핸들러
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(log_level)
+    console_handler.setFormatter(formatter)
+    root_logger.addHandler(console_handler)
+
+    # 파일 핸들러 (.jjiban/logs/orchay.log)
+    log_file = None
+    try:
+        base_dir = find_jjiban_root()
+        if base_dir:
+            log_dir = base_dir / ".jjiban" / "logs"
+            log_dir.mkdir(parents=True, exist_ok=True)
+            log_file = log_dir / "orchay.log"
+
+            # RotatingFileHandler: 최대 5MB, 백업 3개
+            file_handler = RotatingFileHandler(
+                log_file,
+                maxBytes=5 * 1024 * 1024,
+                backupCount=3,
+                encoding="utf-8",
+            )
+            file_handler.setLevel(logging.DEBUG)  # 파일은 항상 DEBUG 레벨
+            file_handler.setFormatter(formatter)
+            root_logger.addHandler(file_handler)
+
+            logger.info(f"로그 파일: {log_file}")
+    except Exception as e:
+        logger.warning(f"파일 로깅 설정 실패: {e}")
+
+    return log_file
+
+
 async def async_main() -> int:
     """비동기 메인 함수."""
     args = parse_args()
 
-    # 로깅 설정
-    log_level = logging.DEBUG if args.verbose else logging.INFO
-    logging.basicConfig(
-        level=log_level,
-        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-    )
+    # 로깅 설정 (콘솔 + 파일)
+    log_file = setup_logging(args.verbose)
 
     # WebConfig 생성 (TSK-01-03)
     web_config = WebConfig(
@@ -586,7 +713,18 @@ async def async_main() -> int:
             interval=args.interval,
             orchestrator=orchestrator,
         )
-        await app.run_async()
+
+        # TUI + 웹서버 병렬 실행
+        if args.web:
+            console.print(
+                f"[bold green]웹서버 시작[/] http://{web_config.host}:{web_config.port}\n"
+            )
+            await asyncio.gather(
+                app.run_async(),
+                _run_web_server(orchestrator, web_config.host, web_config.port),
+            )
+        else:
+            await app.run_async()
         return 0
 
     # CLI 모드 (--no-tui)
@@ -628,12 +766,47 @@ async def async_main() -> int:
 
 def main() -> None:
     """orchay 스케줄러 진입점."""
+    # 시작 시 기본 로깅 설정 (async_main 전에 crash 발생 대비)
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    )
+
     try:
         exit_code = asyncio.run(async_main())
         sys.exit(exit_code)
     except KeyboardInterrupt:
         console.print("\n[yellow]중단됨[/]")
+        logger.info("사용자에 의해 중단됨 (Ctrl+C)")
         sys.exit(0)
+    except Exception as e:
+        # 예상치 못한 예외 발생 시 로그에 기록
+        error_msg = f"orchay 비정상 종료: {type(e).__name__}: {e}"
+        console.print(f"\n[red bold]Fatal Error:[/] {error_msg}")
+
+        # 전체 traceback 로깅
+        logger.critical(error_msg)
+        logger.critical(f"Traceback:\n{traceback.format_exc()}")
+
+        # crash 파일에도 기록 (로그 파일 접근 불가 시 대비)
+        try:
+            base_dir = find_jjiban_root() or Path.cwd()
+            crash_dir = base_dir / ".jjiban" / "logs"
+            crash_dir.mkdir(parents=True, exist_ok=True)
+            crash_file = crash_dir / "orchay-crash.log"
+
+            timestamp = datetime.now().isoformat()
+            with open(crash_file, "a", encoding="utf-8") as f:
+                f.write(f"\n{'=' * 60}\n")
+                f.write(f"[{timestamp}] {error_msg}\n")
+                f.write(traceback.format_exc())
+                f.write(f"{'=' * 60}\n")
+
+            console.print(f"[dim]Crash 로그: {crash_file}[/]")
+        except Exception:
+            pass  # crash 로그 기록 실패는 무시
+
+        sys.exit(1)
 
 
 if __name__ == "__main__":
