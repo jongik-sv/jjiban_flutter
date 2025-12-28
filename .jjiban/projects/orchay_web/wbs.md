@@ -353,7 +353,7 @@
 ### TSK-04-02: 통합 테스트
 - category: development
 - domain: test
-- status: implement [im]
+- status: done [xx]
 - priority: medium
 - assignee: -
 - schedule: 2026-01-04 ~ 2026-01-05
