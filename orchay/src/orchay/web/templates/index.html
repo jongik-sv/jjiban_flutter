@@ -25,6 +25,7 @@
     <!-- Left: WBS Tree -->
     <div class="w-1/2 border-r border-gray-700 overflow-auto p-4"
          id="tree-panel"
+         data-testid="tree-panel"
          hx-get="/api/tree"
          hx-trigger="load, every 5s"
          hx-swap="innerHTML">
@@ -36,10 +37,45 @@
     </div>
 
     <!-- Right: Task Detail -->
-    <div class="w-1/2 overflow-auto p-4" id="detail-panel">
+    <div class="w-1/2 overflow-auto p-4" id="detail-panel" data-testid="detail-panel">
         <div class="flex items-center justify-center h-full text-gray-500">
             <p>Task를 선택하세요</p>
         </div>
     </div>
 </main>
+
+<!-- 글로벌 스크립트 (selectTask 함수) -->
+<script>
+// Task 선택 표시 (글로벌)
+function selectTask(el) {
+    // 기존 선택 해제
+    document.querySelectorAll('.tree-node.task.selected').forEach(node => {
+        node.classList.remove('selected', 'bg-gray-700', 'ring-2', 'ring-blue-500');
+    });
+    // 새로운 선택
+    el.classList.add('selected', 'bg-gray-700', 'ring-2', 'ring-blue-500');
+}
+
+// WP 확장/축소 토글 (글로벌)
+function toggleWp(el) {
+    const wpDiv = el.closest('[data-id^="WP-"]');
+    const childrenDiv = wpDiv.querySelector('.children');
+    const toggleIcon = el.querySelector('.toggle-icon');
+    const isExpanded = el.dataset.expanded === 'true';
+
+    if (isExpanded) {
+        // 축소
+        childrenDiv.classList.remove('max-h-[2000px]', 'opacity-100');
+        childrenDiv.classList.add('max-h-0', 'opacity-0');
+        toggleIcon.classList.remove('rotate-90');
+        el.dataset.expanded = 'false';
+    } else {
+        // 확장
+        childrenDiv.classList.remove('max-h-0', 'opacity-0');
+        childrenDiv.classList.add('max-h-[2000px]', 'opacity-100');
+        toggleIcon.classList.add('rotate-90');
+        el.dataset.expanded = 'true';
+    }
+}
+</script>
 {% endblock %}

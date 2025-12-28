@@ -1,73 +1,113 @@
+{#
+  트리 템플릿 (tree.html)
+  TSK-02-02: 트리 템플릿 구현
+
+  상태 색상 매핑:
+    [ ]  → bg-gray-500    (Todo)
+    [bd] → bg-blue-500    (기본설계)
+    [dd] → bg-purple-500  (상세설계)
+    [an] → bg-indigo-500  (분석)
+    [ds] → bg-cyan-500    (설계)
+    [ap] → bg-green-500   (승인)
+    [im] → bg-yellow-500  (구현)
+    [fx] → bg-orange-500  (수정)
+    [vf] → bg-teal-500    (검증)
+    [xx] → bg-emerald-500 (완료)
+#}
+
+{# 상태 배지 색상 매크로 #}
+{% macro status_badge(status) %}
+{% set color_map = {
+    '[ ]': 'bg-gray-500',
+    '[bd]': 'bg-blue-500',
+    '[dd]': 'bg-purple-500',
+    '[an]': 'bg-indigo-500',
+    '[ds]': 'bg-cyan-500',
+    '[ap]': 'bg-green-500',
+    '[im]': 'bg-yellow-500',
+    '[fx]': 'bg-orange-500',
+    '[vf]': 'bg-teal-500',
+    '[xx]': 'bg-emerald-500'
+} %}
+{% set color = color_map.get(status, 'bg-gray-500') %}
+<span class="status-badge px-1.5 py-0.5 text-xs rounded {{ color }} text-white min-w-[32px] text-center"
+      data-testid="status-badge">{{ status }}</span>
+{% endmacro %}
+
+{# Task 노드 매크로 #}
+{% macro render_task(task, indent_class='') %}
+<div class="tree-node task flex items-center gap-2 py-1.5 cursor-pointer hover:bg-gray-800 rounded px-2 transition-colors duration-150 {{ indent_class }}"
+     data-id="{{ task.id }}"
+     data-type="task"
+     data-testid="tree-node-task"
+     hx-get="/api/detail/{{ task.id }}"
+     hx-target="#detail-panel"
+     hx-swap="innerHTML"
+     onclick="selectTask(this)">
+    <span class="text-yellow-400 font-medium text-sm">T</span>
+    <span class="text-gray-300 truncate flex-1">{{ task.id }}: {{ task.title }}</span>
+    {{ status_badge(task.status) }}
+</div>
+{% endmacro %}
+
+<div class="tree-root space-y-1" data-testid="tree-root">
 {% for wp in tree %}
-<div class="mb-4" data-id="{{ wp.id }}">
+<div class="mb-3" data-id="{{ wp.id }}">
     <!-- WP Node -->
-    <div class="flex items-center gap-2 py-1 cursor-pointer hover:bg-orchay-card rounded px-2"
+    <div class="tree-node wp group flex items-center gap-2 py-1.5 cursor-pointer hover:bg-gray-800 rounded px-2 transition-colors duration-150"
+         data-id="{{ wp.id }}"
+         data-type="wp"
+         data-expanded="false"
+         data-testid="tree-node-wp"
          hx-get="/api/tree/{{ wp.id }}"
          hx-target="#wp-children-{{ wp.id }}"
          hx-swap="innerHTML"
-         onclick="this.querySelector('.toggle-icon').classList.toggle('rotate-90')">
-        <span class="toggle-icon transition-transform">▶</span>
-        <span class="text-orchay-accent font-medium">WP</span>
-        <span class="font-bold">{{ wp.id }}</span>
-        <span class="ml-auto text-sm text-orchay-muted">({{ wp.progress | round(0) | int }}%)</span>
+         onclick="toggleWp(this)">
+        <span class="toggle-icon w-4 text-gray-400 transition-transform duration-200" data-testid="toggle-icon">▶</span>
+        <span class="text-blue-400 font-bold text-xs">WP</span>
+        <span class="font-medium text-gray-200 truncate flex-1">{{ wp.id }}: {{ wp.title }}</span>
+        <span class="text-sm text-gray-400" data-testid="wp-progress">({{ wp.progress | round(0) | int }}%)</span>
     </div>
 
-    <!-- WP Children Container -->
-    <div id="wp-children-{{ wp.id }}" class="ml-4">
+    <!-- WP Children Container (확장/축소 애니메이션) -->
+    <div id="wp-children-{{ wp.id }}"
+         class="children ml-4 overflow-hidden transition-all duration-300 ease-in-out max-h-0 opacity-0">
         {% for child in wp.children %}
         {% if child.type == 'act' %}
         <!-- ACT Node -->
-        <div class="mb-2">
-            <div class="flex items-center gap-2 py-1 cursor-pointer hover:bg-orchay-card rounded px-2">
-                <span class="text-green-400 font-medium">A</span>
-                <span class="font-medium">{{ child.id }}</span>
-                <span class="ml-auto text-sm text-orchay-muted">({{ child.progress | round(0) | int }}%)</span>
+        <div class="mb-2" data-id="{{ child.id }}" data-testid="tree-node-act">
+            <div class="flex items-center gap-2 py-1 cursor-pointer hover:bg-gray-800 rounded px-2 transition-colors duration-150">
+                <span class="w-4"></span>
+                <span class="text-green-400 font-medium text-xs">A</span>
+                <span class="font-medium text-gray-300 truncate flex-1">{{ child.id }}</span>
+                <span class="text-sm text-gray-400">({{ child.progress | round(0) | int }}%)</span>
             </div>
 
             <!-- Task Nodes under ACT -->
             {% for task in child.children %}
-            <div class="ml-4 flex items-center gap-2 py-1 cursor-pointer hover:bg-orchay-card rounded px-2"
-                 hx-get="/api/detail/{{ task.id }}"
-                 hx-target="#detail-panel"
-                 hx-swap="innerHTML">
-                <span class="text-yellow-400 font-medium">T</span>
-                <span>{{ task.id }}</span>
-                <span class="ml-auto text-sm
-                    {% if task.status == '[xx]' %}text-green-400
-                    {% elif task.status == '[im]' %}text-blue-400
-                    {% elif task.status == '[ap]' %}text-purple-400
-                    {% elif task.status == '[dd]' %}text-yellow-400
-                    {% elif task.status == '[bd]' %}text-orange-400
-                    {% else %}text-orchay-muted{% endif %}">
-                    {{ task.status }}
-                </span>
-            </div>
+            {{ render_task(task, 'ml-4') }}
             {% endfor %}
         </div>
         {% else %}
         <!-- Direct Task Node (3-level) -->
-        <div class="flex items-center gap-2 py-1 cursor-pointer hover:bg-orchay-card rounded px-2"
-             hx-get="/api/detail/{{ child.id }}"
-             hx-target="#detail-panel"
-             hx-swap="innerHTML">
-            <span class="text-yellow-400 font-medium">T</span>
-            <span>{{ child.id }}</span>
-            <span class="ml-auto text-sm
-                {% if child.status == '[xx]' %}text-green-400
-                {% elif child.status == '[im]' %}text-blue-400
-                {% elif child.status == '[ap]' %}text-purple-400
-                {% elif child.status == '[dd]' %}text-yellow-400
-                {% elif child.status == '[bd]' %}text-orange-400
-                {% else %}text-orchay-muted{% endif %}">
-                {{ child.status }}
-            </span>
-        </div>
+        {{ render_task(child, '') }}
         {% endif %}
         {% endfor %}
     </div>
 </div>
 {% endfor %}
+</div>
 
 {% if not tree %}
-<div class="text-orchay-muted text-sm">Task가 없습니다</div>
+<!-- 빈 상태 메시지 -->
+<div class="empty-tree flex flex-col items-center justify-center h-64 text-gray-500" data-testid="empty-tree">
+    <svg class="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
+    </svg>
+    <p class="text-lg">등록된 Task가 없습니다</p>
+    <p class="text-sm mt-2">WBS 파일을 확인해주세요</p>
+</div>
 {% endif %}
+
+{# 스크립트는 index.html에서 글로벌로 정의됨 #}

@@ -155,7 +155,7 @@
 ### TSK-02-02: 트리 템플릿 구현
 - category: development
 - domain: frontend
-- status: approved [ap]
+- status: implement [im]
 - priority: high
 - assignee: -
 - schedule: 2025-12-31 ~ 2025-12-31

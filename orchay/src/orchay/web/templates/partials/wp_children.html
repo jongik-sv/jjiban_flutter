@@ -1,54 +1,67 @@
+{#
+  WP 하위 노드 템플릿 (wp_children.html)
+  TSK-02-02: WP 확장 시 HTMX로 로드되는 파셜
+
+  상태 색상 매핑은 tree.html과 동일
+#}
+
+{# 상태 배지 색상 매크로 #}
+{% macro status_badge(status) %}
+{% set color_map = {
+    '[ ]': 'bg-gray-500',
+    '[bd]': 'bg-blue-500',
+    '[dd]': 'bg-purple-500',
+    '[an]': 'bg-indigo-500',
+    '[ds]': 'bg-cyan-500',
+    '[ap]': 'bg-green-500',
+    '[im]': 'bg-yellow-500',
+    '[fx]': 'bg-orange-500',
+    '[vf]': 'bg-teal-500',
+    '[xx]': 'bg-emerald-500'
+} %}
+{% set color = color_map.get(status, 'bg-gray-500') %}
+<span class="status-badge px-1.5 py-0.5 text-xs rounded {{ color }} text-white min-w-[32px] text-center"
+      data-testid="status-badge">{{ status }}</span>
+{% endmacro %}
+
+{# Task 노드 매크로 #}
+{% macro render_task(task, indent_class='') %}
+<div class="tree-node task flex items-center gap-2 py-1.5 cursor-pointer hover:bg-gray-800 rounded px-2 transition-colors duration-150 {{ indent_class }}"
+     data-id="{{ task.id }}"
+     data-type="task"
+     data-testid="tree-node-task"
+     hx-get="/api/detail/{{ task.id }}"
+     hx-target="#detail-panel"
+     hx-swap="innerHTML"
+     onclick="selectTask(this)">
+    <span class="text-yellow-400 font-medium text-sm">T</span>
+    <span class="text-gray-300 truncate flex-1">{{ task.id }}: {{ task.title }}</span>
+    {{ status_badge(task.status) }}
+</div>
+{% endmacro %}
+
 {% for child in children %}
 {% if child.type == 'act' %}
 <!-- ACT Node -->
-<div class="mb-2">
-    <div class="flex items-center gap-2 py-1 cursor-pointer hover:bg-orchay-card rounded px-2">
-        <span class="text-green-400 font-medium">A</span>
-        <span class="font-medium">{{ child.id }}</span>
-        <span class="ml-auto text-sm text-orchay-muted">({{ child.progress | round(0) | int }}%)</span>
+<div class="mb-2" data-id="{{ child.id }}" data-testid="tree-node-act">
+    <div class="flex items-center gap-2 py-1 cursor-pointer hover:bg-gray-800 rounded px-2 transition-colors duration-150">
+        <span class="w-4"></span>
+        <span class="text-green-400 font-medium text-xs">A</span>
+        <span class="font-medium text-gray-300 truncate flex-1">{{ child.id }}</span>
+        <span class="text-sm text-gray-400">({{ child.progress | round(0) | int }}%)</span>
     </div>
 
     <!-- Task Nodes under ACT -->
     {% for task in child.children %}
-    <div class="ml-4 flex items-center gap-2 py-1 cursor-pointer hover:bg-orchay-card rounded px-2"
-         hx-get="/api/detail/{{ task.id }}"
-         hx-target="#detail-panel"
-         hx-swap="innerHTML">
-        <span class="text-yellow-400 font-medium">T</span>
-        <span>{{ task.id }}</span>
-        <span class="ml-auto text-sm
-            {% if task.status == '[xx]' %}text-green-400
-            {% elif task.status == '[im]' %}text-blue-400
-            {% elif task.status == '[ap]' %}text-purple-400
-            {% elif task.status == '[dd]' %}text-yellow-400
-            {% elif task.status == '[bd]' %}text-orange-400
-            {% else %}text-orchay-muted{% endif %}">
-            {{ task.status }}
-        </span>
-    </div>
+    {{ render_task(task, 'ml-4') }}
     {% endfor %}
 </div>
 {% else %}
 <!-- Direct Task Node (3-level) -->
-<div class="flex items-center gap-2 py-1 cursor-pointer hover:bg-orchay-card rounded px-2"
-     hx-get="/api/detail/{{ child.id }}"
-     hx-target="#detail-panel"
-     hx-swap="innerHTML">
-    <span class="text-yellow-400 font-medium">T</span>
-    <span>{{ child.id }}</span>
-    <span class="ml-auto text-sm
-        {% if child.status == '[xx]' %}text-green-400
-        {% elif child.status == '[im]' %}text-blue-400
-        {% elif child.status == '[ap]' %}text-purple-400
-        {% elif child.status == '[dd]' %}text-yellow-400
-        {% elif child.status == '[bd]' %}text-orange-400
-        {% else %}text-orchay-muted{% endif %}">
-        {{ child.status }}
-    </span>
-</div>
+{{ render_task(child, '') }}
 {% endif %}
 {% endfor %}
 
 {% if not children %}
-<div class="text-orchay-muted text-sm ml-4">하위 Task가 없습니다</div>
+<div class="text-gray-500 text-sm ml-4">하위 Task가 없습니다</div>
 {% endif %}
